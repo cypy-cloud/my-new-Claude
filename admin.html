@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>관리자 페이지 | 임현수 강사</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+  <!-- ===== 로그인 화면 ===== -->
+  <div id="loginScreen" class="admin-login">
+    <div class="admin-login__card">
+      <div class="admin-login__logo">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <h1 class="admin-login__title">관리자 로그인</h1>
+      <p class="admin-login__desc">임현수 강사 사이트 관리자 페이지입니다.</p>
+      <form id="loginForm" class="admin-login__form">
+        <div class="form-group">
+          <label for="adminPw">비밀번호</label>
+          <input type="password" id="adminPw" placeholder="비밀번호를 입력하세요" autocomplete="current-password" />
+        </div>
+        <div id="loginError" class="admin-login__error" style="display:none">
+          <i class="fa-solid fa-circle-exclamation"></i> 비밀번호가 틀렸습니다.
+        </div>
+        <button type="submit" class="btn btn--primary btn--full" style="padding:12px 20px;">
+          <i class="fa-solid fa-right-to-bracket"></i> 로그인
+        </button>
+      </form>
+      <p class="admin-login__hint">기본 비밀번호: <code>admin1234</code></p>
+    </div>
+  </div>
+
+  <!-- ===== 관리자 패널 ===== -->
+  <div id="adminPanel" class="admin-panel" style="display:none">
+
+    <!-- 헤더 -->
+    <header class="admin-header">
+      <div class="admin-header__inner">
+        <div class="admin-header__left">
+          <a href="index.html" class="admin-header__logo">
+            <i class="fa-solid fa-house"></i>
+            <span>사이트로 돌아가기</span>
+          </a>
+        </div>
+        <div class="admin-header__title">
+          <i class="fa-solid fa-sliders"></i> 사이트 관리
+        </div>
+        <div class="admin-header__right">
+          <button id="changePasswordBtn" class="admin-btn admin-btn--ghost">
+            <i class="fa-solid fa-key"></i> 비밀번호 변경
+          </button>
+          <button id="logoutBtn" class="admin-btn admin-btn--ghost">
+            <i class="fa-solid fa-right-from-bracket"></i> 로그아웃
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="admin-main">
+      <div class="admin-container">
+
+        <!-- 안내 배너 -->
+        <div class="admin-notice">
+          <i class="fa-solid fa-circle-info"></i>
+          사진을 업로드하면 <strong>이 브라우저</strong>에서 바로 반영됩니다. 다른 기기에서도 보이려면 아래 <strong>"사진 내보내기"</strong> 기능을 이용하세요.
+        </div>
+
+        <!-- 프로필 사진 섹션 -->
+        <section class="admin-section">
+          <div class="admin-section__header">
+            <div>
+              <h2 class="admin-section__title">
+                <i class="fa-solid fa-user-circle"></i> 프로필 사진
+              </h2>
+              <p class="admin-section__desc">강사 소개 카드 및 연락처 카드에 표시됩니다.</p>
+            </div>
+            <button class="admin-btn admin-btn--danger" id="clearProfile" title="삭제">
+              <i class="fa-solid fa-trash"></i> 삭제
+            </button>
+          </div>
+
+          <div class="admin-upload-area" id="profileUploadArea">
+            <div class="admin-upload-area__preview" id="profilePreview">
+              <img id="profilePreviewImg" src="" alt="프로필 미리보기" style="display:none" />
+              <div class="admin-upload-area__placeholder" id="profilePlaceholder">
+                <i class="fa-solid fa-user"></i>
+                <span>사진이 없습니다</span>
+              </div>
+            </div>
+            <div class="admin-upload-area__info">
+              <p class="admin-upload-area__name" id="profileFileName">선택된 파일 없음</p>
+              <p class="admin-upload-area__tip">권장: 정방형(1:1) 또는 세로 비율 사진 · JPG/PNG · 10MB 이하</p>
+              <label for="profileInput" class="admin-btn admin-btn--primary">
+                <i class="fa-solid fa-upload"></i> 사진 선택하기
+              </label>
+              <input type="file" id="profileInput" accept="image/*" style="display:none" />
+            </div>
+          </div>
+        </section>
+
+        <!-- 갤러리 사진 섹션 -->
+        <section class="admin-section">
+          <div class="admin-section__header">
+            <div>
+              <h2 class="admin-section__title">
+                <i class="fa-solid fa-images"></i> 강의 현장 갤러리
+              </h2>
+              <p class="admin-section__desc">갤러리 섹션에 표시됩니다. 각 슬롯마다 사진을 개별 업로드할 수 있습니다.</p>
+            </div>
+          </div>
+
+          <div class="admin-gallery-grid">
+
+            <div class="admin-gallery-slot" data-slot="1">
+              <div class="admin-gallery-slot__preview">
+                <img class="admin-gallery-slot__img" src="" alt="" style="display:none" />
+                <div class="admin-gallery-slot__fallback">
+                  <i class="fa-solid fa-trophy"></i>
+                </div>
+                <button class="admin-gallery-slot__clear" title="삭제"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+              <input type="text" class="admin-gallery-caption" placeholder="캡션 (예: 기업 리더십 특강)" value="" />
+              <label class="admin-btn admin-btn--sm admin-btn--outline">
+                <i class="fa-solid fa-upload"></i> 사진 선택
+                <input type="file" accept="image/*" style="display:none" class="admin-gallery-input" />
+              </label>
+              <span class="admin-gallery-slot__num">01</span>
+            </div>
+
+            <div class="admin-gallery-slot" data-slot="2">
+              <div class="admin-gallery-slot__preview">
+                <img class="admin-gallery-slot__img" src="" alt="" style="display:none" />
+                <div class="admin-gallery-slot__fallback">
+                  <i class="fa-solid fa-brain"></i>
+                </div>
+                <button class="admin-gallery-slot__clear" title="삭제"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+              <input type="text" class="admin-gallery-caption" placeholder="캡션 (예: MBTI 조직소통 워크숍)" value="" />
+              <label class="admin-btn admin-btn--sm admin-btn--outline">
+                <i class="fa-solid fa-upload"></i> 사진 선택
+                <input type="file" accept="image/*" style="display:none" class="admin-gallery-input" />
+              </label>
+              <span class="admin-gallery-slot__num">02</span>
+            </div>
+
+            <div class="admin-gallery-slot" data-slot="3">
+              <div class="admin-gallery-slot__preview">
+                <img class="admin-gallery-slot__img" src="" alt="" style="display:none" />
+                <div class="admin-gallery-slot__fallback">
+                  <i class="fa-solid fa-robot"></i>
+                </div>
+                <button class="admin-gallery-slot__clear" title="삭제"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+              <input type="text" class="admin-gallery-caption" placeholder="캡션 (예: AI 활용 실습 교육)" value="" />
+              <label class="admin-btn admin-btn--sm admin-btn--outline">
+                <i class="fa-solid fa-upload"></i> 사진 선택
+                <input type="file" accept="image/*" style="display:none" class="admin-gallery-input" />
+              </label>
+              <span class="admin-gallery-slot__num">03</span>
+            </div>
+
+            <div class="admin-gallery-slot" data-slot="4">
+              <div class="admin-gallery-slot__preview">
+                <img class="admin-gallery-slot__img" src="" alt="" style="display:none" />
+                <div class="admin-gallery-slot__fallback">
+                  <i class="fa-solid fa-star"></i>
+                </div>
+                <button class="admin-gallery-slot__clear" title="삭제"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+              <input type="text" class="admin-gallery-caption" placeholder="캡션 (예: CS 커뮤니케이션 교육)" value="" />
+              <label class="admin-btn admin-btn--sm admin-btn--outline">
+                <i class="fa-solid fa-upload"></i> 사진 선택
+                <input type="file" accept="image/*" style="display:none" class="admin-gallery-input" />
+              </label>
+              <span class="admin-gallery-slot__num">04</span>
+            </div>
+
+            <div class="admin-gallery-slot" data-slot="5">
+              <div class="admin-gallery-slot__preview">
+                <img class="admin-gallery-slot__img" src="" alt="" style="display:none" />
+                <div class="admin-gallery-slot__fallback">
+                  <i class="fa-solid fa-comments"></i>
+                </div>
+                <button class="admin-gallery-slot__clear" title="삭제"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+              <input type="text" class="admin-gallery-caption" placeholder="캡션 (예: 코칭 커뮤니케이션 워크숍)" value="" />
+              <label class="admin-btn admin-btn--sm admin-btn--outline">
+                <i class="fa-solid fa-upload"></i> 사진 선택
+                <input type="file" accept="image/*" style="display:none" class="admin-gallery-input" />
+              </label>
+              <span class="admin-gallery-slot__num">05</span>
+            </div>
+
+            <div class="admin-gallery-slot" data-slot="6">
+              <div class="admin-gallery-slot__preview">
+                <img class="admin-gallery-slot__img" src="" alt="" style="display:none" />
+                <div class="admin-gallery-slot__fallback">
+                  <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <button class="admin-gallery-slot__clear" title="삭제"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+              <input type="text" class="admin-gallery-caption" placeholder="캡션 (예: 세일즈 역량 강화 교육)" value="" />
+              <label class="admin-btn admin-btn--sm admin-btn--outline">
+                <i class="fa-solid fa-upload"></i> 사진 선택
+                <input type="file" accept="image/*" style="display:none" class="admin-gallery-input" />
+              </label>
+              <span class="admin-gallery-slot__num">06</span>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- 저장 / 내보내기 -->
+        <section class="admin-section admin-section--actions">
+          <button id="saveAllBtn" class="admin-btn admin-btn--primary admin-btn--lg">
+            <i class="fa-solid fa-floppy-disk"></i> 모든 변경사항 저장
+          </button>
+          <div class="admin-export-wrap">
+            <button id="exportBtn" class="admin-btn admin-btn--ghost">
+              <i class="fa-solid fa-file-export"></i> 사진 데이터 내보내기
+            </button>
+            <label class="admin-btn admin-btn--ghost">
+              <i class="fa-solid fa-file-import"></i> 사진 데이터 가져오기
+              <input type="file" id="importInput" accept=".json" style="display:none" />
+            </label>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- 비밀번호 변경 모달 -->
+  <div id="pwModal" class="admin-modal" style="display:none">
+    <div class="admin-modal__card">
+      <h3 class="admin-modal__title">비밀번호 변경</h3>
+      <div class="form-group">
+        <label>현재 비밀번호</label>
+        <input type="password" id="currentPw" placeholder="현재 비밀번호" />
+      </div>
+      <div class="form-group">
+        <label>새 비밀번호</label>
+        <input type="password" id="newPw" placeholder="새 비밀번호 (4자 이상)" />
+      </div>
+      <div class="form-group">
+        <label>새 비밀번호 확인</label>
+        <input type="password" id="newPwConfirm" placeholder="새 비밀번호 재입력" />
+      </div>
+      <div id="pwError" class="admin-login__error" style="display:none"></div>
+      <div class="admin-modal__actions">
+        <button id="pwModalCancel" class="admin-btn admin-btn--ghost">취소</button>
+        <button id="pwModalSave" class="admin-btn admin-btn--primary">변경하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 토스트 -->
+  <div id="adminToast" class="admin-toast"></div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

@@ -994,5 +994,38 @@
   </a>
 
   <script src="js/main.js"></script>
+  <script>
+    /* 관리자 페이지에서 저장한 사진을 불러와 반영 */
+    (function applyAdminPhotos() {
+      // 프로필 사진
+      const profile = localStorage.getItem('im_profile');
+      if (profile) {
+        document.querySelectorAll('.instructor-card__img, .contact__card-photo img').forEach(img => {
+          img.src = profile;
+          img.style.display = 'block';
+          const fallback = img.nextElementSibling;
+          if (fallback) fallback.style.display = 'none';
+        });
+      }
+      // 갤러리 사진
+      for (let i = 1; i <= 6; i++) {
+        const src     = localStorage.getItem(`im_gallery_${i}`);
+        const caption = localStorage.getItem(`im_caption_${i}`);
+        const items   = document.querySelectorAll('.gallery-item');
+        const item    = items[i - 1];
+        if (!item) continue;
+        if (src) {
+          const img = item.querySelector('img');
+          if (img) { img.src = src; img.style.display = 'block'; }
+          const fallback = item.querySelector('.gallery-item__fallback');
+          if (fallback) fallback.style.zIndex = '0';
+        }
+        if (caption) {
+          const cap = item.querySelector('.gallery-item__caption');
+          if (cap) cap.textContent = caption;
+        }
+      }
+    })();
+  </script>
 </body>
 </html>
