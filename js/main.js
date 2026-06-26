@@ -86,6 +86,63 @@
 
   document.querySelectorAll('.expertise-card').forEach(card => cardObserver.observe(card));
 
+  /* ─── Gallery lightbox ─── */
+  const lightbox     = document.getElementById('lightbox');
+  const lbImg        = document.getElementById('lightboxImg');
+  const lbCaption    = document.getElementById('lightboxCaption');
+  const lbClose      = document.getElementById('lightboxClose');
+  const lbPrev       = document.getElementById('lightboxPrev');
+  const lbNext       = document.getElementById('lightboxNext');
+
+  const galleryItems = Array.from(document.querySelectorAll('.gallery-item'));
+  let currentIndex   = 0;
+
+  function openLightbox(index) {
+    const item   = galleryItems[index];
+    const img    = item.querySelector('img');
+    const caption = item.querySelector('.gallery-item__caption');
+
+    // 실제 사진이 있을 때만 라이트박스 표시
+    if (!img || img.style.display === 'none') return;
+
+    lbImg.src        = img.src;
+    lbImg.alt        = img.alt;
+    lbCaption.textContent = caption ? caption.textContent : '';
+    currentIndex     = index;
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    lbClose.focus();
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function shiftLightbox(dir) {
+    const next = (currentIndex + dir + galleryItems.length) % galleryItems.length;
+    openLightbox(next);
+  }
+
+  galleryItems.forEach((item, i) => {
+    item.setAttribute('tabindex', '0');
+    item.addEventListener('click', () => openLightbox(i));
+    item.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openLightbox(i); });
+  });
+
+  lbClose.addEventListener('click', closeLightbox);
+  lbPrev.addEventListener('click', () => shiftLightbox(-1));
+  lbNext.addEventListener('click', () => shiftLightbox(1));
+
+  lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+
+  document.addEventListener('keydown', e => {
+    if (!lightbox.classList.contains('open')) return;
+    if (e.key === 'Escape')      closeLightbox();
+    if (e.key === 'ArrowLeft')   shiftLightbox(-1);
+    if (e.key === 'ArrowRight')  shiftLightbox(1);
+  });
+
   /* ─── Floating CTA ─── */
   const floatingCta = document.getElementById('floatingCta');
 

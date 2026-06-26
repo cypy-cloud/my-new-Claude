@@ -1064,6 +1064,193 @@ input, textarea, select { font-family: inherit; }
 }
 
 /* ===================================================
+   GALLERY
+   =================================================== */
+.gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+/* ── 각 아이템 ── */
+.gallery-item {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+.gallery-item:focus-visible { outline: 2px solid var(--orange-500); border-radius: var(--radius-md); }
+
+.gallery-item__img-wrap {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background: transparent;
+}
+
+/* 실제 사진 */
+.gallery-item__img-wrap img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform .5s ease;
+  z-index: 1;
+}
+.gallery-item:hover .gallery-item__img-wrap img { transform: scale(1.06); }
+
+/* 대체 배경 — 사진이 없을 때 항상 표시, 사진이 있으면 img가 위에 덮음 */
+.gallery-item__fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--gray-200) 0%, var(--gray-100) 100%);
+  z-index: 0;
+}
+.gallery-item__fallback i {
+  font-size: 2.4rem;
+  color: var(--gray-300);
+}
+
+/* 사진 위 hover 오버레이 */
+.gallery-item__img-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.5) 0%, transparent 55%);
+  opacity: 0;
+  transition: opacity .3s ease;
+  z-index: 2;
+  pointer-events: none;
+}
+.gallery-item:hover .gallery-item__img-wrap::after { opacity: 1; }
+
+/* 확대 아이콘 */
+.gallery-item__img-wrap::before {
+  content: '\f00e'; /* fa-search-plus */
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(.7);
+  color: var(--white);
+  font-size: 1.6rem;
+  opacity: 0;
+  transition: opacity .3s ease, transform .3s ease;
+  z-index: 3;
+  pointer-events: none;
+}
+.gallery-item:hover .gallery-item__img-wrap::before {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* 캡션 */
+.gallery-item__caption {
+  margin-top: 10px;
+  font-size: .86rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  text-align: center;
+  line-height: 1.4;
+  padding: 0 4px;
+}
+
+/* 안내 문구 */
+.gallery__note {
+  text-align: center;
+  font-size: .82rem;
+  color: var(--gray-400);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.gallery__note i { color: var(--orange-300, #fdba74); }
+
+/* ── 라이트박스 ── */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.92);
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.lightbox.open { display: flex; }
+
+.lightbox__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 860px;
+  width: 100%;
+}
+.lightbox__content img {
+  width: 100%;
+  max-height: 72vh;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  box-shadow: 0 24px 64px rgba(0,0,0,.6);
+}
+.lightbox__caption {
+  font-size: .95rem;
+  color: rgba(255,255,255,.75);
+  font-weight: 500;
+}
+
+.lightbox__close {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.12);
+  color: var(--white);
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition);
+  border: none;
+  cursor: pointer;
+}
+.lightbox__close:hover { background: rgba(255,255,255,.24); }
+
+.lightbox__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.12);
+  color: var(--white);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition);
+  border: none;
+  cursor: pointer;
+}
+.lightbox__nav:hover { background: rgba(255,255,255,.25); }
+.lightbox__nav--prev { left: 20px; }
+.lightbox__nav--next { right: 20px; }
+
+/* ===================================================
    REVIEWS
    =================================================== */
 .reviews__grid {
@@ -1357,6 +1544,7 @@ textarea { resize: vertical; min-height: 100px; }
   .about__inner { grid-template-columns: 1fr; gap: 40px; }
   .about__photo { max-width: 360px; margin: 0 auto; }
   .clients__grid { grid-template-columns: repeat(2, 1fr); }
+  .gallery__grid { grid-template-columns: repeat(2, 1fr); }
   .expertise__grid { grid-template-columns: repeat(2, 1fr); }
   .programs__grid { grid-template-columns: repeat(2, 1fr); }
   .programs__grid .prog-card:nth-child(4),
@@ -1401,6 +1589,7 @@ textarea { resize: vertical; min-height: 100px; }
   .instructor-card__photo { height: 200px; }
 
   .clients__grid { grid-template-columns: 1fr; }
+  .gallery__grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
   .expertise__grid { grid-template-columns: 1fr; }
   .programs__grid { grid-template-columns: 1fr; }
   .programs__grid .prog-card:nth-child(4),
@@ -1419,4 +1608,7 @@ textarea { resize: vertical; min-height: 100px; }
   .btn { justify-content: center; }
   .floating-cta span { display: none; }
   .floating-cta { padding: 14px; border-radius: 50%; }
+  .gallery__grid { grid-template-columns: 1fr; }
+  .lightbox__nav--prev { left: 8px; }
+  .lightbox__nav--next { right: 8px; }
 }

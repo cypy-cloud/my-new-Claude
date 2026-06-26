@@ -593,6 +593,140 @@
       </div>
     </section>
 
+    <!-- ===== GALLERY ===== -->
+    <!--
+      갤러리 사진 추가 방법:
+      1. assets/gallery/ 폴더에 이미지 파일 복사
+         (파일명 형식: gallery-1.jpg, gallery-2.jpg, ...)
+      2. 아래 .gallery-item 블록의 <img src="..."> 경로를 수정
+      3. <figcaption> 안의 캡션 텍스트를 변경
+      새 사진 추가 시 .gallery-item 블록 전체를 복사해서 붙여넣으면 됩니다.
+    -->
+    <section class="gallery section section--gray" id="gallery">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">강의 현장 갤러리</div>
+          <h2 class="section-title">현장에서 직접 만드는<br /><span class="accent">교육의 순간들</span></h2>
+        </div>
+
+        <div class="gallery__grid">
+
+          <figure class="gallery-item">
+            <div class="gallery-item__img-wrap">
+              <img
+                src="assets/gallery/gallery-1.jpg"
+                alt="기업 리더십 특강"
+                loading="lazy"
+                onerror="this.style.display='none'"
+              />
+              <div class="gallery-item__fallback" aria-hidden="true">
+                <i class="fa-solid fa-trophy"></i>
+              </div>
+            </div>
+            <figcaption class="gallery-item__caption">기업 리더십 특강</figcaption>
+          </figure>
+
+          <figure class="gallery-item">
+            <div class="gallery-item__img-wrap">
+              <img
+                src="assets/gallery/gallery-2.jpg"
+                alt="MBTI 조직소통 워크숍"
+                loading="lazy"
+                onerror="this.style.display='none'"
+              />
+              <div class="gallery-item__fallback" aria-hidden="true">
+                <i class="fa-solid fa-brain"></i>
+              </div>
+            </div>
+            <figcaption class="gallery-item__caption">MBTI 조직소통 워크숍</figcaption>
+          </figure>
+
+          <figure class="gallery-item">
+            <div class="gallery-item__img-wrap">
+              <img
+                src="assets/gallery/gallery-3.jpg"
+                alt="AI 활용 실습 교육"
+                loading="lazy"
+                onerror="this.style.display='none'"
+              />
+              <div class="gallery-item__fallback" aria-hidden="true">
+                <i class="fa-solid fa-robot"></i>
+              </div>
+            </div>
+            <figcaption class="gallery-item__caption">AI 활용 실습 교육</figcaption>
+          </figure>
+
+          <figure class="gallery-item">
+            <div class="gallery-item__img-wrap">
+              <img
+                src="assets/gallery/gallery-4.jpg"
+                alt="CS 커뮤니케이션 교육"
+                loading="lazy"
+                onerror="this.style.display='none'"
+              />
+              <div class="gallery-item__fallback" aria-hidden="true">
+                <i class="fa-solid fa-star"></i>
+              </div>
+            </div>
+            <figcaption class="gallery-item__caption">CS 커뮤니케이션 교육</figcaption>
+          </figure>
+
+          <figure class="gallery-item">
+            <div class="gallery-item__img-wrap">
+              <img
+                src="assets/gallery/gallery-5.jpg"
+                alt="코칭 커뮤니케이션 워크숍"
+                loading="lazy"
+                onerror="this.style.display='none'"
+              />
+              <div class="gallery-item__fallback" aria-hidden="true">
+                <i class="fa-solid fa-comments"></i>
+              </div>
+            </div>
+            <figcaption class="gallery-item__caption">코칭 커뮤니케이션 워크숍</figcaption>
+          </figure>
+
+          <figure class="gallery-item">
+            <div class="gallery-item__img-wrap">
+              <img
+                src="assets/gallery/gallery-6.jpg"
+                alt="세일즈 역량 강화 교육"
+                loading="lazy"
+                onerror="this.style.display='none'"
+              />
+              <div class="gallery-item__fallback" aria-hidden="true">
+                <i class="fa-solid fa-chart-line"></i>
+              </div>
+            </div>
+            <figcaption class="gallery-item__caption">세일즈 역량 강화 교육</figcaption>
+          </figure>
+
+        </div>
+
+        <p class="gallery__note">
+          <i class="fa-solid fa-circle-info"></i>
+          실제 강의 현장 사진은 순차적으로 업데이트됩니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- 라이트박스 오버레이 -->
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="사진 확대보기">
+      <button class="lightbox__close" id="lightboxClose" aria-label="닫기">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <button class="lightbox__nav lightbox__nav--prev" id="lightboxPrev" aria-label="이전 사진">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <div class="lightbox__content">
+        <img src="" alt="" id="lightboxImg" />
+        <p class="lightbox__caption" id="lightboxCaption"></p>
+      </div>
+      <button class="lightbox__nav lightbox__nav--next" id="lightboxNext" aria-label="다음 사진">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+
     <!-- ===== REVIEWS ===== -->
     <section class="reviews section section--gray" id="reviews">
       <div class="container">
