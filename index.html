@@ -3,8 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="임현수 강사 - MBTI·코칭·리더십·CS·AI 전문강사. 열리고육컨설팅 이사. 기업·기관 교육 컨설팅 전문." />
-  <title>임현수 강사 | 열리고육컨설팅 이사</title>
+
+  <!-- Primary SEO -->
+  <title>임현수 강사 | 리더십·MBTI·코칭·CS·AI 기업교육 전문 | 열린교육컨설팅</title>
+  <meta name="description" content="임현수 강사 — 열린교육컨설팅 이사. 리더십, MBTI 조직소통, 코칭 커뮤니케이션, CS·세일즈, AI 활용 교육 전문. 500회 이상 기업·기관·대학 출강 경력. 지금 바로 강의 문의하세요." />
+  <meta name="keywords" content="임현수강사, 기업교육강사, 리더십교육, MBTI강사, 코칭강사, AI교육강사, CS강사, 세일즈교육, 열린교육컨설팅, 기업강의섭외" />
+  <meta name="author" content="임현수" />
+  <link rel="canonical" href="https://imhyunsoo.com/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://imhyunsoo.com/" />
+  <meta property="og:title" content="임현수 강사 | 리더십·MBTI·코칭·CS·AI 기업교육 전문" />
+  <meta property="og:description" content="500회 이상의 기업·기관·대학 강의 경력. 리더십, MBTI 조직소통, 코칭, CS·세일즈, AI 활용 교육 전문강사. 열린교육컨설팅 이사 임현수." />
+  <meta property="og:image" content="assets/profile.jpg" />
+  <meta property="og:locale" content="ko_KR" />
+  <meta property="og:site_name" content="임현수 강사 공식 사이트" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="임현수 강사 | 기업교육 전문강사" />
+  <meta name="twitter:description" content="리더십·MBTI·코칭·CS·AI 교육 전문. 열린교육컨설팅 이사. 강의 문의: 010-9405-0838" />
+  <meta name="twitter:image" content="assets/profile.jpg" />
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -25,11 +45,12 @@
         <span class="logo-accent">임현수</span> 강사
       </a>
       <ul class="nav__menu" id="navMenu">
-        <li><a href="#about" class="nav__link">소개</a></li>
-        <li><a href="#expertise" class="nav__link">전문분야</a></li>
+        <li><a href="#about" class="nav__link">강사소개</a></li>
         <li><a href="#programs" class="nav__link">강의프로그램</a></li>
-        <li><a href="#reviews" class="nav__link">강의후기</a></li>
-        <li><a href="#contact" class="nav__link nav__link--cta">섭외문의</a></li>
+        <li><a href="#clients" class="nav__link">출강이력</a></li>
+        <li><a href="#gallery" class="nav__link">갤러리</a></li>
+        <li><a href="#reviews" class="nav__link">후기</a></li>
+        <li><a href="#contact" class="nav__link nav__link--cta">강의문의</a></li>
       </ul>
       <button class="nav__hamburger" id="hamburger" aria-label="메뉴 열기">
         <span></span><span></span><span></span>
@@ -48,7 +69,7 @@
         <!-- 왼쪽: 메인 카피 -->
         <div class="hero__text">
           <p class="hero__eyebrow">
-            <span class="eyebrow-dot"></span>열리고육컨설팅 이사
+            <span class="eyebrow-dot"></span>열린교육컨설팅 이사
           </p>
           <h1 class="hero__title">
             조직의 변화를 이끄는 강의,<br />
@@ -313,7 +334,7 @@
           <div class="section-label">강사 소개</div>
           <h2 class="section-title">사람과 조직의<br /><span class="accent">가능성을 열어주는</span> 전문가</h2>
           <p class="about__lead">
-            열리고육컨설팅 이사로서 15년 이상 기업·기관 현장을 누비며 수백 회의 교육을 진행해 왔습니다.
+            열린교육컨설팅 이사로서 15년 이상 기업·기관 현장을 누비며 수백 회의 교육을 진행해 왔습니다.
             단순한 지식 전달이 아닌, <strong>현장에서 즉시 적용 가능한 변화</strong>를 만드는 교육을 추구합니다.
           </p>
           <ul class="about__list">
@@ -427,7 +448,7 @@
     </section>
 
     <!-- ===== PROGRAMS ===== -->
-    <section class="programs section section--gray" id="programs">
+    <section class="programs section" id="programs">
       <div class="container">
         <div class="section-header">
           <div class="section-label">강의 프로그램</div>
@@ -593,15 +614,11 @@
       </div>
     </section>
 
-    <!-- ===== GALLERY ===== -->
-    <!--
-      갤러리 사진 추가 방법:
-      1. assets/gallery/ 폴더에 이미지 파일 복사
-         (파일명 형식: gallery-1.jpg, gallery-2.jpg, ...)
-      2. 아래 .gallery-item 블록의 <img src="..."> 경로를 수정
-      3. <figcaption> 안의 캡션 텍스트를 변경
-      새 사진 추가 시 .gallery-item 블록 전체를 복사해서 붙여넣으면 됩니다.
-    -->
+    <!-- ===== GALLERY =====
+      사진 추가: assets/gallery/gallery-N.jpg 복사 후
+      아래 img src 경로와 figcaption 캡션 수정.
+      새 항목은 .gallery-item 블록 전체를 복사해 추가.
+    ===== -->
     <section class="gallery section section--gray" id="gallery">
       <div class="container">
         <div class="section-header">
