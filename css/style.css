@@ -410,102 +410,124 @@ input, textarea, select { font-family: inherit; }
 
 /* Card body */
 .instructor-card__body {
-  padding: 24px 28px 28px;
+  padding: 22px 24px 24px;
+}
+
+.instructor-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 .instructor-card__org {
-  font-size: .75rem;
-  font-weight: 600;
+  font-size: .72rem;
+  font-weight: 700;
   letter-spacing: .1em;
   color: var(--orange-400);
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   text-transform: uppercase;
 }
 .instructor-card__name {
-  font-size: 1.5rem;
+  font-size: 1.45rem;
   font-weight: 900;
   color: var(--white);
-  margin-bottom: 16px;
   letter-spacing: -.02em;
+  line-height: 1.1;
+}
+.instructor-card__name span {
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(255,255,255,.6);
+}
+
+.instructor-card__badge {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--orange-500), var(--orange-600));
+  color: var(--white);
+  font-size: .7rem;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 3px 10px rgba(249,115,22,.4);
+  white-space: nowrap;
+}
+
+/* 핵심 타이틀 태그 */
+.instructor-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.instructor-card__tags span {
+  font-size: .72rem;
+  font-weight: 600;
+  color: rgba(255,255,255,.75);
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.14);
+  padding: 3px 10px;
+  border-radius: 100px;
 }
 
 .instructor-card__divider {
   height: 1px;
   background: rgba(255,255,255,.1);
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
-.instructor-card__spec {
+/* 이력 리스트 */
+.instructor-card__history {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
   margin-bottom: 20px;
 }
-.instructor-card__spec li {
+.instructor-card__history li {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: .85rem;
-  color: rgba(255,255,255,.75);
+  gap: 9px;
+  font-size: .82rem;
+  line-height: 1.4;
 }
-.instructor-card__spec li i {
-  width: 18px;
-  text-align: center;
-  color: var(--orange-400);
-  font-size: .9rem;
+.history--current span:last-child { color: rgba(255,255,255,.9); font-weight: 500; }
+.history--past span:last-child { color: rgba(255,255,255,.45); }
+
+.history-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.2);
   flex-shrink: 0;
 }
-
-/* Mini stats row */
-.instructor-card__stats {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  background: rgba(255,255,255,.05);
-  border: 1px solid rgba(255,255,255,.09);
-  border-radius: var(--radius-sm);
-  padding: 14px 0;
-  margin-bottom: 20px;
-}
-.istat {
-  flex: 1;
-  text-align: center;
-}
-.istat__num {
-  display: block;
-  font-size: 1.2rem;
-  font-weight: 900;
-  color: var(--orange-400);
-  line-height: 1;
-  margin-bottom: 3px;
-}
-.istat__num sup { font-size: .6em; vertical-align: super; }
-.istat__label { font-size: .7rem; color: rgba(255,255,255,.45); font-weight: 500; }
-.istat__sep {
-  width: 1px;
-  height: 32px;
-  background: rgba(255,255,255,.1);
-  flex-shrink: 0;
+.history-dot--on {
+  background: var(--orange-400);
+  box-shadow: 0 0 0 2px rgba(249,115,22,.25);
 }
 
+/* CTA 버튼 */
 .instructor-card__cta {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   width: 100%;
-  padding: 12px;
+  padding: 13px;
   border-radius: var(--radius-sm);
   background: linear-gradient(135deg, var(--orange-500), var(--orange-600));
   color: var(--white);
-  font-size: .9rem;
+  font-size: .92rem;
   font-weight: 700;
-  box-shadow: 0 4px 16px rgba(249,115,22,.35);
+  box-shadow: 0 4px 16px rgba(249,115,22,.38);
   transition: all var(--transition);
 }
 .instructor-card__cta:hover {
   background: linear-gradient(135deg, var(--orange-600), var(--orange-700));
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(249,115,22,.45);
+  box-shadow: 0 8px 24px rgba(249,115,22,.50);
 }
 
 /* Photo placeholder (about section reuse) */
