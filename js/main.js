@@ -317,18 +317,32 @@ async function loadTestimonialsFromCSV() {
       return;
     }
 
-    // Simulate form submission (replace with real endpoint)
+    const SHEET_URL = 'https://script.google.com/macros/s/AKfycbw1wsFJ93nVDiFuqm8e9VCxuEM97ZjzVs9Qge1Uzy9uB5ksdTGr8nrRtbQ1EsyOFfXscA/exec';
+
     const btn = form.querySelector('button[type=submit]');
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 전송 중...';
 
-    await new Promise(r => setTimeout(r, 1200));
-
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 문의 보내기';
-    form.reset();
-
-    showToast('문의가 접수되었습니다. 빠르게 연락드리겠습니다!');
+    try {
+      await fetch(SHEET_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          org:    document.getElementById('org').value.trim(),
+          uname:  document.getElementById('uname').value.trim(),
+          uphone: document.getElementById('uphone').value.trim(),
+          msg:    document.getElementById('message').value.trim(),
+        }),
+      });
+      form.reset();
+      showToast('문의가 접수되었습니다. 빠르게 연락드리겠습니다!');
+    } catch {
+      showToast('전송 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 문의 보내기';
+    }
   });
 
   // Remove error class on input
