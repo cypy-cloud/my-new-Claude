@@ -42,18 +42,32 @@
     <!-- ===== HERO ===== -->
     <section class="hero" id="hero">
       <div class="hero__bg-shape"></div>
+      <div class="hero__bg-shape hero__bg-shape--2"></div>
       <div class="container hero__inner">
+
+        <!-- 왼쪽: 메인 카피 -->
         <div class="hero__text">
-          <p class="hero__eyebrow">열리고육컨설팅 이사</p>
+          <p class="hero__eyebrow">
+            <span class="eyebrow-dot"></span>열리고육컨설팅 이사
+          </p>
           <h1 class="hero__title">
-            사람을 <span class="accent">열리게</span> 하고<br />
-            조직을 <span class="accent">성장</span>시키는<br />
-            강사 <strong>임현수</strong>
+            조직의 변화를 이끄는 강의,<br />
+            <span class="accent">사람의 성장</span>을<br />
+            설계합니다.
           </h1>
           <p class="hero__desc">
-            MBTI · 코칭 · 리더십 · CS · AI<br />
-            현장 중심의 교육으로 변화를 만듭니다
+            MBTI, 리더십, 코칭, CS, AI 교육을 통해<br />
+            기업과 기관의 구성원이 더 잘 소통하고<br />
+            더 효과적으로 성장할 수 있도록 돕습니다.
           </p>
+          <div class="hero__cta">
+            <a href="#contact" class="btn btn--primary btn--hero">
+              <i class="fa-solid fa-paper-plane"></i> 강의 문의하기
+            </a>
+            <a href="#programs" class="btn btn--hero-outline">
+              강의 프로그램 보기 <i class="fa-solid fa-arrow-right"></i>
+            </a>
+          </div>
           <div class="hero__tags">
             <span class="tag">MBTI 전문</span>
             <span class="tag">코칭</span>
@@ -61,23 +75,59 @@
             <span class="tag">CS</span>
             <span class="tag">AI 교육</span>
           </div>
-          <div class="hero__cta">
-            <a href="#contact" class="btn btn--primary">섭외 문의하기</a>
-            <a href="#programs" class="btn btn--outline">강의 프로그램 보기</a>
+        </div>
+
+        <!-- 오른쪽: 강사 소개 카드 -->
+        <div class="hero__card-wrap">
+          <div class="instructor-card">
+            <div class="instructor-card__photo">
+              <img
+                src="assets/profile.jpg"
+                alt="임현수 강사"
+                class="instructor-card__img"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+              />
+              <div class="instructor-card__photo-fallback">
+                <i class="fa-solid fa-user"></i>
+              </div>
+              <div class="instructor-card__badge">
+                <i class="fa-solid fa-award"></i> 15년+ 경력
+              </div>
+            </div>
+            <div class="instructor-card__body">
+              <p class="instructor-card__org">열리고육컨설팅 이사</p>
+              <h2 class="instructor-card__name">임현수 강사</h2>
+              <div class="instructor-card__divider"></div>
+              <ul class="instructor-card__spec">
+                <li><i class="fa-solid fa-brain"></i> MBTI 전문강사</li>
+                <li><i class="fa-solid fa-comments"></i> 코칭 강사</li>
+                <li><i class="fa-solid fa-trophy"></i> 리더십 강사</li>
+                <li><i class="fa-solid fa-star"></i> CS 강사</li>
+                <li><i class="fa-solid fa-robot"></i> AI 전문강사</li>
+              </ul>
+              <div class="instructor-card__stats">
+                <div class="istat">
+                  <span class="istat__num">500<sup>+</sup></span>
+                  <span class="istat__label">강의</span>
+                </div>
+                <div class="istat__sep"></div>
+                <div class="istat">
+                  <span class="istat__num">200<sup>+</sup></span>
+                  <span class="istat__label">기업·기관</span>
+                </div>
+                <div class="istat__sep"></div>
+                <div class="istat">
+                  <span class="istat__num">98<sup>%</sup></span>
+                  <span class="istat__label">만족도</span>
+                </div>
+              </div>
+              <a href="#contact" class="instructor-card__cta">
+                <i class="fa-solid fa-phone"></i> 010-9405-0838
+              </a>
+            </div>
           </div>
         </div>
-        <div class="hero__photo">
-          <div class="photo-frame">
-            <div class="photo-placeholder">
-              <i class="fa-solid fa-user"></i>
-              <p>강사 사진</p>
-            </div>
-            <div class="photo-badge">
-              <span class="badge-num">15<sup>+</sup></span>
-              <span class="badge-label">년 강의 경력</span>
-            </div>
-          </div>
-        </div>
+
       </div>
       <div class="hero__scroll">
         <span>스크롤</span>
