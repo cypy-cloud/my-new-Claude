@@ -376,8 +376,9 @@ async function loadTestimonialsFromCSV() {
       const target = document.querySelector(anchor.getAttribute('href'));
       if (!target) return;
       e.preventDefault();
-      const offset = header.offsetHeight + 8;
-      window.scrollTo({ top: target.offsetTop - offset, behavior: 'smooth' });
+      const offset = header.offsetHeight + 16;
+      const top = target.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo({ top, behavior: 'smooth' });
     });
   });
 
