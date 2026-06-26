@@ -302,7 +302,7 @@ async function loadTestimonialsFromCSV() {
 
     // Basic validation
     let valid = true;
-    ['org', 'name', 'phone'].forEach(id => {
+    ['org', 'uname', 'uphone'].forEach(id => {
       const el = document.getElementById(id);
       if (!el.value.trim()) {
         el.classList.add('error');
