@@ -728,62 +728,48 @@
     </div>
 
     <!-- ===== REVIEWS ===== -->
-    <section class="reviews section section--gray" id="reviews">
+    <section class="reviews section" id="reviews">
       <div class="container">
         <div class="section-header">
           <div class="section-label">강의 후기</div>
-          <h2 class="section-title">현장에서 직접 들려오는<br /><span class="accent">생생한 교육 후기</span></h2>
+          <h2 class="section-title">교육에 참여한 분들이<br /><span class="accent">직접 전하는 이야기</span></h2>
+          <p class="section-desc">구글 설문을 통해 수집된 실제 교육 참여자 후기입니다.</p>
         </div>
-        <div class="reviews__grid">
 
-          <div class="review-card">
-            <div class="review-stars">
-              <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i>
-            </div>
-            <p class="review-text">"MBTI 교육인데 단순히 성격 테스트 수준이 아닌, 우리 팀의 실제 갈등 상황에 바로 적용할 수 있는 실전 내용이었습니다. 팀장들 모두 "이제 팀원들이 이해된다"는 반응이었어요."</p>
-            <div class="review-author">
-              <div class="author-avatar"><i class="fa-solid fa-user"></i></div>
-              <div>
-                <strong>김○○ 과장</strong>
-                <span>대기업 인사팀 · MBTI 리더십 과정</span>
-              </div>
+        <!-- 평균 별점 요약 -->
+        <div class="reviews__summary">
+          <div class="reviews__avg">
+            <span class="avg-num" id="avgScore">5.0</span>
+            <div class="avg-right">
+              <div class="avg-stars" id="avgStars"></div>
+              <span class="avg-label">평균 만족도</span>
             </div>
           </div>
-
-          <div class="review-card">
-            <div class="review-stars">
-              <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i>
-            </div>
-            <p class="review-text">"AI 교육이라고 해서 어렵고 기술적인 내용만 다룰 줄 알았는데, 우리 업무에 바로 쓸 수 있는 실습 위주라 정말 좋았습니다. 참가자 만족도 4.9점! 역대 최고였습니다."</p>
-            <div class="review-author">
-              <div class="author-avatar"><i class="fa-solid fa-user"></i></div>
-              <div>
-                <strong>이○○ 대리</strong>
-                <span>공공기관 교육담당 · AI 업무 혁신 과정</span>
-              </div>
-            </div>
+          <div class="reviews__count">
+            총 <strong id="reviewCount">0</strong>개의 후기
           </div>
+        </div>
 
-          <div class="review-card">
-            <div class="review-stars">
-              <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i>
-            </div>
-            <p class="review-text">"코칭 리더십 과정 이후 팀장들의 회의 방식이 바뀌었습니다. 지시하는 대신 질문하는 문화가 생기면서 팀원들의 자발적 참여가 눈에 띄게 늘었어요."</p>
-            <div class="review-author">
-              <div class="author-avatar"><i class="fa-solid fa-user"></i></div>
-              <div>
-                <strong>박○○ 부장</strong>
-                <span>중견기업 HR팀 · 코칭 리더십 과정</span>
-              </div>
-            </div>
-          </div>
+        <!-- 카드 그리드 — JS가 렌더링 -->
+        <div class="reviews__grid" id="reviewsGrid"></div>
 
+        <!-- 더보기 버튼 (후기 3개 초과 시 노출) -->
+        <div class="reviews__more" id="reviewsMore" style="display:none;">
+          <button class="btn btn--outline" id="reviewsMoreBtn">
+            후기 더 보기 <i class="fa-solid fa-chevron-down"></i>
+          </button>
+        </div>
+
+        <!-- 구글 설문 링크 -->
+        <div class="reviews__cta-survey">
+          <p>교육에 참여하셨나요?</p>
+          <!--
+            구글 설문지 링크를 아래 href에 붙여넣으세요.
+            예) href="https://forms.gle/xxxxxxxx"
+          -->
+          <a href="#" class="btn-survey" target="_blank" rel="noopener">
+            <i class="fa-solid fa-pen-to-square"></i> 후기 작성하기
+          </a>
         </div>
       </div>
     </section>

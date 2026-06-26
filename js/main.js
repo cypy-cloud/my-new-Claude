@@ -2,6 +2,82 @@
    임현수 강사 랜딩페이지 - Main JS
    =================================================== */
 
+/* ===================================================
+   강의 후기 데이터 (testimonials)
+   ---------------------------------------------------
+   후기를 직접 추가하려면 아래 배열에 객체를 추가하세요.
+   필드 설명:
+     rating  : 별점 (1~5, 소수점 가능 예: 4.5)
+     text    : 후기 본문
+     org     : 기관/직무 (예: "대기업 인사팀 · 과장")
+     topic   : 교육 주제 (예: "MBTI 조직소통 교육")
+
+   ── 구글 설문지/시트 자동 연동 방법 (추후 구현) ──────
+   방법 A. Google Apps Script Web App 활용
+     1. 구글 시트에서 확장 프로그램 > Apps Script 열기
+     2. doGet() 함수로 JSON 응답 반환하는 웹앱 배포
+     3. 아래 loadTestimonialsFromSheet() 함수의 SHEET_API_URL에
+        배포된 웹앱 URL 입력 후 주석 해제
+
+   방법 B. 공개 CSV 링크 활용 (Apps Script 없이)
+     1. 구글 시트 > 파일 > 웹에 게시 > CSV 형식으로 게시
+     2. 아래 loadTestimonialsFromCSV() 함수의 CSV_URL에
+        복사한 링크 입력 후 주석 해제
+   ────────────────────────────────────────────────── */
+const testimonials = [
+  {
+    rating : 5,
+    text   : '강의가 어렵지 않고 현장에서 바로 적용할 수 있어 좋았습니다. 이론 설명보다 실습 중심이라 교육 후 바로 업무에 써볼 수 있었습니다.',
+    org    : '제조기업 · 팀장',
+    topic  : '리더십 교육',
+  },
+  {
+    rating : 5,
+    text   : '팀원 성향을 이해하고 소통하는 방법을 구체적으로 배울 수 있었습니다. MBTI가 단순한 유형 구분이 아니라 실제 협업에 이렇게 활용될 수 있다는 게 인상적이었어요.',
+    org    : '공공기관 · 교육담당자',
+    topic  : 'MBTI 조직소통 교육',
+  },
+  {
+    rating : 5,
+    text   : 'AI를 막연하게만 생각했는데 실제 업무에 활용할 수 있다는 자신감이 생겼습니다. 비전공자도 쉽게 따라갈 수 있도록 설명해 주셔서 감사했습니다.',
+    org    : '금융기관 · 대리',
+    topic  : 'AI 활용 교육',
+  },
+];
+
+/*
+─── 방법 A: Apps Script 웹앱에서 불러오기 ───────────────
+async function loadTestimonialsFromSheet() {
+  const SHEET_API_URL = 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+  try {
+    const res  = await fetch(SHEET_API_URL);
+    const data = await res.json(); // [{ rating, text, org, topic }, ...]
+    return data;
+  } catch (e) {
+    console.warn('시트 로딩 실패, 기본 데이터 사용:', e);
+    return testimonials;
+  }
+}
+
+─── 방법 B: 공개 CSV에서 불러오기 ──────────────────────
+async function loadTestimonialsFromCSV() {
+  const CSV_URL = 'YOUR_PUBLIC_GOOGLE_SHEET_CSV_URL_HERE';
+  // 시트 컬럼 순서: rating, text, org, topic
+  try {
+    const res  = await fetch(CSV_URL);
+    const text = await res.text();
+    const rows = text.trim().split('\n').slice(1); // 헤더 제외
+    return rows.map(row => {
+      const [rating, text, org, topic] = row.split(',').map(s => s.trim().replace(/^"|"$/g, ''));
+      return { rating: parseFloat(rating), text, org, topic };
+    });
+  } catch (e) {
+    console.warn('CSV 로딩 실패, 기본 데이터 사용:', e);
+    return testimonials;
+  }
+}
+*/
+
 (function () {
   'use strict';
 
@@ -85,6 +161,78 @@
   }, { threshold: 0.12 });
 
   document.querySelectorAll('.expertise-card').forEach(card => cardObserver.observe(card));
+
+  /* ─── Reviews: render from testimonials array ─── */
+  (function renderReviews(data) {
+    const grid       = document.getElementById('reviewsGrid');
+    const avgEl      = document.getElementById('avgScore');
+    const avgStarsEl = document.getElementById('avgStars');
+    const countEl    = document.getElementById('reviewCount');
+    const moreWrap   = document.getElementById('reviewsMore');
+    const moreBtn    = document.getElementById('reviewsMoreBtn');
+    if (!grid) return;
+
+    const INITIAL_SHOW = 3;
+    let showAll = false;
+
+    function starHTML(rating) {
+      let html = '';
+      for (let i = 1; i <= 5; i++) {
+        if (rating >= i)       html += '<i class="fa-solid fa-star"></i>';
+        else if (rating >= i - 0.5) html += '<i class="fa-solid fa-star-half-stroke"></i>';
+        else                   html += '<i class="fa-regular fa-star empty"></i>';
+      }
+      return html;
+    }
+
+    function cardHTML(item) {
+      return `
+        <div class="review-card">
+          <div class="review-stars">${starHTML(item.rating)}</div>
+          <p class="review-text">"${item.text}"</p>
+          <span class="review-topic">${item.topic}</span>
+          <div class="review-author">
+            <div class="author-avatar"><i class="fa-solid fa-user"></i></div>
+            <div>
+              <strong>${item.org}</strong>
+              <span>${item.topic}</span>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function render(items) {
+      grid.innerHTML = items.map(cardHTML).join('');
+    }
+
+    function updateSummary(items) {
+      const avg = items.reduce((s, i) => s + i.rating, 0) / items.length;
+      avgEl.textContent      = avg.toFixed(1);
+      avgStarsEl.innerHTML   = starHTML(avg);
+      countEl.textContent    = items.length;
+    }
+
+    // 초기 렌더
+    render(data.slice(0, INITIAL_SHOW));
+    updateSummary(data);
+
+    if (data.length > INITIAL_SHOW) {
+      moreWrap.style.display = 'block';
+      moreBtn.addEventListener('click', () => {
+        showAll = !showAll;
+        render(showAll ? data : data.slice(0, INITIAL_SHOW));
+        moreBtn.innerHTML = showAll
+          ? '접기 <i class="fa-solid fa-chevron-up"></i>'
+          : '후기 더 보기 <i class="fa-solid fa-chevron-down"></i>';
+      });
+    }
+  })(testimonials);
+  /*
+    구글 시트/CSV 연동 시에는 위 (testimonials) 를 아래처럼 교체:
+    loadTestimonialsFromSheet().then(renderReviews);
+    또는
+    loadTestimonialsFromCSV().then(renderReviews);
+  */
 
   /* ─── Gallery lightbox ─── */
   const lightbox     = document.getElementById('lightbox');

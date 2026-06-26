@@ -1253,54 +1253,167 @@ input, textarea, select { font-family: inherit; }
 /* ===================================================
    REVIEWS
    =================================================== */
+
+/* 평균 별점 요약 */
+.reviews__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-md);
+  padding: 24px 32px;
+  margin-bottom: 36px;
+  box-shadow: var(--shadow-sm);
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.reviews__avg {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.avg-num {
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--orange-500);
+  line-height: 1;
+  letter-spacing: -.03em;
+}
+.avg-right { display: flex; flex-direction: column; gap: 4px; }
+.avg-stars i { color: var(--orange-400); font-size: 1rem; margin-right: 2px; }
+.avg-label { font-size: .78rem; color: var(--gray-400); font-weight: 500; }
+.reviews__count { font-size: .9rem; color: var(--gray-500); }
+.reviews__count strong { color: var(--gray-800); font-weight: 700; }
+
+/* 카드 그리드 */
 .reviews__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 24px;
+  margin-bottom: 32px;
 }
 
+/* 개별 후기 카드 */
 .review-card {
   background: var(--white);
   border-radius: var(--radius-md);
-  padding: 32px;
+  padding: 28px;
   border: 1px solid var(--gray-100);
   box-shadow: var(--shadow-sm);
-  transition: all var(--transition);
+  transition: transform .28s ease, box-shadow .28s ease;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.review-card::before {
+  content: '\201C';
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  font-size: 4rem;
+  font-family: Georgia, serif;
+  color: var(--orange-100);
+  line-height: 1;
+  pointer-events: none;
 }
 .review-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-5px);
   box-shadow: var(--shadow-lg);
 }
 
-.review-stars { margin-bottom: 16px; }
-.review-stars i { color: var(--orange-400); font-size: .9rem; margin-right: 2px; }
+/* 별점 */
+.review-stars {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 14px;
+}
+.review-stars i { color: var(--orange-400); font-size: .88rem; }
+.review-stars i.empty { color: var(--gray-200); }
 
+/* 후기 본문 */
 .review-text {
   font-size: .9rem;
-  color: var(--gray-600, #4b5563);
-  line-height: 1.8;
+  color: #4b5563;
+  line-height: 1.85;
   margin-bottom: 20px;
-  font-style: italic;
+  flex: 1;
+  word-break: keep-all;
 }
 
+/* 교육 주제 태그 */
+.review-topic {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--orange-600);
+  background: var(--orange-50);
+  border: 1px solid var(--orange-100);
+  padding: 3px 10px;
+  border-radius: 100px;
+  margin-bottom: 14px;
+}
+
+/* 작성자 */
 .review-author {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--gray-100);
+  margin-top: auto;
 }
 .author-avatar {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: var(--gray-100);
+  background: var(--orange-50);
+  border: 1.5px solid var(--orange-100);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-.author-avatar i { color: var(--gray-400); font-size: 1rem; }
-.review-author strong { display: block; font-size: .88rem; font-weight: 700; }
-.review-author span { font-size: .78rem; color: var(--gray-400); }
+.author-avatar i { color: var(--orange-400); font-size: .9rem; }
+.review-author strong { display: block; font-size: .86rem; font-weight: 700; color: var(--gray-800); }
+.review-author span { font-size: .76rem; color: var(--gray-400); }
+
+/* 더보기 버튼 */
+.reviews__more { text-align: center; margin-bottom: 32px; }
+.reviews__more .btn--outline { gap: 8px; }
+
+/* 구글 설문 링크 */
+.reviews__cta-survey {
+  text-align: center;
+  padding: 28px;
+  background: var(--gray-50);
+  border: 1.5px dashed var(--gray-200);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.reviews__cta-survey p { font-size: .9rem; color: var(--gray-500); margin: 0; }
+.btn-survey {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  background: var(--orange-500);
+  color: var(--white);
+  font-size: .88rem;
+  font-weight: 700;
+  box-shadow: 0 3px 12px rgba(249,115,22,.3);
+  transition: all var(--transition);
+}
+.btn-survey:hover {
+  background: var(--orange-600);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(249,115,22,.4);
+}
 
 /* ===================================================
    CONTACT
@@ -1545,6 +1658,7 @@ textarea { resize: vertical; min-height: 100px; }
   .about__photo { max-width: 360px; margin: 0 auto; }
   .clients__grid { grid-template-columns: repeat(2, 1fr); }
   .gallery__grid { grid-template-columns: repeat(2, 1fr); }
+  .reviews__grid { grid-template-columns: repeat(2, 1fr); }
   .expertise__grid { grid-template-columns: repeat(2, 1fr); }
   .programs__grid { grid-template-columns: repeat(2, 1fr); }
   .programs__grid .prog-card:nth-child(4),
@@ -1590,6 +1704,8 @@ textarea { resize: vertical; min-height: 100px; }
 
   .clients__grid { grid-template-columns: 1fr; }
   .gallery__grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .reviews__grid { grid-template-columns: 1fr; }
+  .reviews__summary { padding: 20px; }
   .expertise__grid { grid-template-columns: 1fr; }
   .programs__grid { grid-template-columns: 1fr; }
   .programs__grid .prog-card:nth-child(4),
