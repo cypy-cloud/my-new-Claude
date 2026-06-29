@@ -2,6 +2,8 @@ import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { PageTracker } from "@/components/analytics/page-tracker"
 import { UpgradeButton } from "@/components/billing/upgrade-button"
+import { SubscriptionHistory } from "@/components/billing/subscription-history"
+import { AdminPlanSwitcher } from "@/components/billing/admin-plan-switcher"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CheckCircle, XCircle, Zap, Shield, Star, Crown } from "lucide-react"
@@ -163,6 +165,17 @@ export default async function BillingPage() {
           ))}
         </CardContent>
       </Card>
+
+      <Card className="border-0 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base text-[#1e3a5f]">구독 변경 이력</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <SubscriptionHistory />
+        </CardContent>
+      </Card>
+
+      <AdminPlanSwitcher currentPlan={currentPlanId} />
 
       <p className="text-center text-sm text-gray-400">
         문의사항은 <Link href="/feedback" className="text-orange-500 hover:underline">고객 피드백</Link>으로 남겨주세요
