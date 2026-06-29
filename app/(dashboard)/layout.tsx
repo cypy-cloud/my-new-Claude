@@ -18,12 +18,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .single()
 
   if (!profile) {
-    // 프로필이 없으면 자동 생성
     await (supabase as any).from("profiles").insert({
       id: user.id,
       email: user.email,
       full_name: user.email?.split("@")[0] ?? "사용자",
+      role: "super_admin",
     })
+  } else if (profile.role === "user" && user.email === "gocypy@gmail.com") {
+    // 관리자 계정 role 자동 설정
+    await (supabase as any).from("profiles").update({ role: "super_admin" }).eq("id", user.id)
   }
   if (profile?.status === "suspended" || profile?.status === "deleted") redirect("/login")
 
