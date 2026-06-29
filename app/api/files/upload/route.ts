@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getPlanLimits, type PlanId } from '@/lib/subscription/plans'
 import { incrementUsage } from '@/lib/subscription/usage'
 import { trackEvent } from '@/lib/analytics/track'
+import { logError } from '@/lib/errors/logger'
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const pdfParse = require('pdf-parse') as (buffer: Buffer) => Promise<{ text: string; numpages: number }>
 
@@ -82,6 +83,7 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (insertError || !fileRecord) {
+    await logError(insertError, { userId: user.id, area: 'upload', severity: 'high', metadata: { fileName: file.name } })
     return NextResponse.json({ error: '파일 등록에 실패했습니다' }, { status: 500 })
   }
 
@@ -104,9 +106,10 @@ export async function POST(request: NextRequest) {
     } else {
       extractedText = rawText.slice(0, MAX_TEXT_LENGTH)
     }
-  } catch {
+  } catch (parseErr) {
     status = 'failed'
     errorNote = 'PDF 파싱 중 오류가 발생했습니다. 파일이 손상되었거나 암호화된 PDF일 수 있습니다.'
+    await logError(parseErr, { userId: user.id, area: 'upload', severity: 'medium', metadata: { fileName: file.name, fileId } })
   }
 
   // Upload original PDF to Supabase Storage (best effort)

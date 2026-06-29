@@ -4,6 +4,7 @@ import { generateWithAI, DuplicateRequestError } from '@/lib/ai/provider'
 import { getActivePrompt, renderPrompt } from '@/lib/ai/prompts/prompt-versioning'
 import { blockIfLimitExceeded, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
 import { trackFeatureComplete } from '@/lib/analytics/track'
+import { handleApiError } from '@/lib/errors/api-error-handler'
 
 const DISCLAIMER = '\n\n【필수 고지문】\n본 자료는 업로드된 자료를 바탕으로 AI가 작성한 참고용 설명자료입니다. 실제 보장 여부, 보험금 지급 여부, 가입 가능 여부는 해당 보험회사의 약관, 인수기준, 심사결과에 따라 달라질 수 있습니다.'
 
@@ -114,7 +115,7 @@ export async function POST(request: NextRequest) {
     if (err instanceof DuplicateRequestError) {
       return NextResponse.json({ error: err.message, duplicate: true }, { status: 409 })
     }
-    return NextResponse.json({ error: 'AI 생성 중 오류가 발생했습니다. 다시 시도해주세요.' }, { status: 500 })
+    return handleApiError(err, { userId: user.id, area: 'ai', metadata: { feature: 'ai_document' } })
   }
 
   const wasCached = !!result.cachedAt
