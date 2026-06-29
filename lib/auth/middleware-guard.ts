@@ -12,8 +12,10 @@ export async function adminGuard(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
 
+  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const adminClient = createAdminClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: profile } = await (supabase as any)
+  const { data: profile } = await (adminClient as any)
     .from('profiles').select('role').eq('id', user.id).single()
 
   const role = (profile?.role as UserRole) ?? 'user'
