@@ -1,28 +1,40 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Clock } from "lucide-react"
+import { createClient } from "@/lib/supabase/server"
+import { PdfUploader } from "@/components/ai/pdf-uploader"
+import { getPlanLimits, PLAN_LABELS, type PlanId } from "@/lib/subscription/plans"
+import { getMonthlyUsage } from "@/lib/subscription/usage"
 
-export default function AiDocumentPage() {
+export default async function AiDocumentPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: profile } = await (supabase as any)
+    .from("profiles")
+    .select("plan_type")
+    .eq("user_id", user!.id)
+    .single()
+
+  const planId = (profile?.plan_type as PlanId) ?? "free"
+  const planName = PLAN_LABELS[planId]
+  const limits = getPlanLimits(planId)
+  const usage = await getMonthlyUsage(user!.id)
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">AI 설명자료 생성</h1>
-          <p className="text-gray-600 mt-1">PDF 약관을 업로드하면 AI가 고객용 설명자료로 변환해드립니다</p>
-        </div>
-        <Badge variant="secondary">Phase 2</Badge>
+    <div className="space-y-6 max-w-5xl">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">AI 설명자료 생성</h1>
+        <p className="text-gray-600 mt-1">
+          보험 약관 PDF를 업로드하면 텍스트를 추출하여 AI 설명자료 생성에 활용합니다
+        </p>
       </div>
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-20 space-y-4">
-          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-            <Clock className="h-8 w-8 text-orange-600" />
-          </div>
-          <div className="text-center">
-            <h2 className="text-xl font-semibold text-gray-900">준비 중입니다</h2>
-            <p className="text-gray-500 mt-2">AI 설명자료 생성기 - Phase 2에서 구현됩니다</p>
-          </div>
-        </CardContent>
-      </Card>
+
+      <PdfUploader
+        initialUploadCount={usage.pdfUploadCount}
+        uploadLimit={limits.pdfUploadLimit}
+        maxFileSizeMb={limits.maxFileSizeMb}
+        storageDays={limits.storageDays}
+        planName={planName}
+      />
     </div>
   )
 }

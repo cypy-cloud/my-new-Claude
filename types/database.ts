@@ -368,6 +368,37 @@ export type Database = {
         }
         Update: Partial<Database['public']['Tables']['feedback']['Insert']>
       }
+      uploaded_files: {
+        Row: {
+          id: string
+          user_id: string
+          original_file_name: string
+          storage_path: string | null
+          file_size_mb: number
+          file_type: string
+          extracted_text: string | null
+          summary_text: string | null
+          status: 'uploaded' | 'processing' | 'completed' | 'failed' | 'deleted'
+          delete_after: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          original_file_name: string
+          storage_path?: string | null
+          file_size_mb?: number
+          file_type?: string
+          extracted_text?: string | null
+          summary_text?: string | null
+          status?: 'uploaded' | 'processing' | 'completed' | 'failed' | 'deleted'
+          delete_after?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['uploaded_files']['Insert']>
+      }
       generated_outputs: {
         Row: {
           id: string
