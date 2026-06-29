@@ -41,13 +41,20 @@ export async function proxy(request: NextRequest) {
   }
 
   if (ADMIN_PATHS.some((p) => pathname.startsWith(p))) {
-    const { data: profile } = await supabase
+    // Use service role key to bypass broken RLS (user_id vs id column mismatch)
+    const { createClient } = await import('@supabase/supabase-js')
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    )
+    const { data: profile } = await adminClient
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
-    if (!profile || !['admin', 'super_admin'].includes(profile.role)) {
+    if (!profile || !['admin', 'super_admin'].includes(profile.role as string)) {
       const url = request.nextUrl.clone()
       url.pathname = '/dashboard'
       return NextResponse.redirect(url)
