@@ -101,6 +101,7 @@ export async function POST(request: NextRequest) {
   }
 
   let result
+  let sections: Record<string, string>
   try {
     result = await generateWithAI(prompt, {
       feature: 'ai_document',
@@ -111,6 +112,21 @@ export async function POST(request: NextRequest) {
       promptVersion: version,
       forceRegenerate,
     })
+    sections = parseOutputSections(result.text)
+
+    // Stale cache from before a prompt/format change may not contain valid markers — bypass it once
+    if (Object.keys(sections).length === 0 && result.cachedAt) {
+      result = await generateWithAI(prompt, {
+        feature: 'ai_document',
+        userId: user.id,
+        maxTokens: 3000,
+        temperature: 0.6,
+        cacheInput,
+        promptVersion: version,
+        forceRegenerate: true,
+      })
+      sections = parseOutputSections(result.text)
+    }
   } catch (err) {
     if (err instanceof DuplicateRequestError) {
       return NextResponse.json({ error: err.message, duplicate: true }, { status: 409 })
@@ -119,7 +135,6 @@ export async function POST(request: NextRequest) {
   }
 
   const wasCached = !!result.cachedAt
-  const sections = parseOutputSections(result.text)
 
   if (!wasCached) {
     await incrementUsage(user.id, 'pdf_analysis', {

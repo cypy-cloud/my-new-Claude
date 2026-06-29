@@ -78,6 +78,7 @@ export async function POST(request: NextRequest) {
   const cacheInput = { customerName: customerName || '', ageGroup, occupation, relationship, purpose, productField, tone, length, extraNotes }
 
   let result
+  let sections: Record<string, string>
   try {
     result = await generateWithAI(prompt, {
       feature: 'ai_message',
@@ -88,6 +89,21 @@ export async function POST(request: NextRequest) {
       promptVersion: version,
       forceRegenerate,
     })
+    sections = parseOutputSections(result.text)
+
+    // Stale cache from before a prompt/format change may not contain valid markers — bypass it once
+    if (Object.keys(sections).length === 0 && result.cachedAt) {
+      result = await generateWithAI(prompt, {
+        feature: 'ai_message',
+        userId: user.id,
+        maxTokens: 1200,
+        temperature: 0.75,
+        cacheInput,
+        promptVersion: version,
+        forceRegenerate: true,
+      })
+      sections = parseOutputSections(result.text)
+    }
   } catch (err) {
     if (err instanceof DuplicateRequestError) {
       return NextResponse.json({ error: err.message, duplicate: true }, { status: 409 })
@@ -96,7 +112,6 @@ export async function POST(request: NextRequest) {
   }
 
   const wasCached = !!result.cachedAt
-  const sections = parseOutputSections(result.text)
 
   // Add disclaimer to each section
   const withDisclaimer: Record<string, string> = {}
