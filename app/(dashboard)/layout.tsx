@@ -17,10 +17,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .eq("id", user.id)
     .single()
 
-  if (!profile) redirect("/login")
-  if (profile.status === "suspended" || profile.status === "deleted") redirect("/login")
+  if (!profile) {
+    // 프로필이 없으면 자동 생성
+    await (supabase as any).from("profiles").insert({
+      id: user.id,
+      email: user.email,
+      full_name: user.email?.split("@")[0] ?? "사용자",
+    })
+  }
+  if (profile?.status === "suspended" || profile?.status === "deleted") redirect("/login")
 
-  const planName = PLAN_LABELS[profile.plan_type as keyof typeof PLAN_LABELS] ?? "무료"
+  const planName = PLAN_LABELS[(profile?.plan_type) as keyof typeof PLAN_LABELS] ?? "무료"
 
   return (
     <div className="min-h-screen bg-gray-50">
