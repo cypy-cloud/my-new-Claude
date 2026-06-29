@@ -9,11 +9,9 @@ create policy "admins can read file metadata only" on public.uploaded_files
     or (
       exists (
         select 1 from public.profiles
-        where profiles.user_id = auth.uid()
+        where profiles.id = auth.uid()
           and profiles.role in ('admin', 'super_admin')
       )
-      -- 관리자 정책: 원본 텍스트·storage_path는 별도 열 제한 없이 RLS 행 레벨로만 제어
-      -- 실제 컬럼 레벨 제한은 API 레이어에서 select 컬럼 지정으로 적용
     )
   );
 
@@ -25,7 +23,7 @@ create policy "admins can read output metadata" on public.generated_outputs
     auth.uid() = user_id
     or exists (
       select 1 from public.profiles
-      where profiles.user_id = auth.uid()
+      where profiles.id = auth.uid()
         and profiles.role in ('admin', 'super_admin')
     )
   );
@@ -38,7 +36,7 @@ create policy "admins can read all event_logs" on public.event_logs
     auth.uid() = user_id
     or exists (
       select 1 from public.profiles
-      where profiles.user_id = auth.uid()
+      where profiles.id = auth.uid()
         and profiles.role in ('admin', 'super_admin')
     )
   );
@@ -51,7 +49,7 @@ create policy "admins can read all usage_records" on public.usage_records
     auth.uid() = user_id
     or exists (
       select 1 from public.profiles
-      where profiles.user_id = auth.uid()
+      where profiles.id = auth.uid()
         and profiles.role in ('admin', 'super_admin')
     )
   );

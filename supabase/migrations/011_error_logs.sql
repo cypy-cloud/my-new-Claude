@@ -33,7 +33,7 @@ create policy "admins_read_all_errors"
   using (
     exists (
       select 1 from public.profiles
-      where profiles.user_id = auth.uid()
+      where profiles.id = auth.uid()
         and profiles.role in ('admin', 'super_admin')
     )
   );
@@ -44,7 +44,7 @@ create policy "admins_update_errors"
   using (
     exists (
       select 1 from public.profiles
-      where profiles.user_id = auth.uid()
+      where profiles.id = auth.uid()
         and profiles.role in ('admin', 'super_admin')
     )
   );

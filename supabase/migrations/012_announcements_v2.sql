@@ -46,7 +46,7 @@ create policy "admins_read_all_reads"
   using (
     exists (
       select 1 from public.profiles
-      where profiles.user_id = auth.uid()
+      where profiles.id = auth.uid()
         and profiles.role in ('admin', 'super_admin')
     )
   );
