@@ -4,8 +4,12 @@ import { getPlanLimits, type PlanId } from '@/lib/subscription/plans'
 import { incrementUsage } from '@/lib/subscription/usage'
 import { trackEvent } from '@/lib/analytics/track'
 import { logError } from '@/lib/errors/logger'
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdfParse = require('pdf-parse') as (buffer: Buffer) => Promise<{ text: string; numpages: number }>
+type PdfParseResult = { text: string; numpages: number }
+async function parsePdf(buffer: Buffer): Promise<PdfParseResult> {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const pdfParse = require('pdf-parse')
+  return pdfParse(buffer)
+}
 
 const MAX_TEXT_LENGTH = 50_000
 
@@ -25,7 +29,7 @@ export async function POST(request: NextRequest) {
   const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('plan_type')
-    .eq('user_id', user.id)
+    .eq('id', user.id)
     .single()
 
   const planId = (profile?.plan_type as PlanId) ?? 'free'
@@ -96,7 +100,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer())
-    const parsed = await pdfParse(buffer)
+    const parsed = await parsePdf(buffer)
     const rawText = parsed.text?.trim() ?? ''
 
     if (!rawText || rawText.length < 20) {
