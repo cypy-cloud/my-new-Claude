@@ -368,6 +368,37 @@ export type Database = {
         }
         Update: Partial<Database['public']['Tables']['feedback']['Insert']>
       }
+      generated_outputs: {
+        Row: {
+          id: string
+          user_id: string
+          type: 'sms' | 'script' | 'pdf_explanation'
+          title: string
+          input_data: Json
+          output_text: string
+          prompt_version: string | null
+          ai_provider: string | null
+          model: string | null
+          is_favorite: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: 'sms' | 'script' | 'pdf_explanation'
+          title: string
+          input_data?: Json
+          output_text: string
+          prompt_version?: string | null
+          ai_provider?: string | null
+          model?: string | null
+          is_favorite?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['generated_outputs']['Insert']>
+      }
       event_logs: {
         Row: {
           id: string

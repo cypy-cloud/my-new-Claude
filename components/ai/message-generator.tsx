@@ -1,8 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
-import { Sparkles, Copy, Download, RefreshCw, CheckCircle, AlertCircle, Zap } from "lucide-react"
+import {
+  Sparkles, Copy, Download, RefreshCw, CheckCircle, AlertCircle,
+  Zap, Bookmark, BookmarkCheck, MessageSquare, MessageCircle,
+  Heart, TrendingUp, Send, ChevronDown, ChevronUp,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -10,23 +14,31 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useAIGenerate } from "@/hooks/useAIGenerate"
-import { clientTrackFeatureStart, clientTrackFeatureComplete, clientTrackDownload } from "@/lib/analytics/client-track"
+import { clientTrackFeatureStart, clientTrackDownload } from "@/lib/analytics/client-track"
 
-const MESSAGE_TYPES = [
-  { value: "생일 축하", label: "🎂 생일 축하" },
-  { value: "보험 만기 안내", label: "📋 보험 만기 안내" },
-  { value: "신상품 소개", label: "✨ 신상품 소개" },
-  { value: "감사 메시지", label: "💙 감사 메시지" },
-  { value: "명절 인사", label: "🎊 명절 인사" },
-  { value: "계약 갱신 안내", label: "🔄 계약 갱신 안내" },
-  { value: "기타", label: "✏️ 기타" },
-]
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-const STYLES = [
-  { value: "격식체", label: "격식체", desc: "정중하고 공식적인 문체" },
-  { value: "친근체", label: "친근체", desc: "따뜻하고 편안한 문체" },
-  { value: "카카오톡 스타일", label: "카톡 스타일", desc: "이모티콘 포함, 짧고 경쾌" },
+const AGE_GROUPS = ["20대", "30대", "40대", "50대", "60대 이상"]
+const OCCUPATIONS = ["직장인", "자영업자", "공무원", "주부", "학생", "은퇴자", "기타"]
+const RELATIONSHIPS = ["신규 고객", "기존 고객", "지인/소개", "온라인 문의", "기타"]
+const PURPOSES = ["보험 만기 안내", "신상품 소개", "계약 갱신 권유", "생일/기념일 축하", "감사 인사", "안부 인사", "상담 예약 요청", "기타"]
+const PRODUCT_FIELDS = ["생명보험", "건강보험", "실손보험", "자동차보험", "연금보험", "저축보험", "어린이보험", "종신보험", "기타"]
+const TONES = [
+  { value: "격식체", desc: "공식적·정중한 문체" },
+  { value: "친근체", desc: "따뜻하고 편안한 문체" },
+  { value: "카톡 스타일", desc: "짧고 경쾌, 이모지 포함" },
 ]
+const LENGTHS = ["짧게 (50자 이내)", "보통 (100자 이내)", "길게 (150자 이내)"]
+
+const OUTPUT_TABS = [
+  { key: "SMS",        icon: MessageSquare,  label: "문자용",         color: "blue" },
+  { key: "KAKAO",     icon: MessageCircle,  label: "카톡용",         color: "yellow" },
+  { key: "SOFT",      icon: Heart,          label: "부드러운 버전",  color: "pink" },
+  { key: "PERSUASIVE",icon: TrendingUp,     label: "설득력 있는 버전", color: "purple" },
+  { key: "FOLLOWUP",  icon: Send,           label: "후속 연락용",    color: "green" },
+] as const
+
+type TabKey = typeof OUTPUT_TABS[number]["key"]
 
 interface Props {
   initialUsage: number
@@ -34,187 +46,311 @@ interface Props {
   planName: string
 }
 
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export function MessageGenerator({ initialUsage, limit, planName }: Props) {
-  const [messageType, setMessageType] = useState("")
+  // Form state
   const [customerName, setCustomerName] = useState("")
-  const [situation, setSituation] = useState("")
-  const [style, setStyle] = useState("친근체")
-  const [copied, setCopied] = useState(false)
+  const [ageGroup, setAgeGroup] = useState("")
+  const [occupation, setOccupation] = useState("")
+  const [relationship, setRelationship] = useState("")
+  const [purpose, setPurpose] = useState("")
+  const [productField, setProductField] = useState("")
+  const [tone, setTone] = useState("친근체")
+  const [length, setLength] = useState("보통 (100자 이내)")
+  const [extraNotes, setExtraNotes] = useState("")
+  const [showAdvanced, setShowAdvanced] = useState(false)
+
+  // Result state
+  const [activeTab, setActiveTab] = useState<TabKey>("SMS")
+  const [copiedKey, setCopiedKey] = useState<string | null>(null)
+  const [savedId, setSavedId] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [isFavorite, setIsFavorite] = useState(false)
 
   const { state, generate } = useAIGenerate(
     Math.max(0, limit - initialUsage),
     { endpoint: "/api/ai/message", minIntervalMs: 1000, maxRetries: 1 }
   )
 
-  const isLoading = state.status === 'loading'
+  const isLoading = state.status === "loading"
   const isLimitReached = state.remaining === 0
-  const hasResult = state.status === 'success' && !!state.result
+  const sections: Record<string, string> = (state.result as unknown as { sections?: Record<string, string> })?.sections ?? {}
+  const hasResult = state.status === "success" && Object.keys(sections).length > 0
 
-  // Show toasts when status changes
   useEffect(() => {
-    if (state.status === 'success') {
+    if (state.status === "success" && hasResult) {
       if (state.cached) toast.info("이전에 생성된 결과를 불러왔습니다")
-      else { toast.success("메시지가 생성되었습니다!"); clientTrackFeatureComplete('ai_message') }
+      else toast.success("메시지 5가지 버전이 생성되었습니다!")
+      setSavedId(null)
+      setIsFavorite(false)
     }
-    if (state.status === 'error' && state.error) {
+    if (state.status === "error" && state.error) {
       toast.error(state.error)
     }
-  }, [state.status, state.cached, state.error])
+  }, [state.status, state.cached, state.error, hasResult])
 
   function buildParams(forceRegenerate = false) {
-    return { messageType, customerName, situation, style, forceRegenerate }
+    return { customerName, ageGroup, occupation, relationship, purpose, productField, tone, length, extraNotes, forceRegenerate }
   }
 
   function handleGenerate() {
-    if (!messageType) { toast.error("메시지 유형을 선택해주세요"); return }
-    if (!situation.trim()) { toast.error("상황을 입력해주세요"); return }
+    if (!purpose) { toast.error("목적을 선택해주세요"); return }
+    if (!productField) { toast.error("상품 분야를 선택해주세요"); return }
     if (isLimitReached) { toast.error("이번 달 사용 한도를 초과했습니다"); return }
-    clientTrackFeatureStart('ai_message', { messageType, style })
+    clientTrackFeatureStart("ai_message", { purpose, productField })
     generate(buildParams(false))
   }
 
   function handleRegenerate() {
-    if (!messageType || !situation.trim()) return
+    if (!purpose || !productField) return
+    clientTrackFeatureStart("ai_message", { purpose, productField, regenerate: true })
     generate(buildParams(true))
   }
 
-  async function handleCopy() {
-    await navigator.clipboard.writeText(state.result)
-    setCopied(true)
+  async function handleCopy(key: string) {
+    const text = sections[key] ?? ""
+    if (!text) return
+    await navigator.clipboard.writeText(text)
+    setCopiedKey(key)
     toast.success("클립보드에 복사되었습니다")
-    setTimeout(() => setCopied(false), 2000)
+    setTimeout(() => setCopiedKey(null), 2000)
   }
 
   function handleDownload() {
-    const blob = new Blob([state.result], { type: "text/plain;charset=utf-8" })
+    const allText = OUTPUT_TABS
+      .map(t => `【${t.label}】\n${sections[t.key] ?? "(생성되지 않음)"}\n`)
+      .join("\n" + "─".repeat(40) + "\n\n")
+    const blob = new Blob([allText], { type: "text/plain;charset=utf-8" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `메시지_${messageType}_${new Date().toLocaleDateString("ko-KR").replace(/\. /g, "-").replace(".", "")}.txt`
+    a.download = `메시지_${productField}_${new Date().toLocaleDateString("ko-KR").replace(/\. /g, "-").replace(".", "")}.txt`
     a.click()
     URL.revokeObjectURL(url)
-    toast.success("파일이 다운로드되었습니다")
-    clientTrackDownload('result', { feature: 'ai_message' })
+    toast.success("TXT 파일이 다운로드되었습니다")
+    clientTrackDownload("result", { feature: "ai_message", productField })
+  }
+
+  const handleSave = useCallback(async () => {
+    if (isSaving || !hasResult) return
+    setIsSaving(true)
+    try {
+      const outputText = OUTPUT_TABS.map(t => `[${t.key}]\n${sections[t.key] ?? ""}`).join("\n\n")
+      const res = await fetch("/api/outputs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "sms",
+          title: `${productField} - ${purpose} (${customerName || "고객"})`,
+          inputData: buildParams(),
+          outputText,
+          promptVersion: (state as unknown as { promptVersion?: string }).promptVersion,
+          aiProvider: state.provider,
+          model: null,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setSavedId(data.id)
+      toast.success("저장되었습니다")
+    } catch {
+      toast.error("저장에 실패했습니다")
+    } finally {
+      setIsSaving(false)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasResult, isSaving, sections, productField, purpose, customerName, state.provider])
+
+  async function handleFavoriteToggle() {
+    if (!savedId) {
+      await handleSave()
+      return
+    }
+    const next = !isFavorite
+    try {
+      await fetch("/api/outputs", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: savedId, isFavorite: next }),
+      })
+      setIsFavorite(next)
+      toast.success(next ? "즐겨찾기에 추가되었습니다" : "즐겨찾기에서 제거되었습니다")
+    } catch {
+      toast.error("업데이트에 실패했습니다")
+    }
   }
 
   const usedCount = limit - state.remaining
 
+  // ─── Render ─────────────────────────────────────────────────────────────────
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* 입력 폼 */}
-      <div className="space-y-5">
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      {/* ── 입력 폼 ─────────────────────────────────────── */}
+      <div className="space-y-4">
         {/* 사용량 */}
-        <div className={`flex items-center justify-between p-3 rounded-lg border ${
-          isLimitReached
-            ? "bg-red-50 border-red-200"
-            : state.remaining <= 3
-            ? "bg-yellow-50 border-yellow-200"
-            : "bg-blue-50 border-blue-100"
+        <div className={`flex items-center justify-between p-3 rounded-lg border text-sm ${
+          isLimitReached ? "bg-red-50 border-red-200 text-red-700" :
+          state.remaining <= 3 ? "bg-yellow-50 border-yellow-200 text-yellow-700" :
+          "bg-blue-50 border-blue-100 text-blue-700"
         }`}>
-          <span className={`text-sm ${isLimitReached ? "text-red-700" : state.remaining <= 3 ? "text-yellow-700" : "text-blue-700"}`}>
-            이번 달 사용량 <strong>{usedCount}/{limit}회</strong>
-            {" "}
-            <span className="opacity-70">({planName} 플랜)</span>
-          </span>
+          <span>이번 달 사용량 <strong>{usedCount}/{limit}회</strong> <span className="opacity-70">({planName} 플랜)</span></span>
           {isLimitReached && <Badge variant="destructive" className="text-xs">한도 초과</Badge>}
-          {!isLimitReached && state.remaining <= 3 && (
-            <Badge className="text-xs bg-yellow-500 text-white">{state.remaining}회 남음</Badge>
-          )}
+          {!isLimitReached && state.remaining <= 3 && <Badge className="text-xs bg-yellow-500 text-white">{state.remaining}회 남음</Badge>}
         </div>
 
-        {/* 메시지 유형 */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">메시지 유형 <span className="text-red-500">*</span></Label>
-          <div className="grid grid-cols-2 gap-2">
-            {MESSAGE_TYPES.map((type) => (
-              <button
-                key={type.value}
-                onClick={() => setMessageType(type.value)}
-                disabled={isLoading}
-                className={`px-3 py-2 rounded-lg text-sm border text-left transition-all ${
-                  messageType === type.value
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50"
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                {type.label}
-              </button>
-            ))}
+        {/* 필수 항목 */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">목적 <span className="text-red-500">*</span></Label>
+            <select
+              value={purpose}
+              onChange={e => setPurpose(e.target.value)}
+              disabled={isLoading}
+              className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
+            >
+              <option value="">선택해주세요</option>
+              {PURPOSES.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">상품 분야 <span className="text-red-500">*</span></Label>
+            <select
+              value={productField}
+              onChange={e => setProductField(e.target.value)}
+              disabled={isLoading}
+              className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
+            >
+              <option value="">선택해주세요</option>
+              {PRODUCT_FIELDS.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
           </div>
         </div>
 
-        {/* 고객 이름 */}
-        <div className="space-y-2">
-          <Label htmlFor="customerName" className="text-sm font-medium">
-            고객 이름 <span className="text-gray-400 font-normal">(선택)</span>
-          </Label>
-          <Input
-            id="customerName"
-            placeholder="예: 홍길동"
-            value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
-            disabled={isLoading}
-          />
+        {/* 고객 이름 + 연령대 */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">고객 이름 <span className="text-gray-400 font-normal">(선택)</span></Label>
+            <Input placeholder="예: 홍길동" value={customerName} onChange={e => setCustomerName(e.target.value)} disabled={isLoading} className="h-9 text-sm" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">연령대 <span className="text-gray-400 font-normal">(선택)</span></Label>
+            <select
+              value={ageGroup}
+              onChange={e => setAgeGroup(e.target.value)}
+              disabled={isLoading}
+              className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
+            >
+              <option value="">선택</option>
+              {AGE_GROUPS.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </div>
         </div>
 
-        {/* 상황 */}
-        <div className="space-y-2">
-          <Label htmlFor="situation" className="text-sm font-medium">
-            상황 / 요청사항 <span className="text-red-500">*</span>
-          </Label>
-          <Textarea
-            id="situation"
-            placeholder="예: 고객이 다음 달 생명보험 만기를 앞두고 있습니다. 갱신을 권유하는 메시지를 보내고 싶습니다."
-            value={situation}
-            onChange={(e) => setSituation(e.target.value)}
-            className="min-h-[100px] resize-none"
-            disabled={isLoading}
-          />
-        </div>
-
-        {/* 스타일 */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">메시지 스타일</Label>
+        {/* 말투 */}
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium">말투</Label>
           <div className="grid grid-cols-3 gap-2">
-            {STYLES.map((s) => (
+            {TONES.map(t => (
               <button
-                key={s.value}
-                onClick={() => setStyle(s.value)}
+                key={t.value}
+                onClick={() => setTone(t.value)}
                 disabled={isLoading}
-                className={`px-3 py-3 rounded-lg text-sm border transition-all text-center disabled:opacity-50 disabled:cursor-not-allowed ${
-                  style === s.value
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-700 border-gray-200 hover:border-blue-300"
+                className={`px-2 py-2 rounded-lg text-xs border transition-all text-center disabled:opacity-50 ${
+                  tone === t.value ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-700 border-gray-200 hover:border-blue-300"
                 }`}
               >
-                <div className="font-medium">{s.label}</div>
-                <div className={`text-xs mt-1 ${style === s.value ? "text-blue-100" : "text-gray-400"}`}>
-                  {s.desc}
-                </div>
+                <div className="font-medium">{t.value}</div>
+                <div className={`text-[10px] mt-0.5 ${tone === t.value ? "text-blue-100" : "text-gray-400"}`}>{t.desc}</div>
               </button>
             ))}
           </div>
         </div>
+
+        {/* 길이 */}
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium">메시지 길이</Label>
+          <div className="flex gap-2">
+            {LENGTHS.map(l => (
+              <button
+                key={l}
+                onClick={() => setLength(l)}
+                disabled={isLoading}
+                className={`flex-1 py-1.5 rounded-lg text-xs border transition-all disabled:opacity-50 ${
+                  length === l ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-700 border-gray-200 hover:border-blue-300"
+                }`}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 고급 설정 토글 */}
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(v => !v)}
+          className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+        >
+          {showAdvanced ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          고급 설정 {showAdvanced ? "닫기" : "열기"} (직업, 관계, 추가 참고)
+        </button>
+
+        {showAdvanced && (
+          <div className="space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">직업</Label>
+                <select
+                  value={occupation}
+                  onChange={e => setOccupation(e.target.value)}
+                  disabled={isLoading}
+                  className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
+                >
+                  <option value="">선택</option>
+                  {OCCUPATIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">고객과의 관계</Label>
+                <select
+                  value={relationship}
+                  onChange={e => setRelationship(e.target.value)}
+                  disabled={isLoading}
+                  className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
+                >
+                  <option value="">선택</option>
+                  {RELATIONSHIPS.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">추가 참고 내용</Label>
+              <Textarea
+                placeholder="예: 고객이 최근 직업을 바꿨습니다. 새로운 직업에 맞는 보험을 추천하고 싶습니다."
+                value={extraNotes}
+                onChange={e => setExtraNotes(e.target.value)}
+                className="min-h-[70px] resize-none text-sm"
+                disabled={isLoading}
+              />
+            </div>
+          </div>
+        )}
 
         <Button
           onClick={handleGenerate}
           disabled={isLoading || isLimitReached}
-          className="w-full h-12 text-base bg-[#1e3a5f] hover:bg-[#162d4a]"
+          className="w-full h-11 text-sm bg-[#1e3a5f] hover:bg-[#162d4a]"
         >
           {isLoading ? (
-            <>
-              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              AI가 작성 중...
-            </>
+            <><RefreshCw className="mr-2 h-4 w-4 animate-spin" />AI가 5가지 버전 생성 중...</>
           ) : (
-            <>
-              <Sparkles className="mr-2 h-4 w-4" />
-              메시지 생성하기
-            </>
+            <><Sparkles className="mr-2 h-4 w-4" />메시지 5가지 버전 생성하기</>
           )}
         </Button>
 
-        {state.status === 'error' && (
+        {state.status === "error" && (
           <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
             <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
             <span>{state.error}</span>
@@ -222,50 +358,104 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
         )}
       </div>
 
-      {/* 결과 */}
+      {/* ── 결과 ────────────────────────────────────────── */}
       <div className="space-y-3">
-        <Card className="min-h-[420px]">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center justify-between">
-              <span>생성된 메시지</span>
+        <Card className="min-h-[520px]">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center justify-between">
+              <span className="text-base font-semibold">생성된 메시지</span>
               {hasResult && (
-                <div className="flex gap-2">
+                <div className="flex gap-1.5">
                   {state.cached && (
                     <Badge variant="secondary" className="text-xs gap-1">
                       <Zap className="h-3 w-3" /> 캐시
                     </Badge>
                   )}
-                  <Button variant="outline" size="sm" onClick={handleCopy}>
-                    {copied
-                      ? <CheckCircle className="h-4 w-4 text-green-500" />
-                      : <Copy className="h-4 w-4" />}
-                    <span className="ml-1">{copied ? "복사됨" : "복사"}</span>
+                  <Button variant="outline" size="sm" onClick={handleFavoriteToggle} className="h-7 px-2 text-xs">
+                    {isFavorite
+                      ? <><BookmarkCheck className="h-3.5 w-3.5 text-orange-500 mr-1" />즐겨찾기</>
+                      : <><Bookmark className="h-3.5 w-3.5 mr-1" />즐겨찾기</>}
                   </Button>
-                  <Button variant="outline" size="sm" onClick={handleDownload}>
-                    <Download className="h-4 w-4" />
-                    <span className="ml-1">저장</span>
+                  <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving || !!savedId} className="h-7 px-2 text-xs">
+                    {savedId ? <><CheckCircle className="h-3.5 w-3.5 text-green-500 mr-1" />저장됨</> : "저장"}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleDownload} className="h-7 px-2 text-xs">
+                    <Download className="h-3.5 w-3.5 mr-1" />TXT
                   </Button>
                 </div>
               )}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             {isLoading ? (
-              <div className="flex flex-col items-center justify-center min-h-[300px] space-y-4">
-                <div className="relative">
-                  <div className="w-12 h-12 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin" />
-                </div>
-                <p className="text-sm text-gray-500">AI가 메시지를 작성하고 있습니다...</p>
+              <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+                <div className="w-12 h-12 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin" />
+                <p className="text-sm text-gray-500">AI가 5가지 버전을 작성하고 있습니다...</p>
+                <p className="text-xs text-gray-400">문자용·카톡용·부드러운·설득력·후속 연락</p>
               </div>
             ) : hasResult ? (
-              <div className="whitespace-pre-wrap text-sm leading-relaxed text-gray-800 bg-gray-50 rounded-lg p-4 min-h-[300px]">
-                {state.result}
+              <div className="space-y-3">
+                {/* Tab buttons */}
+                <div className="flex flex-wrap gap-1.5">
+                  {OUTPUT_TABS.map(tab => {
+                    const Icon = tab.icon
+                    const isActive = activeTab === tab.key
+                    return (
+                      <button
+                        key={tab.key}
+                        onClick={() => setActiveTab(tab.key)}
+                        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                          isActive
+                            ? "bg-[#1e3a5f] text-white border-[#1e3a5f]"
+                            : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <Icon className="h-3 w-3" />
+                        {tab.label}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Active tab content */}
+                {OUTPUT_TABS.map(tab => (
+                  activeTab === tab.key && (
+                    <div key={tab.key} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500 font-medium">{tab.label}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleCopy(tab.key)}
+                          className="h-7 px-2 text-xs text-gray-500"
+                        >
+                          {copiedKey === tab.key
+                            ? <><CheckCircle className="h-3.5 w-3.5 text-green-500 mr-1" />복사됨</>
+                            : <><Copy className="h-3.5 w-3.5 mr-1" />복사</>}
+                        </Button>
+                      </div>
+                      <div className="whitespace-pre-wrap text-sm leading-relaxed text-gray-800 bg-gray-50 rounded-lg p-4 min-h-[280px] border">
+                        {sections[tab.key] ?? ""}
+                      </div>
+                    </div>
+                  )
+                ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center min-h-[300px] text-gray-400 space-y-3">
+              <div className="flex flex-col items-center justify-center min-h-[400px] text-gray-400 space-y-3">
                 <Sparkles className="h-10 w-10 text-gray-200" />
-                <p className="text-sm">왼쪽에서 정보를 입력하고</p>
-                <p className="text-sm">"메시지 생성하기"를 클릭하세요</p>
+                <p className="text-sm">목적과 상품 분야를 선택하고</p>
+                <p className="text-sm">"메시지 5가지 버전 생성하기"를 클릭하세요</p>
+                <div className="flex flex-wrap gap-2 mt-2 justify-center">
+                  {OUTPUT_TABS.map(t => {
+                    const Icon = t.icon
+                    return (
+                      <span key={t.key} className="flex items-center gap-1 text-xs text-gray-300 bg-gray-50 px-2 py-1 rounded-full border">
+                        <Icon className="h-3 w-3" />{t.label}
+                      </span>
+                    )
+                  })}
+                </div>
               </div>
             )}
           </CardContent>
@@ -276,10 +466,10 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
             variant="outline"
             onClick={handleRegenerate}
             disabled={isLoading}
-            className="w-full border-orange-200 text-orange-600 hover:bg-orange-50"
+            className="w-full border-orange-200 text-orange-600 hover:bg-orange-50 text-sm"
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-            다시 생성하기 (새로 생성)
+            다시 생성하기 (새로 생성 — 사용량 차감)
           </Button>
         )}
 

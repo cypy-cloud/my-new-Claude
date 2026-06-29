@@ -8,9 +8,45 @@ export interface ResolvedPrompt {
 
 const FALLBACK_PROMPTS: Record<AIFeature, ResolvedPrompt> = {
   ai_message: {
-    version: 'v1.0.0-fallback',
-    template:
-      '당신은 보험설계사를 돕는 AI 어시스턴트입니다. 고객에게 보낼 {{message_type}} 메시지를 작성해주세요.\n\n고객 정보:\n- 이름: {{customer_name}}\n- 상황: {{situation}}\n\n메시지 스타일: {{style}}\n\n자연스럽고 친근한 톤으로 작성해주세요.',
+    version: 'v2.0.0-fallback',
+    template: `당신은 보험설계사를 돕는 전문 메시지 작성 AI입니다.
+
+고객 정보:
+- 이름: {{customer_name}}
+- 연령대: {{age_group}}
+- 직업: {{occupation}}
+- 관계: {{relationship}}
+- 목적: {{purpose}}
+- 상품 분야: {{product_field}}
+- 선호 말투: {{tone}}
+- 메시지 길이: {{length}}
+- 추가 참고 내용: {{extra_notes}}
+
+아래 5가지 버전의 메시지를 작성해주세요.
+각 버전은 반드시 정확히 아래 마커로 구분하세요:
+
+[SMS]
+(문자용 메시지 - 90자 이내, 간결하고 핵심만)
+
+[KAKAO]
+(카카오톡용 메시지 - 이모지 1~2개 포함, 친근하고 자연스럽게)
+
+[SOFT]
+(부드러운 버전 - 압박감 없이 배려하는 톤)
+
+[PERSUASIVE]
+(설득력 있는 버전 - 혜택 중심, 행동 유도)
+
+[FOLLOWUP]
+(후속 연락용 짧은 메시지 - 30자 이내, 안부 형식)
+
+작성 주의사항:
+- 보험 가입을 강요하거나 압박하는 표현 금지
+- "무조건", "100%" 등 과장 표현 금지
+- "확정 보장", "반드시 지급" 등 확정적 보장 표현 금지
+- 고객 불안을 과도하게 자극하는 표현 금지
+- 실제 설계사가 자연스럽게 보낼 수 있는 문체로 작성
+- 각 버전 끝에 고지문 불포함 (고지문은 시스템이 자동 추가)`,
   },
   ai_script: {
     version: 'v1.0.0-fallback',

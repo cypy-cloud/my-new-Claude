@@ -23,7 +23,7 @@ export default async function AiMessagePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">AI 문자/카톡 생성기</h1>
-        <p className="text-gray-600 mt-1">고객에게 보낼 맞춤형 메시지를 AI가 즉시 작성해드립니다</p>
+        <p className="text-gray-600 mt-1">고객 정보를 입력하면 AI가 5가지 버전의 메시지를 즉시 작성해드립니다</p>
       </div>
 
       <MessageGenerator

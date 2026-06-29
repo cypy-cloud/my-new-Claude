@@ -6,7 +6,7 @@ export type AIGenerateStatus = 'idle' | 'loading' | 'success' | 'error'
 
 export interface AIGenerateState {
   status: AIGenerateStatus
-  result: string
+  result: unknown
   cached: boolean
   remaining: number
   error: string | null
@@ -32,7 +32,7 @@ export function useAIGenerate(
 
   const [state, setState] = useState<AIGenerateState>({
     status: 'idle',
-    result: '',
+    result: null,
     cached: false,
     remaining: initialRemaining,
     error: null,
@@ -90,7 +90,8 @@ export function useAIGenerate(
 
         setState({
           status: 'success',
-          result: data.text,
+          // API may return `sections` (object) or `text` (string)
+          result: data.sections !== undefined ? { sections: data.sections, promptVersion: data.promptVersion } : data.text,
           cached: data.cached ?? false,
           remaining: data.remaining ?? 0,
           error: null,
@@ -117,7 +118,7 @@ export function useAIGenerate(
   }, [endpoint, minIntervalMs, maxRetries])
 
   const reset = useCallback(() => {
-    setState(prev => ({ ...prev, status: 'idle', result: '', error: null }))
+    setState(prev => ({ ...prev, status: 'idle', result: null, error: null }))
   }, [])
 
   return { state, generate, reset }
