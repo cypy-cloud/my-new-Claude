@@ -6,9 +6,14 @@ import { trackEvent } from '@/lib/analytics/track'
 import { logError } from '@/lib/errors/logger'
 type PdfParseResult = { text: string; numpages: number }
 async function parsePdf(buffer: Buffer): Promise<PdfParseResult> {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pdfParse = require('pdf-parse')
-  return pdfParse(buffer)
+  const { PDFParse } = await import('pdf-parse')
+  const parser = new PDFParse({ data: buffer })
+  try {
+    const result = await parser.getText()
+    return { text: result.text, numpages: result.pages.length }
+  } finally {
+    await parser.destroy()
+  }
 }
 
 const MAX_TEXT_LENGTH = 50_000
