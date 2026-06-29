@@ -7,8 +7,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, CheckCircle } from "lucide-react"
+import { Loader2, CheckCircle, Mail, Lock, User } from "lucide-react"
 
 export function SignupForm() {
   const [isLoading, setIsLoading] = useState(false)
@@ -20,36 +19,16 @@ export function SignupForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-
-    if (password !== confirmPassword) {
-      toast.error("비밀번호가 일치하지 않습니다.")
-      return
-    }
-
-    if (password.length < 8) {
-      toast.error("비밀번호는 8자 이상이어야 합니다.")
-      return
-    }
-
+    if (password !== confirmPassword) { toast.error("비밀번호가 일치하지 않습니다."); return }
+    if (password.length < 8) { toast.error("비밀번호는 8자 이상이어야 합니다."); return }
     setIsLoading(true)
-
     try {
       const supabase = createClient()
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { full_name: fullName } },
-      })
-
+      const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName } } })
       if (error) {
-        if (error.message.includes("already registered")) {
-          toast.error("이미 등록된 이메일 주소입니다.")
-        } else {
-          toast.error(error.message)
-        }
+        toast.error(error.message.includes("already registered") ? "이미 등록된 이메일 주소입니다." : error.message)
         return
       }
-
       setIsSuccess(true)
     } catch {
       toast.error("회원가입 중 오류가 발생했습니다.")
@@ -60,53 +39,64 @@ export function SignupForm() {
 
   if (isSuccess) {
     return (
-      <Card className="w-full max-w-md">
-        <CardContent className="flex flex-col items-center space-y-4 py-12">
-          <CheckCircle className="h-16 w-16 text-green-500" />
-          <h2 className="text-2xl font-bold text-center">이메일을 확인해주세요</h2>
-          <p className="text-center text-muted-foreground">
-            <strong>{email}</strong>로 인증 이메일을 발송했습니다.<br />
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
+            <CheckCircle className="h-8 w-8 text-green-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-[#1e3a5f] mb-3">이메일을 확인해주세요</h2>
+          <p className="text-gray-500 text-sm leading-relaxed mb-6">
+            <strong className="text-gray-700">{email}</strong>로 인증 이메일을 발송했습니다.<br />
             이메일을 확인하고 링크를 클릭하여 가입을 완료해주세요.
           </p>
-          <Link href="/login" className="text-blue-600 hover:underline text-sm">로그인 페이지로 이동</Link>
-        </CardContent>
-      </Card>
+          <Link href="/login" className="text-orange-500 hover:text-orange-600 text-sm font-medium">로그인 페이지로 이동 →</Link>
+        </div>
+      </div>
     )
   }
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">회원가입</CardTitle>
-        <CardDescription>FP AI Assistant를 무료로 시작해보세요</CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
+    <div className="w-full max-w-md">
+      <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-[#1e3a5f]">무료로 시작하기</h1>
+          <p className="text-gray-500 mt-2 text-sm">신용카드 없이 지금 바로 시작하세요</p>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="fullName">이름</Label>
-            <Input id="fullName" type="text" placeholder="홍길동" value={fullName} onChange={(e) => setFullName(e.target.value)} required disabled={isLoading} />
+            <Label htmlFor="fullName" className="text-sm font-medium text-gray-700">이름</Label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input id="fullName" type="text" placeholder="홍길동" value={fullName} onChange={(e) => setFullName(e.target.value)} required disabled={isLoading} className="pl-10 h-12" />
+            </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">이메일</Label>
-            <Input id="email" type="email" placeholder="example@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={isLoading} />
+            <Label htmlFor="email" className="text-sm font-medium text-gray-700">이메일</Label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input id="email" type="email" placeholder="example@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={isLoading} className="pl-10 h-12" />
+            </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">비밀번호</Label>
-            <Input id="password" type="password" placeholder="8자 이상 입력하세요" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} disabled={isLoading} />
+            <Label htmlFor="password" className="text-sm font-medium text-gray-700">비밀번호</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input id="password" type="password" placeholder="8자 이상 입력하세요" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} disabled={isLoading} className="pl-10 h-12" />
+            </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">비밀번호 확인</Label>
-            <Input id="confirmPassword" type="password" placeholder="비밀번호를 다시 입력하세요" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required disabled={isLoading} />
+            <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">비밀번호 확인</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input id="confirmPassword" type="password" placeholder="비밀번호를 다시 입력하세요" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required disabled={isLoading} className="pl-10 h-12" />
+            </div>
           </div>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            무료로 시작하기
+          <Button type="submit" className="w-full h-12 text-base bg-orange-500 hover:bg-orange-600 text-white mt-2" disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}무료로 시작하기
           </Button>
-          <p className="text-sm text-center text-muted-foreground">이미 계정이 있으신가요?{" "}<Link href="/login" className="text-blue-600 hover:underline font-medium">로그인</Link></p>
-        </CardFooter>
-      </form>
-    </Card>
+        </form>
+        <p className="text-sm text-center text-gray-500 mt-5">이미 계정이 있으신가요?{" "}<Link href="/login" className="text-orange-500 hover:text-orange-600 font-semibold">로그인</Link></p>
+      </div>
+    </div>
   )
 }
