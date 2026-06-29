@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 
 export type UserRole = 'user' | 'manager' | 'admin' | 'super_admin'
@@ -57,12 +57,15 @@ export interface AuthContext {
 }
 
 export async function getAuthContext(): Promise<AuthContext | null> {
+  const { createClient } = await import('@/lib/supabase/server')
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
+  // Use admin client to bypass broken RLS policies (user_id vs id column mismatch)
+  const adminClient = createAdminClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: profile } = await (supabase as any)
+  const { data: profile } = await (adminClient as any)
     .from('profiles')
     .select('role, email')
     .eq('id', user.id)
