@@ -3,8 +3,9 @@ import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { MessageSquare, BookOpen, FileText, ArrowRight, TrendingUp, Zap, CreditCard } from "lucide-react"
-import { PLAN_LABELS } from "@/types"
+import { MessageSquare, BookOpen, FileText, ArrowRight, TrendingUp, Zap, CreditCard, AlertCircle } from "lucide-react"
+import { getPlanLimits, PLAN_LABELS, type PlanId } from "@/lib/subscription/plans"
+import { getMonthlyUsage } from "@/lib/subscription/usage"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -12,29 +13,62 @@ export default async function DashboardPage() {
 
   const yearMonth = new Date().toISOString().slice(0, 7)
 
-  const [{ data: profileData }, { data: usage }] = await Promise.all([
-    supabase.from("profiles").select("name, email, plan_type").eq("user_id", user!.id).single(),
-    supabase.from("monthly_usage").select("ai_message_count, ai_script_count, ai_document_count").eq("user_id", user!.id).eq("year_month", yearMonth).maybeSingle(),
-  ])
-
-  const planType = profileData?.plan_type ?? 'free'
-  const { data: plan } = await supabase
-    .from("plans")
-    .select("name, ai_message_limit, ai_script_limit, ai_document_limit")
-    .eq("id", planType)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: profile } = await (supabase as any)
+    .from("profiles")
+    .select("name, email, plan_type")
+    .eq("user_id", user!.id)
     .single()
 
-  const p = plan as { name?: string; ai_message_limit?: number; ai_script_limit?: number; ai_document_limit?: number } | null
-  const u = usage as { ai_message_count?: number; ai_script_count?: number; ai_document_count?: number } | null
+  const planId = (profile?.plan_type as PlanId) ?? "free"
+  const planName = PLAN_LABELS[planId]
+  const limits = getPlanLimits(planId)
+  const usage = await getMonthlyUsage(user!.id)
 
   const stats = [
-    { label: "AI 문자/카톡", used: u?.ai_message_count ?? 0, limit: p?.ai_message_limit ?? 5, icon: MessageSquare, color: "blue", href: "/ai-message" },
-    { label: "AI 상담 스크립트", used: u?.ai_script_count ?? 0, limit: p?.ai_script_limit ?? 3, icon: BookOpen, color: "purple", href: "/ai-script" },
-    { label: "AI PDF 분석", used: u?.ai_document_count ?? 0, limit: p?.ai_document_limit ?? 1, icon: FileText, color: "orange", href: "/ai-document" },
+    {
+      label: "AI 문자/카톡",
+      used: usage.smsCount,
+      limit: limits.smsLimit,
+      icon: MessageSquare,
+      color: "blue",
+      href: "/ai-message",
+    },
+    {
+      label: "AI 상담 스크립트",
+      used: usage.scriptCount,
+      limit: limits.scriptLimit,
+      icon: BookOpen,
+      color: "purple",
+      href: "/ai-script",
+    },
+    {
+      label: "AI PDF 분석",
+      used: usage.pdfAnalysisCount,
+      limit: limits.pdfAnalysisLimit,
+      icon: FileText,
+      color: "orange",
+      href: "/ai-document",
+    },
   ]
 
-  const colorMap: Record<string, string> = { blue: "bg-blue-500", purple: "bg-purple-500", orange: "bg-orange-500" }
-  const iconBgMap: Record<string, string> = { blue: "bg-blue-100 text-blue-600", purple: "bg-purple-100 text-purple-600", orange: "bg-orange-100 text-orange-500" }
+  const colorMap: Record<string, string> = {
+    blue: "bg-blue-500",
+    purple: "bg-purple-500",
+    orange: "bg-orange-500",
+  }
+
+  const iconBgMap: Record<string, string> = {
+    blue: "bg-blue-100 text-blue-600",
+    purple: "bg-purple-100 text-purple-600",
+    orange: "bg-orange-100 text-orange-500",
+  }
+
+  const warningBorderMap: Record<string, string> = {
+    blue: "border-blue-200 bg-blue-50",
+    purple: "border-purple-200 bg-purple-50",
+    orange: "border-orange-200 bg-orange-50",
+  }
 
   const quickActions = [
     { href: "/ai-message", label: "AI 문자 생성", desc: "고객 메시지 자동 작성", icon: MessageSquare, color: "blue" },
@@ -42,43 +76,75 @@ export default async function DashboardPage() {
     { href: "/ai-document", label: "AI PDF 분석", desc: "PDF 설명자료 자동화", icon: FileText, color: "orange" },
   ]
 
-  const planLabel = PLAN_LABELS[planType as keyof typeof PLAN_LABELS] ?? "무료"
+  const totalTokens = usage.tokenInput + usage.tokenOutput
+  const costKrw = Math.round(usage.costEstimate * 1350)
 
   return (
     <div className="space-y-8 max-w-5xl">
+      {/* Welcome */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[#1e3a5f]">
-            안녕하세요, {profileData?.name ?? "설계사"}님! 👋
+            안녕하세요, {profile?.name ?? "설계사"}님! 👋
           </h1>
           <p className="text-gray-500 mt-1">오늘도 FP AI Assistant와 함께 효율적인 업무를 시작해보세요.</p>
         </div>
         <Badge className="self-start sm:self-auto bg-[#1e3a5f] text-white px-4 py-1.5 text-sm">
-          {planLabel} 플랜
+          {planName} 플랜
         </Badge>
       </div>
 
+      {/* Usage Stats */}
       <div>
-        <h2 className="text-base font-semibold text-gray-700 mb-3">이번 달 사용량 ({yearMonth})</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-semibold text-gray-700">이번 달 사용량 ({yearMonth})</h2>
+          <Link href="/billing" className="text-xs text-orange-500 hover:underline font-medium">
+            플랜 업그레이드 →
+          </Link>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {stats.map((s) => {
             const Icon = s.icon
             const pct = s.limit > 0 ? Math.min(100, (s.used / s.limit) * 100) : 0
+            const isWarning = pct >= 80 && pct < 100
+            const isExhausted = pct >= 100
+
             return (
               <Link key={s.label} href={s.href}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer border-0 shadow-sm">
+                <Card className={`hover:shadow-md transition-shadow cursor-pointer border shadow-sm ${
+                  isExhausted
+                    ? "border-red-200 bg-red-50"
+                    : isWarning
+                    ? `border ${warningBorderMap[s.color]}`
+                    : "border-0 bg-white"
+                }`}>
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between mb-3">
-                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${iconBgMap[s.color]}`}>
-                        <Icon className="h-4 w-4" />
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                        isExhausted ? "bg-red-100 text-red-500" : iconBgMap[s.color]
+                      }`}>
+                        {isExhausted ? <AlertCircle className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
                       </div>
-                      <span className="text-2xl font-bold text-[#1e3a5f]">
+                      <span className={`text-2xl font-bold ${isExhausted ? "text-red-500" : "text-[#1e3a5f]"}`}>
                         {s.used}<span className="text-sm font-normal text-gray-400">/{s.limit}</span>
                       </span>
                     </div>
                     <p className="text-sm text-gray-600 mb-2">{s.label}</p>
-                    <div className="w-full bg-gray-100 rounded-full h-1.5">
-                      <div className={`h-1.5 rounded-full ${colorMap[s.color]} transition-all`} style={{ width: `${pct}%` }} />
+                    <div className="w-full bg-gray-100 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all ${
+                          isExhausted ? "bg-red-400" : isWarning ? "bg-yellow-400" : colorMap[s.color]
+                        }`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between mt-1.5">
+                      <span className="text-xs text-gray-400">{Math.round(pct)}% 사용</span>
+                      {isExhausted ? (
+                        <span className="text-xs text-red-500 font-medium">한도 초과</span>
+                      ) : (
+                        <span className="text-xs text-gray-400">잔여 {s.limit - s.used}회</span>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -88,6 +154,54 @@ export default async function DashboardPage() {
         </div>
       </div>
 
+      {/* Token Usage Summary */}
+      {totalTokens > 0 && (
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-5">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">이번 달 AI 토큰 사용 현황</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-[#1e3a5f]">{(usage.tokenInput / 1000).toFixed(1)}K</p>
+                <p className="text-xs text-gray-400 mt-0.5">입력 토큰</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-[#1e3a5f]">{(usage.tokenOutput / 1000).toFixed(1)}K</p>
+                <p className="text-xs text-gray-400 mt-0.5">출력 토큰</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-[#1e3a5f]">{(totalTokens / 1000).toFixed(1)}K</p>
+                <p className="text-xs text-gray-400 mt-0.5">총 토큰</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-orange-500">₩{costKrw.toLocaleString()}</p>
+                <p className="text-xs text-gray-400 mt-0.5">추정 비용</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Plan Details */}
+      <Card className="border-0 shadow-sm">
+        <CardContent className="p-5">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">{planName} 플랜 혜택</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: "파일 크기", value: `${limits.maxFileSizeMb}MB` },
+              { label: "보관 기간", value: `${limits.storageDays}일` },
+              { label: "우선 처리", value: limits.priorityProcessing ? "✓ 제공" : "– 미제공" },
+              { label: "팀 공유", value: limits.teamSharing ? "✓ 제공" : "– 미제공" },
+            ].map(({ label, value }) => (
+              <div key={label} className="bg-gray-50 rounded-lg p-3 text-center">
+                <p className="text-sm font-semibold text-[#1e3a5f]">{value}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Quick Actions */}
       <div>
         <h2 className="text-base font-semibold text-gray-700 mb-3">빠른 시작</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -111,6 +225,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
+      {/* Plan + Upgrade */}
       <Card className="border-0 shadow-sm bg-gradient-to-r from-[#1e3a5f] to-[#2d5a8e] text-white">
         <CardContent className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -118,7 +233,7 @@ export default async function DashboardPage() {
               <TrendingUp className="h-6 w-6 text-white" />
             </div>
             <div>
-              <p className="font-semibold text-white">현재 {planLabel} 플랜</p>
+              <p className="font-semibold text-white">현재 {planName} 플랜</p>
               <p className="text-blue-200 text-sm mt-0.5">더 많은 AI 기능을 이용하려면 업그레이드하세요</p>
             </div>
           </div>
@@ -131,6 +246,7 @@ export default async function DashboardPage() {
         </CardContent>
       </Card>
 
+      {/* Tips */}
       <Card className="border-0 shadow-sm border-l-4 border-l-orange-400 bg-orange-50">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold text-orange-700 flex items-center gap-2">

@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createHash } from 'crypto'
 import { createClient } from '@/lib/supabase/server'
 import { getAIProvider } from '@/lib/ai/provider'
+import { blockIfLimitExceeded, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
 
@@ -16,39 +19,16 @@ export async function POST(request: NextRequest) {
   }
 
   // Check usage limit
-  const yearMonth = new Date().toISOString().slice(0, 7)
-
-  const { data: subscription } = await supabase
-    .from('subscriptions')
-    .select('plan_id')
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .single()
-
-  const planId = (subscription as { plan_id?: string } | null)?.plan_id ?? 'free'
-
-  const { data: planData } = await supabase
-    .from('plans')
-    .select('ai_message_limit, name')
-    .eq('id', planId)
-    .single()
-
-  const limit = (planData as { ai_message_limit?: number } | null)?.ai_message_limit ?? 5
-
-  const { data: usage } = await supabase
-    .from('monthly_usage')
-    .select('ai_message_count')
-    .eq('user_id', user.id)
-    .eq('year_month', yearMonth)
-    .single()
-
-  const currentCount = (usage as { ai_message_count?: number } | null)?.ai_message_count ?? 0
-
-  if (currentCount >= limit) {
-    return NextResponse.json(
-      { error: `이번 달 사용 한도(${limit}회)를 초과했습니다. 플랜을 업그레이드해주세요.`, limitExceeded: true },
-      { status: 429 }
-    )
+  try {
+    await blockIfLimitExceeded(user.id, 'sms')
+  } catch (err) {
+    if (err instanceof UsageLimitError) {
+      return NextResponse.json(
+        { error: err.message, limitExceeded: true, check: err.check },
+        { status: 429 }
+      )
+    }
+    throw err
   }
 
   // Check AI cache
@@ -65,7 +45,7 @@ export async function POST(request: NextRequest) {
   if (cached) {
     const c = cached as { response_text: string; ai_provider: string; ai_model: string; input_tokens: number; output_tokens: number }
     await Promise.all([
-      supabase.from('usage_logs').insert({
+      db.from('usage_logs').insert({
         user_id: user.id,
         feature: 'ai_message',
         action: 'generate',
@@ -76,9 +56,10 @@ export async function POST(request: NextRequest) {
         response_cached: true,
         metadata: { messageType, style },
       }),
-      supabase.rpc('increment_usage', { p_user_id: user.id, p_feature: 'ai_message' }),
+      incrementUsage(user.id, 'sms', { tokenInput: c.input_tokens, tokenOutput: c.output_tokens }),
     ])
-    return NextResponse.json({ text: c.response_text, cached: true, remaining: limit - currentCount - 1 })
+    const afterCheck = await checkUsageLimit(user.id, 'sms')
+    return NextResponse.json({ text: c.response_text, cached: true, remaining: afterCheck.remaining })
   }
 
   // Get active prompt template
@@ -105,7 +86,7 @@ export async function POST(request: NextRequest) {
   try {
     result = await provider.generateText(prompt, { maxTokens: 600, temperature: 0.75 })
   } catch (err) {
-    await supabase.from('usage_logs').insert({
+    await db.from('usage_logs').insert({
       user_id: user.id,
       feature: 'ai_message',
       action: 'generate_error',
@@ -120,7 +101,7 @@ export async function POST(request: NextRequest) {
   const duration = Date.now() - startTime
 
   await Promise.all([
-    supabase.from('ai_cache').upsert({
+    db.from('ai_cache').upsert({
       cache_key: cacheKey,
       feature: 'ai_message',
       response_text: result.text,
@@ -130,7 +111,7 @@ export async function POST(request: NextRequest) {
       output_tokens: result.usage.outputTokens,
       expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     }),
-    supabase.from('usage_logs').insert({
+    db.from('usage_logs').insert({
       user_id: user.id,
       feature: 'ai_message',
       action: 'generate',
@@ -142,8 +123,12 @@ export async function POST(request: NextRequest) {
       duration_ms: duration,
       metadata: { messageType, style },
     }),
-    supabase.rpc('increment_usage', { p_user_id: user.id, p_feature: 'ai_message' }),
+    incrementUsage(user.id, 'sms', {
+      tokenInput: result.usage.inputTokens,
+      tokenOutput: result.usage.outputTokens,
+    }),
   ])
 
-  return NextResponse.json({ text: result.text, cached: false, remaining: limit - currentCount - 1 })
+  const finalCheck = await checkUsageLimit(user.id, 'sms')
+  return NextResponse.json({ text: result.text, cached: false, remaining: finalCheck.remaining })
 }

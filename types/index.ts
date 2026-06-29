@@ -1,6 +1,7 @@
 import type { Database } from './database'
 
 export type Profile = Database['public']['Tables']['profiles']['Row']
+export type UsageRecord = Database['public']['Tables']['usage_records']['Row']
 export type Team = Database['public']['Tables']['teams']['Row']
 export type TeamMember = Database['public']['Tables']['team_members']['Row']
 export type Subscription = Database['public']['Tables']['subscriptions']['Row']
