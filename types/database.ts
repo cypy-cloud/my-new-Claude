@@ -103,6 +103,27 @@ export type Database = {
         }
         Update: Partial<Database['public']['Tables']['subscriptions']['Insert']>
       }
+      request_locks: {
+        Row: {
+          id: string
+          user_id: string
+          feature_type: 'ai_message' | 'ai_script' | 'ai_document'
+          input_hash: string
+          status: 'processing' | 'completed' | 'failed'
+          created_at: string
+          expires_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          feature_type: 'ai_message' | 'ai_script' | 'ai_document'
+          input_hash: string
+          status?: 'processing' | 'completed' | 'failed'
+          created_at?: string
+          expires_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['request_locks']['Insert']>
+      }
       ai_requests: {
         Row: {
           id: string
@@ -269,11 +290,13 @@ export type Database = {
       ai_cache: {
         Row: {
           id: string
-          cache_key: string
-          feature: string
-          response_text: string
-          ai_provider: string
-          ai_model: string
+          user_id: string | null
+          feature_type: 'ai_message' | 'ai_script' | 'ai_document'
+          input_hash: string
+          output_text: string
+          prompt_version: string | null
+          provider: string
+          model: string
           input_tokens: number
           output_tokens: number
           hit_count: number
@@ -282,15 +305,17 @@ export type Database = {
         }
         Insert: {
           id?: string
-          cache_key: string
-          feature: string
-          response_text: string
-          ai_provider: string
-          ai_model: string
+          user_id?: string | null
+          feature_type: 'ai_message' | 'ai_script' | 'ai_document'
+          input_hash: string
+          output_text: string
+          prompt_version?: string | null
+          provider: string
+          model: string
           input_tokens?: number
           output_tokens?: number
           hit_count?: number
-          expires_at?: string
+          expires_at: string
           created_at?: string
         }
         Update: Partial<Database['public']['Tables']['ai_cache']['Insert']>

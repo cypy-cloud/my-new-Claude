@@ -1,14 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
-import { Sparkles, Copy, Download, RefreshCw, CheckCircle } from "lucide-react"
+import { Sparkles, Copy, Download, RefreshCw, CheckCircle, AlertCircle, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { useAIGenerate } from "@/hooks/useAIGenerate"
 
 const MESSAGE_TYPES = [
   { value: "생일 축하", label: "🎂 생일 축하" },
@@ -37,60 +38,53 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
   const [customerName, setCustomerName] = useState("")
   const [situation, setSituation] = useState("")
   const [style, setStyle] = useState("친근체")
-  const [result, setResult] = useState("")
-  const [loading, setLoading] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [usage, setUsage] = useState(initialUsage)
 
-  const remaining = Math.max(0, limit - usage)
-  const isLimitReached = remaining === 0
+  const { state, generate } = useAIGenerate(
+    Math.max(0, limit - initialUsage),
+    { endpoint: "/api/ai/message", minIntervalMs: 1000, maxRetries: 1 }
+  )
 
-  async function handleGenerate() {
+  const isLoading = state.status === 'loading'
+  const isLimitReached = state.remaining === 0
+  const hasResult = state.status === 'success' && !!state.result
+
+  // Show toasts when status changes
+  useEffect(() => {
+    if (state.status === 'success') {
+      if (state.cached) toast.info("이전에 생성된 결과를 불러왔습니다")
+      else toast.success("메시지가 생성되었습니다!")
+    }
+    if (state.status === 'error' && state.error) {
+      toast.error(state.error)
+    }
+  }, [state.status, state.cached, state.error])
+
+  function buildParams(forceRegenerate = false) {
+    return { messageType, customerName, situation, style, forceRegenerate }
+  }
+
+  function handleGenerate() {
     if (!messageType) { toast.error("메시지 유형을 선택해주세요"); return }
     if (!situation.trim()) { toast.error("상황을 입력해주세요"); return }
     if (isLimitReached) { toast.error("이번 달 사용 한도를 초과했습니다"); return }
+    generate(buildParams(false))
+  }
 
-    setLoading(true)
-    setResult("")
-
-    try {
-      const res = await fetch("/api/ai/message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messageType, customerName, situation, style }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        if (res.status === 429) {
-          toast.error(data.error)
-        } else {
-          toast.error(data.error ?? "생성 중 오류가 발생했습니다")
-        }
-        return
-      }
-
-      setResult(data.text)
-      setUsage(prev => prev + 1)
-      if (data.cached) toast.info("캐시된 결과를 불러왔습니다")
-      else toast.success("메시지가 생성되었습니다!")
-    } catch {
-      toast.error("네트워크 오류가 발생했습니다")
-    } finally {
-      setLoading(false)
-    }
+  function handleRegenerate() {
+    if (!messageType || !situation.trim()) return
+    generate(buildParams(true))
   }
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(result)
+    await navigator.clipboard.writeText(state.result)
     setCopied(true)
     toast.success("클립보드에 복사되었습니다")
     setTimeout(() => setCopied(false), 2000)
   }
 
   function handleDownload() {
-    const blob = new Blob([result], { type: "text/plain;charset=utf-8" })
+    const blob = new Blob([state.result], { type: "text/plain;charset=utf-8" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
@@ -100,22 +94,28 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
     toast.success("파일이 다운로드되었습니다")
   }
 
+  const usedCount = limit - state.remaining
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* 입력 폼 */}
       <div className="space-y-5">
         {/* 사용량 */}
-        <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-100">
-          <span className="text-sm text-blue-700">
-            이번 달 사용량 <strong>{usage}/{limit}회</strong>
+        <div className={`flex items-center justify-between p-3 rounded-lg border ${
+          isLimitReached
+            ? "bg-red-50 border-red-200"
+            : state.remaining <= 3
+            ? "bg-yellow-50 border-yellow-200"
+            : "bg-blue-50 border-blue-100"
+        }`}>
+          <span className={`text-sm ${isLimitReached ? "text-red-700" : state.remaining <= 3 ? "text-yellow-700" : "text-blue-700"}`}>
+            이번 달 사용량 <strong>{usedCount}/{limit}회</strong>
             {" "}
-            <span className="text-blue-500">({planName} 플랜)</span>
+            <span className="opacity-70">({planName} 플랜)</span>
           </span>
-          {isLimitReached && (
-            <Badge variant="destructive" className="text-xs">한도 초과</Badge>
-          )}
-          {!isLimitReached && remaining <= 3 && (
-            <Badge variant="secondary" className="text-xs">{remaining}회 남음</Badge>
+          {isLimitReached && <Badge variant="destructive" className="text-xs">한도 초과</Badge>}
+          {!isLimitReached && state.remaining <= 3 && (
+            <Badge className="text-xs bg-yellow-500 text-white">{state.remaining}회 남음</Badge>
           )}
         </div>
 
@@ -127,11 +127,12 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
               <button
                 key={type.value}
                 onClick={() => setMessageType(type.value)}
+                disabled={isLoading}
                 className={`px-3 py-2 rounded-lg text-sm border text-left transition-all ${
                   messageType === type.value
                     ? "bg-blue-600 text-white border-blue-600"
                     : "bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50"
-                }`}
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {type.label}
               </button>
@@ -149,6 +150,7 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
             placeholder="예: 홍길동"
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
+            disabled={isLoading}
           />
         </div>
 
@@ -159,10 +161,11 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
           </Label>
           <Textarea
             id="situation"
-            placeholder={`예: 고객이 다음 달 생명보험 만기를 앞두고 있습니다. 갱신을 권유하는 메시지를 보내고 싶습니다.`}
+            placeholder="예: 고객이 다음 달 생명보험 만기를 앞두고 있습니다. 갱신을 권유하는 메시지를 보내고 싶습니다."
             value={situation}
             onChange={(e) => setSituation(e.target.value)}
             className="min-h-[100px] resize-none"
+            disabled={isLoading}
           />
         </div>
 
@@ -174,7 +177,8 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
               <button
                 key={s.value}
                 onClick={() => setStyle(s.value)}
-                className={`px-3 py-3 rounded-lg text-sm border transition-all text-center ${
+                disabled={isLoading}
+                className={`px-3 py-3 rounded-lg text-sm border transition-all text-center disabled:opacity-50 disabled:cursor-not-allowed ${
                   style === s.value
                     ? "bg-blue-600 text-white border-blue-600"
                     : "bg-white text-gray-700 border-gray-200 hover:border-blue-300"
@@ -191,10 +195,10 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
 
         <Button
           onClick={handleGenerate}
-          disabled={loading || isLimitReached}
-          className="w-full h-12 text-base"
+          disabled={isLoading || isLimitReached}
+          className="w-full h-12 text-base bg-[#1e3a5f] hover:bg-[#162d4a]"
         >
-          {loading ? (
+          {isLoading ? (
             <>
               <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
               AI가 작성 중...
@@ -206,22 +210,32 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
             </>
           )}
         </Button>
+
+        {state.status === 'error' && (
+          <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+            <span>{state.error}</span>
+          </div>
+        )}
       </div>
 
       {/* 결과 */}
-      <div className="space-y-4">
-        <Card className="h-full min-h-[400px]">
+      <div className="space-y-3">
+        <Card className="min-h-[420px]">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center justify-between">
               <span>생성된 메시지</span>
-              {result && (
+              {hasResult && (
                 <div className="flex gap-2">
+                  {state.cached && (
+                    <Badge variant="secondary" className="text-xs gap-1">
+                      <Zap className="h-3 w-3" /> 캐시
+                    </Badge>
+                  )}
                   <Button variant="outline" size="sm" onClick={handleCopy}>
-                    {copied ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
+                    {copied
+                      ? <CheckCircle className="h-4 w-4 text-green-500" />
+                      : <Copy className="h-4 w-4" />}
                     <span className="ml-1">{copied ? "복사됨" : "복사"}</span>
                   </Button>
                   <Button variant="outline" size="sm" onClick={handleDownload}>
@@ -233,9 +247,16 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {result ? (
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center min-h-[300px] space-y-4">
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin" />
+                </div>
+                <p className="text-sm text-gray-500">AI가 메시지를 작성하고 있습니다...</p>
+              </div>
+            ) : hasResult ? (
               <div className="whitespace-pre-wrap text-sm leading-relaxed text-gray-800 bg-gray-50 rounded-lg p-4 min-h-[300px]">
-                {result}
+                {state.result}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center min-h-[300px] text-gray-400 space-y-3">
@@ -247,16 +268,22 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
           </CardContent>
         </Card>
 
-        {result && (
+        {hasResult && (
           <Button
             variant="outline"
-            onClick={handleGenerate}
-            disabled={loading}
-            className="w-full"
+            onClick={handleRegenerate}
+            disabled={isLoading}
+            className="w-full border-orange-200 text-orange-600 hover:bg-orange-50"
           >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            다시 생성하기
+            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            다시 생성하기 (새로 생성)
           </Button>
+        )}
+
+        {state.provider && hasResult && (
+          <p className="text-xs text-gray-400 text-center">
+            {state.cached ? "캐시에서 불러옴" : `${state.provider} 모델로 생성됨`}
+          </p>
         )}
       </div>
     </div>

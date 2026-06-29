@@ -4,7 +4,8 @@ import { MockProvider } from './mock-provider'
 import { AnthropicProvider } from './anthropic-provider'
 import { OpenAIProvider } from './openai-provider'
 import { logAiRequest } from './ai-logger'
-import { getCachedResponse, setCachedResponse, hashInput } from './ai-cache'
+import { createInputHash, getCachedResponse, setCachedResponse } from './ai-cache'
+import { acquireRequestLock, releaseRequestLock } from './request-lock'
 
 // ─── Provider registry ───────────────────────────────────────────────────────
 
@@ -23,31 +24,17 @@ function getProvider(name: AIProviderName): AIProvider {
 
 // ─── Provider selection ───────────────────────────────────────────────────────
 
-/**
- * Selects the AI provider for a given feature.
- * Priority: feature-specific env var → global AI_PROVIDER → mock
- *
- * Env vars:
- *   AI_PROVIDER_SMS=anthropic
- *   AI_PROVIDER_SCRIPT=openai
- *   AI_PROVIDER_DOCUMENT=anthropic
- *   AI_PROVIDER=anthropic  (default for all features)
- */
 export function selectProvider(feature?: AIFeature): AIProvider {
   let providerName: string | undefined
-
   if (feature) {
-    const featureKey = feature === 'ai_message' ? 'SMS'
-      : feature === 'ai_script' ? 'SCRIPT'
-      : 'DOCUMENT'
-    providerName = process.env[`AI_PROVIDER_${featureKey}`]
+    const key = feature === 'ai_message' ? 'SMS' : feature === 'ai_script' ? 'SCRIPT' : 'DOCUMENT'
+    providerName = process.env[`AI_PROVIDER_${key}`]
   }
-
   providerName ??= process.env.AI_PROVIDER ?? 'mock'
   return getProvider(providerName as AIProviderName)
 }
 
-// Legacy export — kept for backward compatibility
+/** @deprecated use selectProvider() */
 export function getAIProvider(): AIProvider {
   return selectProvider()
 }
@@ -66,8 +53,11 @@ export class AIProviderError extends Error {
 }
 
 export function handleAiError(err: unknown, provider: AIProviderName): AIProviderError {
-  const message = err instanceof Error ? err.message : String(err)
-  return new AIProviderError(`[${provider}] ${message}`, provider, err)
+  return new AIProviderError(
+    `[${provider}] ${err instanceof Error ? err.message : String(err)}`,
+    provider,
+    err
+  )
 }
 
 export async function fallbackToMock(prompt: string, options?: GenerateOptions): Promise<AIResponse> {
@@ -77,27 +67,38 @@ export async function fallbackToMock(prompt: string, options?: GenerateOptions):
 // ─── Main entry point ─────────────────────────────────────────────────────────
 
 export interface GenerateWithAIOptions extends GenerateOptions {
-  cacheInput?: object       // object to hash for cache key (omit to skip cache)
+  cacheInput?: object       // object to hash for dedup/cache
   cacheTtlHours?: number    // default 24h
+  forceRegenerate?: boolean // bypass cache, force new generation
   skipFallback?: boolean    // throw instead of falling back to mock
+  maxRetries?: number       // retry count on failure (default 2)
 }
 
 export async function generateWithAI(
   prompt: string,
   options: GenerateWithAIOptions = {}
 ): Promise<AIResponse> {
-  const { feature, userId, cacheInput, cacheTtlHours = 24, skipFallback = false, ...genOpts } = options
+  const {
+    feature,
+    userId,
+    cacheInput,
+    cacheTtlHours = 24,
+    forceRegenerate = false,
+    skipFallback = false,
+    maxRetries = 2,
+    ...genOpts
+  } = options
 
-  // 1. Cache check
-  let cacheKey: string | undefined
-  if (cacheInput) {
-    cacheKey = hashInput(cacheInput)
-    const cached = await getCachedResponse(cacheKey)
+  // 1. Compute cache/lock key
+  const inputHash = cacheInput ? createInputHash(cacheInput) : undefined
+
+  // 2. Cache check (skip if forceRegenerate)
+  if (!forceRegenerate && inputHash && feature) {
+    const cached = await getCachedResponse(inputHash, feature, userId)
     if (cached) {
       if (userId && feature) {
         await logAiRequest({
-          userId,
-          feature,
+          userId, feature,
           provider: cached.provider as AIProviderName,
           model: cached.model,
           inputTokens: cached.usage.inputTokens,
@@ -105,31 +106,49 @@ export async function generateWithAI(
           estimatedCostUsd: 0,
           status: 'cached',
           promptVersion: genOpts.promptVersion,
-          inputHash: cacheKey,
+          inputHash,
         })
       }
       return cached
     }
   }
 
-  // 2. Select provider
+  // 3. Acquire request lock (prevents duplicate concurrent requests)
+  if (userId && feature && inputHash) {
+    const lock = await acquireRequestLock(userId, feature, inputHash)
+    if (!lock.acquired) {
+      // Another request with the same input is already processing
+      throw new DuplicateRequestError(
+        '동일한 요청이 처리 중입니다. 잠시 후 다시 시도해주세요.'
+      )
+    }
+  }
+
+  // 4. Generate with retries
   const provider = selectProvider(feature)
+  let response: AIResponse | undefined
+  let lastError: unknown
 
-  // 3. Generate
-  let response: AIResponse
-  let status: 'success' | 'failed' = 'success'
-  let errorMessage: string | undefined
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      response = await provider.generateText(prompt, { ...genOpts, feature })
+      break
+    } catch (err) {
+      lastError = err
+      if (attempt < maxRetries) {
+        await sleep(300 * Math.pow(2, attempt)) // 300ms, 600ms
+      }
+    }
+  }
 
-  try {
-    response = await provider.generateText(prompt, { ...genOpts, feature })
-  } catch (err) {
-    status = 'failed'
-    errorMessage = err instanceof Error ? err.message : String(err)
+  // 5. Handle final failure
+  if (!response) {
+    const errorMessage = lastError instanceof Error ? lastError.message : String(lastError)
 
-    if (userId && feature) {
+    if (userId && feature && inputHash) {
+      await releaseRequestLock(userId, feature, inputHash, 'failed')
       await logAiRequest({
-        userId,
-        feature,
+        userId, feature,
         provider: provider.name,
         model: provider.defaultModel,
         inputTokens: estimateTokens(prompt),
@@ -138,21 +157,20 @@ export async function generateWithAI(
         status: 'failed',
         errorMessage,
         promptVersion: genOpts.promptVersion,
-        inputHash: cacheKey,
+        inputHash,
       })
     }
 
-    if (skipFallback) throw handleAiError(err, provider.name)
+    if (skipFallback) throw handleAiError(lastError, provider.name)
 
-    console.warn(`[ai] ${provider.name} failed, falling back to mock:`, errorMessage)
+    console.warn(`[ai] ${provider.name} failed after ${maxRetries + 1} attempts, falling back to mock`)
     response = await fallbackToMock(prompt, { ...genOpts, feature })
   }
 
-  // 4. Log success
-  if (userId && feature && status === 'success') {
+  // 6. Log success + release lock
+  if (userId && feature) {
     await logAiRequest({
-      userId,
-      feature,
+      userId, feature,
       provider: response.provider as AIProviderName,
       model: response.model,
       inputTokens: response.usage.inputTokens,
@@ -160,14 +178,28 @@ export async function generateWithAI(
       estimatedCostUsd: response.estimatedCostUsd,
       status: 'success',
       promptVersion: genOpts.promptVersion,
-      inputHash: cacheKey,
+      inputHash,
     })
+    if (inputHash) await releaseRequestLock(userId, feature, inputHash, 'completed')
   }
 
-  // 5. Store in cache
-  if (cacheKey && feature && status === 'success') {
-    await setCachedResponse(cacheKey, feature, response, cacheTtlHours)
+  // 7. Save to cache
+  if (inputHash && feature) {
+    await setCachedResponse(inputHash, feature, response, cacheTtlHours)
   }
 
   return response
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+export class DuplicateRequestError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'DuplicateRequestError'
+  }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms))
 }

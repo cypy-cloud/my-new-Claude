@@ -1,28 +1,23 @@
 import { createClient } from "@/lib/supabase/server"
 import { MessageGenerator } from "@/components/ai/message-generator"
+import { getPlanLimits, PLAN_LABELS, type PlanId } from "@/lib/subscription/plans"
+import { getMonthlyUsage } from "@/lib/subscription/usage"
 
 export default async function AiMessagePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const yearMonth = new Date().toISOString().slice(0, 7)
-
-  const [{ data: subscription }, { data: usage }] = await Promise.all([
-    supabase.from("subscriptions").select("plan_id").eq("user_id", user!.id).eq("status", "active").single(),
-    supabase.from("monthly_usage").select("ai_message_count").eq("user_id", user!.id).eq("year_month", yearMonth).maybeSingle(),
-  ])
-
-  const planId = (subscription as { plan_id?: string } | null)?.plan_id ?? "free"
-
-  const { data: plan } = await supabase
-    .from("plans")
-    .select("ai_message_limit, name")
-    .eq("id", planId)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: profile } = await (supabase as any)
+    .from("profiles")
+    .select("plan_type")
+    .eq("user_id", user!.id)
     .single()
 
-  const limit = (plan as { ai_message_limit?: number } | null)?.ai_message_limit ?? 5
-  const planName = (plan as { name?: string } | null)?.name ?? "무료"
-  const currentUsage = (usage as { ai_message_count?: number } | null)?.ai_message_count ?? 0
+  const planId = (profile?.plan_type as PlanId) ?? "free"
+  const planName = PLAN_LABELS[planId]
+  const limits = getPlanLimits(planId)
+  const usage = await getMonthlyUsage(user!.id)
 
   return (
     <div className="space-y-6">
@@ -32,8 +27,8 @@ export default async function AiMessagePage() {
       </div>
 
       <MessageGenerator
-        initialUsage={currentUsage}
-        limit={limit}
+        initialUsage={usage.smsCount}
+        limit={limits.smsLimit}
         planName={planName}
       />
     </div>
