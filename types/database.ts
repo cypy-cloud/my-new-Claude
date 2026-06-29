@@ -368,6 +368,31 @@ export type Database = {
         }
         Update: Partial<Database['public']['Tables']['feedback']['Insert']>
       }
+      event_logs: {
+        Row: {
+          id: string
+          user_id: string | null
+          event_name: string
+          feature_type: string | null
+          page_path: string | null
+          metadata: Json | null
+          device_type: string | null
+          browser: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          event_name: string
+          feature_type?: string | null
+          page_path?: string | null
+          metadata?: Json | null
+          device_type?: string | null
+          browser?: string | null
+          created_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['event_logs']['Insert']>
+      }
       prompt_versions: {
         Row: {
           id: string

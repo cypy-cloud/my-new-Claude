@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
+import { clientTrackEvent } from "@/lib/analytics/client-track"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -48,6 +49,7 @@ export function SignupForm() {
           : error.message)
         return
       }
+      clientTrackEvent('signup', { metadata: { email } })
       setIsSuccess(true)
     } catch {
       toast.error("회원가입 중 오류가 발생했습니다.")

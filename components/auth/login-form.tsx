@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
+import { clientTrackEvent } from "@/lib/analytics/client-track"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -29,6 +30,7 @@ export function LoginForm() {
         return
       }
       toast.success("로그인 성공!")
+      clientTrackEvent('login', { metadata: { email } })
       router.push("/dashboard")
       router.refresh()
     } catch {

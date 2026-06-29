@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { PageTracker } from "@/components/analytics/page-tracker"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -43,6 +44,7 @@ const STATS = [
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-white">
+      <PageTracker event="landing_visit" />
       <nav className="border-b bg-white sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">

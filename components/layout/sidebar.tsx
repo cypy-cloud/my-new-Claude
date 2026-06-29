@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
+import { clientTrackEvent } from "@/lib/analytics/client-track"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -44,6 +45,7 @@ export function Sidebar({ profile, planName }: SidebarProps) {
 
   async function handleLogout() {
     const supabase = createClient()
+    await clientTrackEvent('logout')
     await supabase.auth.signOut()
     toast.success("로그아웃 되었습니다.")
     router.push("/login")

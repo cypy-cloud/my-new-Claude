@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
+import { clientTrackEvent } from "@/lib/analytics/client-track"
 import { MessageCircle, Star, Send, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -32,6 +33,7 @@ export default function FeedbackPage() {
 
     setLoading(true)
     await new Promise((r) => setTimeout(r, 800))
+    clientTrackEvent('feedback_submit', { metadata: { category, rating } })
     setSubmitted(true)
     setLoading(false)
   }

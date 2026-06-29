@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useAIGenerate } from "@/hooks/useAIGenerate"
+import { clientTrackFeatureStart, clientTrackFeatureComplete, clientTrackDownload } from "@/lib/analytics/client-track"
 
 const MESSAGE_TYPES = [
   { value: "생일 축하", label: "🎂 생일 축하" },
@@ -53,7 +54,7 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
   useEffect(() => {
     if (state.status === 'success') {
       if (state.cached) toast.info("이전에 생성된 결과를 불러왔습니다")
-      else toast.success("메시지가 생성되었습니다!")
+      else { toast.success("메시지가 생성되었습니다!"); clientTrackFeatureComplete('ai_message') }
     }
     if (state.status === 'error' && state.error) {
       toast.error(state.error)
@@ -68,6 +69,7 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
     if (!messageType) { toast.error("메시지 유형을 선택해주세요"); return }
     if (!situation.trim()) { toast.error("상황을 입력해주세요"); return }
     if (isLimitReached) { toast.error("이번 달 사용 한도를 초과했습니다"); return }
+    clientTrackFeatureStart('ai_message', { messageType, style })
     generate(buildParams(false))
   }
 
@@ -92,6 +94,7 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
     a.click()
     URL.revokeObjectURL(url)
     toast.success("파일이 다운로드되었습니다")
+    clientTrackDownload('result', { feature: 'ai_message' })
   }
 
   const usedCount = limit - state.remaining

@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
-import { Button } from "@/components/ui/button"
+import { PageTracker } from "@/components/analytics/page-tracker"
+import { UpgradeButton } from "@/components/billing/upgrade-button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CheckCircle, XCircle, Zap, Shield, Star, Crown } from "lucide-react"
@@ -76,6 +77,7 @@ export default async function BillingPage() {
 
   return (
     <div className="space-y-8 max-w-5xl">
+      <PageTracker event="billing_visit" />
       <div className="text-center">
         <h1 className="text-2xl font-bold text-[#1e3a5f]">요금제 선택</h1>
         <p className="text-gray-500 mt-2">업무 규모에 맞는 플랜을 선택하세요. 언제든지 변경 가능합니다.</p>
@@ -133,22 +135,11 @@ export default async function BillingPage() {
                 ))}
               </ul>
 
-              <Button
-                className={`w-full h-10 text-sm ${ui.btnClass}`}
-                variant={planId === "free" && !isCurrent ? "outline" : "default"}
-                disabled={isCurrent}
-                asChild={!isCurrent}
-              >
-                {isCurrent ? (
-                  <span>현재 사용 중</span>
-                ) : (
-                  <Link href={`/billing/checkout?plan=${planId}`}>
-                    {planId === "free" || PLAN_ORDER.indexOf(planId) < PLAN_ORDER.indexOf(currentPlanId)
-                      ? "다운그레이드"
-                      : "업그레이드"}
-                  </Link>
-                )}
-              </Button>
+              <UpgradeButton
+                planId={planId}
+                isCurrent={isCurrent}
+                isDowngrade={planId === "free" || PLAN_ORDER.indexOf(planId) < PLAN_ORDER.indexOf(currentPlanId)}
+              />
             </div>
           )
         })}

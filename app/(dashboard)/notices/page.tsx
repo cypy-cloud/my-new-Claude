@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
+import { PageTracker } from "@/components/analytics/page-tracker"
 import { Bell, ChevronRight, Megaphone, Wrench, Sparkles, Info } from "lucide-react"
 
 const NOTICES = [
@@ -20,6 +21,7 @@ const typeConfig: Record<string, { label: string; icon: React.ElementType; badge
 export default function NoticesPage() {
   return (
     <div className="space-y-6 max-w-3xl">
+      <PageTracker event="notice_view" />
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 bg-[#1e3a5f] rounded-xl flex items-center justify-center">
           <Bell className="h-5 w-5 text-white" />
