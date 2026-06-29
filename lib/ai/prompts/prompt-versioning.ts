@@ -49,9 +49,64 @@ const FALLBACK_PROMPTS: Record<AIFeature, ResolvedPrompt> = {
 - 각 버전 끝에 고지문 불포함 (고지문은 시스템이 자동 추가)`,
   },
   ai_script: {
-    version: 'v1.0.0-fallback',
-    template:
-      '당신은 보험설계사를 위한 상담 스크립트 전문가입니다.\n\n고객 상황:\n- 상품 유형: {{product_type}}\n- 고객 연령대: {{age_group}}\n- 상담 목적: {{purpose}}\n- 고객 우려사항: {{concerns}}\n\n위 정보를 바탕으로 자연스러운 상담 스크립트를 작성해주세요.',
+    version: 'v2.0.0-fallback',
+    template: `당신은 10년 이상 경력의 보험 상담 전문가입니다. 실제 설계사가 현장에서 사용할 수 있는 구어체 상담 스크립트를 작성해주세요.
+
+고객 정보:
+- 이름: {{customer_name}}
+- 성별: {{gender}}
+- 연령대: {{age_group}}
+- 직업: {{occupation}}
+- 결혼 여부: {{marital_status}}
+- 자녀 여부: {{has_children}}
+- 소득 수준: {{income_level}}
+- 기존 보험 여부: {{existing_insurance}}
+- 관심 상품: {{product_interest}}
+- 상담 목적: {{consultation_purpose}}
+- 고객 성향: {{customer_personality}}
+- 예상 반론: {{expected_objections}}
+- 설계사 스타일: {{agent_style}}
+- 추가 메모: {{extra_notes}}
+
+아래 10개 섹션을 반드시 정확히 마커로 구분하여 작성하세요:
+
+[PREP]
+(상담 전 준비 포인트 — 고객 분석, 준비물, 체크리스트)
+
+[GREETING]
+(첫 인사 멘트 — 자연스럽고 신뢰감 있는 오프닝 2~3가지 변형)
+
+[ICEBREAK]
+(아이스브레이킹 — 고객 상황에 맞는 가벼운 대화 소재 2~3가지)
+
+[NEEDS]
+(니즈 파악 질문 — 고객 상황 파악을 위한 개방형 질문 5개)
+
+[AWARENESS]
+(문제 인식 질문 — 고객 스스로 필요성을 느끼게 하는 질문 4개)
+
+[PRODUCT]
+(상품 설명 흐름 — 핵심 보장, 비교 우위, 가성비 순서로 자연스럽게)
+
+[PERSONA]
+(고객 유형별 설득 포인트 — 분석형/감성형/가격중시형/빠른결정형 각 2~3줄)
+
+[OBJECTION]
+(예상 반론과 답변 — 고객이 말한 반론을 포함하여 3~5개 예상 반론 + 공감하는 답변)
+
+[CLOSING]
+(클로징 멘트 — 부드럽게 마무리하는 클로징 2가지 변형)
+
+[FOLLOWUP]
+(상담 후 follow-up 문자 3개 — 당일/3일후/1주일후 각각 구어체로)
+
+작성 필수 조건:
+- 실제 말하기 쉬운 구어체 사용
+- 전문성과 신뢰감 유지
+- 불안 조장 표현 금지 ("지금 안 들면 큰일 납니다" 등)
+- 보험 가입 강요 금지
+- "확정 수익률", "무조건 지급" 등 확정적 표현 금지
+- 고지문은 시스템이 자동 추가하므로 포함하지 말 것`,
   },
   ai_document: {
     version: 'v1.0.0-fallback',
