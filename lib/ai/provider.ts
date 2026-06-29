@@ -1,198 +1,173 @@
-import type { AIProvider, GenerateOptions, AIResponse } from './types'
+import type { AIProvider, AIProviderName, AIFeature, GenerateOptions, AIResponse } from './types'
+import { estimateTokens } from './types'
+import { MockProvider } from './mock-provider'
+import { AnthropicProvider } from './anthropic-provider'
+import { OpenAIProvider } from './openai-provider'
+import { logAiRequest } from './ai-logger'
+import { getCachedResponse, setCachedResponse, hashInput } from './ai-cache'
 
-class MockProvider implements AIProvider {
-  name = 'mock'
+// ─── Provider registry ───────────────────────────────────────────────────────
 
-  async generateText(prompt: string, options?: GenerateOptions): Promise<AIResponse> {
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    return {
-      text: `[Mock AI Response]\n\n입력된 프롬프트: "${prompt.slice(0, 100)}..."\n\n이것은 개발용 Mock 응답입니다. 실제 AI 프로바이더를 설정하려면 .env.local에서 AI_PROVIDER를 변경하세요.`,
-      usage: { inputTokens: 100, outputTokens: 50, totalTokens: 150 },
-      model: 'mock-model',
-      provider: 'mock',
+const providerCache = new Map<AIProviderName, AIProvider>()
+
+function getProvider(name: AIProviderName): AIProvider {
+  if (!providerCache.has(name)) {
+    switch (name) {
+      case 'anthropic': providerCache.set(name, new AnthropicProvider()); break
+      case 'openai':    providerCache.set(name, new OpenAIProvider());    break
+      default:          providerCache.set(name, new MockProvider());       break
     }
   }
-
-  async *generateStream(prompt: string, options?: GenerateOptions): AsyncIterable<string> {
-    const response = await this.generateText(prompt, options)
-    const words = response.text.split(' ')
-    for (const word of words) {
-      await new Promise((resolve) => setTimeout(resolve, 50))
-      yield word + ' '
-    }
-  }
+  return providerCache.get(name)!
 }
 
-class AnthropicProvider implements AIProvider {
-  name = 'anthropic'
+// ─── Provider selection ───────────────────────────────────────────────────────
 
-  async generateText(prompt: string, options?: GenerateOptions): Promise<AIResponse> {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY!,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: options?.model ?? 'claude-3-haiku-20240307',
-        max_tokens: options?.maxTokens ?? 1024,
-        temperature: options?.temperature ?? 0.7,
-        system: options?.systemPrompt,
-        messages: [{ role: 'user', content: prompt }],
-      }),
-    })
+/**
+ * Selects the AI provider for a given feature.
+ * Priority: feature-specific env var → global AI_PROVIDER → mock
+ *
+ * Env vars:
+ *   AI_PROVIDER_SMS=anthropic
+ *   AI_PROVIDER_SCRIPT=openai
+ *   AI_PROVIDER_DOCUMENT=anthropic
+ *   AI_PROVIDER=anthropic  (default for all features)
+ */
+export function selectProvider(feature?: AIFeature): AIProvider {
+  let providerName: string | undefined
 
-    if (!response.ok) throw new Error(`Anthropic API error: ${response.statusText}`)
-
-    const data = await response.json()
-    return {
-      text: data.content[0].text,
-      usage: {
-        inputTokens: data.usage.input_tokens,
-        outputTokens: data.usage.output_tokens,
-        totalTokens: data.usage.input_tokens + data.usage.output_tokens,
-      },
-      model: data.model,
-      provider: 'anthropic',
-    }
+  if (feature) {
+    const featureKey = feature === 'ai_message' ? 'SMS'
+      : feature === 'ai_script' ? 'SCRIPT'
+      : 'DOCUMENT'
+    providerName = process.env[`AI_PROVIDER_${featureKey}`]
   }
 
-  async *generateStream(prompt: string, options?: GenerateOptions): AsyncIterable<string> {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY!,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: options?.model ?? 'claude-3-haiku-20240307',
-        max_tokens: options?.maxTokens ?? 1024,
-        temperature: options?.temperature ?? 0.7,
-        system: options?.systemPrompt,
-        messages: [{ role: 'user', content: prompt }],
-        stream: true,
-      }),
-    })
-
-    if (!response.ok || !response.body) throw new Error(`Anthropic API error: ${response.statusText}`)
-
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      const chunk = decoder.decode(value)
-      const lines = chunk.split('\n').filter((line) => line.startsWith('data: '))
-      for (const line of lines) {
-        const data = line.slice(6)
-        if (data === '[DONE]') return
-        try {
-          const parsed = JSON.parse(data)
-          if (parsed.type === 'content_block_delta') yield parsed.delta.text
-        } catch { /* ignore */ }
-      }
-    }
-  }
+  providerName ??= process.env.AI_PROVIDER ?? 'mock'
+  return getProvider(providerName as AIProviderName)
 }
 
-class OpenAIProvider implements AIProvider {
-  name = 'openai'
-
-  async generateText(prompt: string, options?: GenerateOptions): Promise<AIResponse> {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: options?.model ?? 'gpt-4o-mini',
-        max_tokens: options?.maxTokens ?? 1024,
-        temperature: options?.temperature ?? 0.7,
-        messages: [
-          ...(options?.systemPrompt ? [{ role: 'system', content: options.systemPrompt }] : []),
-          { role: 'user', content: prompt },
-        ],
-      }),
-    })
-
-    if (!response.ok) throw new Error(`OpenAI API error: ${response.statusText}`)
-
-    const data = await response.json()
-    return {
-      text: data.choices[0].message.content,
-      usage: {
-        inputTokens: data.usage.prompt_tokens,
-        outputTokens: data.usage.completion_tokens,
-        totalTokens: data.usage.total_tokens,
-      },
-      model: data.model,
-      provider: 'openai',
-    }
-  }
-
-  async *generateStream(prompt: string, options?: GenerateOptions): AsyncIterable<string> {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: options?.model ?? 'gpt-4o-mini',
-        max_tokens: options?.maxTokens ?? 1024,
-        temperature: options?.temperature ?? 0.7,
-        messages: [
-          ...(options?.systemPrompt ? [{ role: 'system', content: options.systemPrompt }] : []),
-          { role: 'user', content: prompt },
-        ],
-        stream: true,
-      }),
-    })
-
-    if (!response.ok || !response.body) throw new Error(`OpenAI API error: ${response.statusText}`)
-
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      const chunk = decoder.decode(value)
-      const lines = chunk.split('\n').filter((line) => line.startsWith('data: '))
-      for (const line of lines) {
-        const data = line.slice(6)
-        if (data === '[DONE]') return
-        try {
-          const parsed = JSON.parse(data)
-          const content = parsed.choices[0]?.delta?.content
-          if (content) yield content
-        } catch { /* ignore */ }
-      }
-    }
-  }
-}
-
-let _provider: AIProvider | null = null
-
+// Legacy export — kept for backward compatibility
 export function getAIProvider(): AIProvider {
-  if (_provider) return _provider
+  return selectProvider()
+}
 
-  const providerName = process.env.AI_PROVIDER ?? 'mock'
+// ─── Error handling ───────────────────────────────────────────────────────────
 
-  switch (providerName.toLowerCase()) {
-    case 'anthropic':
-      _provider = new AnthropicProvider()
-      break
-    case 'openai':
-      _provider = new OpenAIProvider()
-      break
-    default:
-      _provider = new MockProvider()
+export class AIProviderError extends Error {
+  constructor(
+    message: string,
+    public readonly provider: AIProviderName,
+    public readonly originalError: unknown
+  ) {
+    super(message)
+    this.name = 'AIProviderError'
+  }
+}
+
+export function handleAiError(err: unknown, provider: AIProviderName): AIProviderError {
+  const message = err instanceof Error ? err.message : String(err)
+  return new AIProviderError(`[${provider}] ${message}`, provider, err)
+}
+
+export async function fallbackToMock(prompt: string, options?: GenerateOptions): Promise<AIResponse> {
+  return new MockProvider().generateText(prompt, options)
+}
+
+// ─── Main entry point ─────────────────────────────────────────────────────────
+
+export interface GenerateWithAIOptions extends GenerateOptions {
+  cacheInput?: object       // object to hash for cache key (omit to skip cache)
+  cacheTtlHours?: number    // default 24h
+  skipFallback?: boolean    // throw instead of falling back to mock
+}
+
+export async function generateWithAI(
+  prompt: string,
+  options: GenerateWithAIOptions = {}
+): Promise<AIResponse> {
+  const { feature, userId, cacheInput, cacheTtlHours = 24, skipFallback = false, ...genOpts } = options
+
+  // 1. Cache check
+  let cacheKey: string | undefined
+  if (cacheInput) {
+    cacheKey = hashInput(cacheInput)
+    const cached = await getCachedResponse(cacheKey)
+    if (cached) {
+      if (userId && feature) {
+        await logAiRequest({
+          userId,
+          feature,
+          provider: cached.provider as AIProviderName,
+          model: cached.model,
+          inputTokens: cached.usage.inputTokens,
+          outputTokens: cached.usage.outputTokens,
+          estimatedCostUsd: 0,
+          status: 'cached',
+          promptVersion: genOpts.promptVersion,
+          inputHash: cacheKey,
+        })
+      }
+      return cached
+    }
   }
 
-  return _provider
+  // 2. Select provider
+  const provider = selectProvider(feature)
+
+  // 3. Generate
+  let response: AIResponse
+  let status: 'success' | 'failed' = 'success'
+  let errorMessage: string | undefined
+
+  try {
+    response = await provider.generateText(prompt, { ...genOpts, feature })
+  } catch (err) {
+    status = 'failed'
+    errorMessage = err instanceof Error ? err.message : String(err)
+
+    if (userId && feature) {
+      await logAiRequest({
+        userId,
+        feature,
+        provider: provider.name,
+        model: provider.defaultModel,
+        inputTokens: estimateTokens(prompt),
+        outputTokens: 0,
+        estimatedCostUsd: 0,
+        status: 'failed',
+        errorMessage,
+        promptVersion: genOpts.promptVersion,
+        inputHash: cacheKey,
+      })
+    }
+
+    if (skipFallback) throw handleAiError(err, provider.name)
+
+    console.warn(`[ai] ${provider.name} failed, falling back to mock:`, errorMessage)
+    response = await fallbackToMock(prompt, { ...genOpts, feature })
+  }
+
+  // 4. Log success
+  if (userId && feature && status === 'success') {
+    await logAiRequest({
+      userId,
+      feature,
+      provider: response.provider as AIProviderName,
+      model: response.model,
+      inputTokens: response.usage.inputTokens,
+      outputTokens: response.usage.outputTokens,
+      estimatedCostUsd: response.estimatedCostUsd,
+      status: 'success',
+      promptVersion: genOpts.promptVersion,
+      inputHash: cacheKey,
+    })
+  }
+
+  // 5. Store in cache
+  if (cacheKey && feature && status === 'success') {
+    await setCachedResponse(cacheKey, feature, response, cacheTtlHours)
+  }
+
+  return response
 }

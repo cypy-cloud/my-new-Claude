@@ -103,6 +103,39 @@ export type Database = {
         }
         Update: Partial<Database['public']['Tables']['subscriptions']['Insert']>
       }
+      ai_requests: {
+        Row: {
+          id: string
+          user_id: string
+          feature_type: 'ai_message' | 'ai_script' | 'ai_document'
+          provider: string
+          model: string
+          prompt_version: string | null
+          input_hash: string | null
+          input_tokens: number
+          output_tokens: number
+          estimated_cost: number
+          status: 'success' | 'failed' | 'cached'
+          error_message: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          feature_type: 'ai_message' | 'ai_script' | 'ai_document'
+          provider: string
+          model: string
+          prompt_version?: string | null
+          input_hash?: string | null
+          input_tokens?: number
+          output_tokens?: number
+          estimated_cost?: number
+          status: 'success' | 'failed' | 'cached'
+          error_message?: string | null
+          created_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['ai_requests']['Insert']>
+      }
       usage_records: {
         Row: {
           id: string
