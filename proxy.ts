@@ -43,11 +43,11 @@ export async function proxy(request: NextRequest) {
   if (ADMIN_PATHS.some((p) => pathname.startsWith(p))) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
-      .eq('id', user.id)
+      .select('role, status')
+      .eq('user_id', user.id)
       .single()
 
-    if (!profile || !['admin', 'super_admin'].includes(profile.role)) {
+    if (!profile || !['admin', 'super_admin'].includes(profile.role) || profile.status !== 'active') {
       const url = request.nextUrl.clone()
       url.pathname = '/dashboard'
       return NextResponse.redirect(url)
@@ -59,6 +59,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

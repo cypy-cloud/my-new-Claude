@@ -31,7 +31,7 @@ const AI_USAGE = [
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user!.id).single()
+  const { data: profile } = await supabase.from("profiles").select("role").eq("user_id", user!.id).single()
   const role = (profile as { role?: string } | null)?.role ?? "admin"
 
   return (
@@ -39,7 +39,7 @@ export default async function AdminDashboardPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#1e3a5f]">관리자 대시보드</h1>
-          <p className="text-gray-500 mt-1">FP AI Assistant 서비스 현황</p>
+          <p className="text-gray-500 mt-1">FP AI Assistant 서비스 현황 — {new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })}</p>
         </div>
         <Badge className="bg-[#1e3a5f] text-white px-3 py-1">{role === "super_admin" ? "슈퍼 관리자" : "관리자"}</Badge>
       </div>

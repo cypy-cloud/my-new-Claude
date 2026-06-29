@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { MessageSquare, BookOpen, FileText, ArrowRight, TrendingUp, Zap, CreditCard } from "lucide-react"
+import { PLAN_LABELS } from "@/types"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -11,18 +12,20 @@ export default async function DashboardPage() {
 
   const yearMonth = new Date().toISOString().slice(0, 7)
 
-  const [{ data: profile }, { data: subscription }, { data: usage }] = await Promise.all([
-    supabase.from("profiles").select("full_name, email").eq("id", user!.id).single(),
-    supabase.from("subscriptions").select("plan_id").eq("user_id", user!.id).eq("status", "active").single(),
+  const [{ data: profileData }, { data: usage }] = await Promise.all([
+    supabase.from("profiles").select("name, email, plan_type").eq("user_id", user!.id).single(),
     supabase.from("monthly_usage").select("ai_message_count, ai_script_count, ai_document_count").eq("user_id", user!.id).eq("year_month", yearMonth).maybeSingle(),
   ])
 
-  const planId = (subscription as { plan_id?: string } | null)?.plan_id ?? "free"
-  const { data: plan } = await supabase.from("plans").select("name, ai_message_limit, ai_script_limit, ai_document_limit").eq("id", planId).single()
+  const planType = profileData?.plan_type ?? 'free'
+  const { data: plan } = await supabase
+    .from("plans")
+    .select("name, ai_message_limit, ai_script_limit, ai_document_limit")
+    .eq("id", planType)
+    .single()
 
   const p = plan as { name?: string; ai_message_limit?: number; ai_script_limit?: number; ai_document_limit?: number } | null
   const u = usage as { ai_message_count?: number; ai_script_count?: number; ai_document_count?: number } | null
-  const pr = profile as { full_name?: string; email?: string } | null
 
   const stats = [
     { label: "AI 문자/카톡", used: u?.ai_message_count ?? 0, limit: p?.ai_message_limit ?? 5, icon: MessageSquare, color: "blue", href: "/ai-message" },
@@ -39,14 +42,20 @@ export default async function DashboardPage() {
     { href: "/ai-document", label: "AI PDF 분석", desc: "PDF 설명자료 자동화", icon: FileText, color: "orange" },
   ]
 
+  const planLabel = PLAN_LABELS[planType as keyof typeof PLAN_LABELS] ?? "무료"
+
   return (
     <div className="space-y-8 max-w-5xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#1e3a5f]">안녕하세요, {pr?.full_name ?? "설계사"}님! 👋</h1>
+          <h1 className="text-2xl font-bold text-[#1e3a5f]">
+            안녕하세요, {profileData?.name ?? "설계사"}님! 👋
+          </h1>
           <p className="text-gray-500 mt-1">오늘도 FP AI Assistant와 함께 효율적인 업무를 시작해보세요.</p>
         </div>
-        <Badge className="self-start sm:self-auto bg-[#1e3a5f] text-white px-4 py-1.5 text-sm">{p?.name ?? "무료"} 플랜</Badge>
+        <Badge className="self-start sm:self-auto bg-[#1e3a5f] text-white px-4 py-1.5 text-sm">
+          {planLabel} 플랜
+        </Badge>
       </div>
 
       <div>
@@ -109,7 +118,7 @@ export default async function DashboardPage() {
               <TrendingUp className="h-6 w-6 text-white" />
             </div>
             <div>
-              <p className="font-semibold text-white">현재 {p?.name ?? "무료"} 플랜</p>
+              <p className="font-semibold text-white">현재 {planLabel} 플랜</p>
               <p className="text-blue-200 text-sm mt-0.5">더 많은 AI 기능을 이용하려면 업그레이드하세요</p>
             </div>
           </div>

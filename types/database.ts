@@ -6,22 +6,55 @@ export type Database = {
       profiles: {
         Row: {
           id: string
+          user_id: string
+          name: string | null
           email: string
-          full_name: string | null
-          avatar_url: string | null
           phone: string | null
           company_name: string | null
-          branch_name: string | null
-          role: 'agent' | 'branch_manager' | 'admin' | 'super_admin'
-          is_active: boolean
+          insurance_company: string | null
+          plan_type: 'free' | 'basic' | 'pro' | 'premium'
+          role: 'user' | 'manager' | 'admin' | 'super_admin'
+          team_id: string | null
+          status: 'active' | 'suspended' | 'deleted'
           created_at: string
           updated_at: string
         }
-        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'created_at' | 'updated_at'> & {
+        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'id' | 'created_at' | 'updated_at'> & {
+          id?: string
           created_at?: string
           updated_at?: string
         }
         Update: Partial<Database['public']['Tables']['profiles']['Insert']>
+      }
+      teams: {
+        Row: {
+          id: string
+          team_name: string
+          owner_user_id: string
+          organization_name: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['teams']['Row'], 'id' | 'created_at' | 'updated_at'> & {
+          id?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['teams']['Insert']>
+      }
+      team_members: {
+        Row: {
+          id: string
+          team_id: string
+          user_id: string
+          role: 'owner' | 'manager' | 'member'
+          joined_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['team_members']['Row'], 'id' | 'joined_at'> & {
+          id?: string
+          joined_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['team_members']['Insert']>
       }
       subscriptions: {
         Row: {
@@ -166,6 +199,10 @@ export type Database = {
       increment_usage: {
         Args: { p_user_id: string; p_feature: string }
         Returns: void
+      }
+      is_admin: {
+        Args: Record<string, never>
+        Returns: boolean
       }
     }
   }
