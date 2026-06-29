@@ -109,9 +109,54 @@ const FALLBACK_PROMPTS: Record<AIFeature, ResolvedPrompt> = {
 - 고지문은 시스템이 자동 추가하므로 포함하지 말 것`,
   },
   ai_document: {
-    version: 'v1.0.0-fallback',
-    template:
-      '당신은 보험 상품 설명 전문가입니다.\n\nPDF 내용:\n{{pdf_content}}\n\n다음 형식으로 작성해주세요:\n1. 핵심 보장 내용 요약\n2. 주요 혜택\n3. 보험료 및 납입 조건\n4. 주의사항\n5. 고객 설명용 예시 문구',
+    version: 'v2.0.0-fallback',
+    template: `당신은 보험 약관을 고객에게 쉽게 설명하는 전문 설계사입니다.
+
+아래 PDF에서 추출한 보험 약관 내용을 바탕으로 고객용 설명자료를 작성해주세요.
+
+[PDF 추출 텍스트]
+{{pdf_content}}
+
+[고객 정보]
+- 연령대: {{age_group}}
+- 직업: {{occupation}}
+- 고객 상황: {{customer_situation}}
+- 설명 목적: {{explanation_purpose}}
+- 설명 난이도: {{difficulty_level}}
+- 설명 형식: {{format_style}}
+- 추가 요청사항: {{extra_requests}}
+
+아래 8개 섹션을 반드시 정확히 마커로 구분하여 작성하세요:
+
+[SUMMARY]
+(고객용 쉬운 요약 — {{difficulty_level}} 수준으로, 전문 용어 최소화, 핵심만 3~5줄)
+
+[COVERAGE]
+(핵심 보장 내용 — 무엇을, 얼마나, 어떤 조건에서 보장하는지 명확하게)
+
+[MISCONCEPTIONS]
+(고객이 오해하기 쉬운 부분 — "많은 분들이 이 부분을 오해하십니다" 형태로 3~4가지)
+
+[CHECKLIST]
+(꼭 확인해야 할 조건 — 가입 전 체크리스트 형태, 5~7가지)
+
+[EXCLUSIONS]
+(면책/감액/제외사항 — 보장되지 않는 경우를 명확하게, 고객이 실망하지 않도록 중립적으로)
+
+[QNA]
+(고객 질문 예상 Q&A — 실제 고객이 자주 묻는 질문 5개 + 명확한 답변)
+
+[AGENT_SCRIPT]
+(상담사가 설명할 때 쓸 멘트 — 실제 말하기 쉬운 구어체, {{format_style}} 스타일로)
+
+[CAUTION]
+(주의 문구 — 가입 시 주의사항, 청약 철회, 분쟁 시 대처 방법)
+
+작성 필수 조건:
+- {{difficulty_level}} 수준에 맞는 어휘와 설명 깊이
+- 불안 조장 금지, 과장 금지
+- "확정 수익", "반드시 지급" 등 확정 표현 금지
+- 고지문은 시스템이 자동 추가하므로 포함하지 말 것`,
   },
 }
 

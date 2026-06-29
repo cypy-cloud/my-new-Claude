@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
-import { PdfUploader } from "@/components/ai/pdf-uploader"
 import { getPlanLimits, PLAN_LABELS, type PlanId } from "@/lib/subscription/plans"
 import { getMonthlyUsage } from "@/lib/subscription/usage"
+import { AiDocumentTabs } from "@/components/ai/document-tabs"
 
 export default async function AiDocumentPage() {
   const supabase = await createClient()
@@ -20,20 +20,27 @@ export default async function AiDocumentPage() {
   const usage = await getMonthlyUsage(user!.id)
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 max-w-6xl">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">AI 설명자료 생성</h1>
         <p className="text-gray-600 mt-1">
-          보험 약관 PDF를 업로드하면 텍스트를 추출하여 AI 설명자료 생성에 활용합니다
+          보험 약관 PDF를 업로드하고, AI가 고객용 설명자료를 즉시 생성합니다
         </p>
       </div>
 
-      <PdfUploader
-        initialUploadCount={usage.pdfUploadCount}
-        uploadLimit={limits.pdfUploadLimit}
-        maxFileSizeMb={limits.maxFileSizeMb}
-        storageDays={limits.storageDays}
-        planName={planName}
+      <AiDocumentTabs
+        uploadProps={{
+          initialUploadCount: usage.pdfUploadCount,
+          uploadLimit: limits.pdfUploadLimit,
+          maxFileSizeMb: limits.maxFileSizeMb,
+          storageDays: limits.storageDays,
+          planName,
+        }}
+        generateProps={{
+          initialAnalysisCount: usage.pdfAnalysisCount,
+          analysisLimit: limits.pdfAnalysisLimit,
+          planName,
+        }}
       />
     </div>
   )
