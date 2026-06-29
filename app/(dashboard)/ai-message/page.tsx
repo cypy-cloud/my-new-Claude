@@ -1,28 +1,41 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Clock } from "lucide-react"
+import { createClient } from "@/lib/supabase/server"
+import { MessageGenerator } from "@/components/ai/message-generator"
 
-export default function AiMessagePage() {
+export default async function AiMessagePage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const yearMonth = new Date().toISOString().slice(0, 7)
+
+  const [{ data: subscription }, { data: usage }] = await Promise.all([
+    supabase.from("subscriptions").select("plan_id").eq("user_id", user!.id).eq("status", "active").single(),
+    supabase.from("monthly_usage").select("ai_message_count").eq("user_id", user!.id).eq("year_month", yearMonth).maybeSingle(),
+  ])
+
+  const planId = (subscription as { plan_id?: string } | null)?.plan_id ?? "free"
+
+  const { data: plan } = await supabase
+    .from("plans")
+    .select("ai_message_limit, name")
+    .eq("id", planId)
+    .single()
+
+  const limit = (plan as { ai_message_limit?: number } | null)?.ai_message_limit ?? 5
+  const planName = (plan as { name?: string } | null)?.name ?? "무료"
+  const currentUsage = (usage as { ai_message_count?: number } | null)?.ai_message_count ?? 0
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">AI 문자/카톡 생성</h1>
-          <p className="text-gray-600 mt-1">고객에게 보낼 맞춤형 메시지를 AI가 생성해드립니다</p>
-        </div>
-        <Badge variant="secondary">Phase 2</Badge>
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">AI 문자/카톡 생성기</h1>
+        <p className="text-gray-600 mt-1">고객에게 보낼 맞춤형 메시지를 AI가 즉시 작성해드립니다</p>
       </div>
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-20 space-y-4">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-            <Clock className="h-8 w-8 text-blue-600" />
-          </div>
-          <div className="text-center">
-            <h2 className="text-xl font-semibold text-gray-900">준비 중입니다</h2>
-            <p className="text-gray-500 mt-2">AI 문자/카톡 생성기 - Phase 2에서 구현됩니다</p>
-          </div>
-        </CardContent>
-      </Card>
+
+      <MessageGenerator
+        initialUsage={currentUsage}
+        limit={limit}
+        planName={planName}
+      />
     </div>
   )
 }
