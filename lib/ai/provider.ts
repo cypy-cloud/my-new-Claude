@@ -94,7 +94,7 @@ export async function generateWithAI(
 
   // 2. Cache check (skip if forceRegenerate)
   if (!forceRegenerate && inputHash && feature) {
-    const cached = await getCachedResponse(inputHash, feature, userId)
+    const cached = await getCachedResponse(inputHash, feature, userId).catch(() => null)
     if (cached) {
       if (userId && feature) {
         await logAiRequest({
@@ -114,13 +114,20 @@ export async function generateWithAI(
   }
 
   // 3. Acquire request lock (prevents duplicate concurrent requests)
+  let lockAcquired = false
   if (userId && feature && inputHash) {
-    const lock = await acquireRequestLock(userId, feature, inputHash)
-    if (!lock.acquired) {
-      // Another request with the same input is already processing
-      throw new DuplicateRequestError(
-        '동일한 요청이 처리 중입니다. 잠시 후 다시 시도해주세요.'
-      )
+    try {
+      const lock = await acquireRequestLock(userId, feature, inputHash)
+      lockAcquired = lock.acquired
+      if (!lock.acquired) {
+        throw new DuplicateRequestError(
+          '동일한 요청이 처리 중입니다. 잠시 후 다시 시도해주세요.'
+        )
+      }
+    } catch (err) {
+      if (err instanceof DuplicateRequestError) throw err
+      // Table may not exist yet — proceed without lock
+      console.warn('[ai] request lock skipped:', err)
     }
   }
 
@@ -145,8 +152,8 @@ export async function generateWithAI(
   if (!response) {
     const errorMessage = lastError instanceof Error ? lastError.message : String(lastError)
 
-    if (userId && feature && inputHash) {
-      await releaseRequestLock(userId, feature, inputHash, 'failed')
+    if (userId && feature && inputHash && lockAcquired) {
+      await releaseRequestLock(userId, feature, inputHash, 'failed').catch(() => {})
       await logAiRequest({
         userId, feature,
         provider: provider.name,
@@ -179,13 +186,13 @@ export async function generateWithAI(
       status: 'success',
       promptVersion: genOpts.promptVersion,
       inputHash,
-    })
-    if (inputHash) await releaseRequestLock(userId, feature, inputHash, 'completed')
+    }).catch(() => {})
+    if (inputHash && lockAcquired) await releaseRequestLock(userId, feature, inputHash, 'completed').catch(() => {})
   }
 
   // 7. Save to cache
   if (inputHash && feature) {
-    await setCachedResponse(inputHash, feature, response, cacheTtlHours)
+    await setCachedResponse(inputHash, feature, response, cacheTtlHours).catch(() => {})
   }
 
   return response
