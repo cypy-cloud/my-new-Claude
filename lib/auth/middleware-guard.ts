@@ -14,7 +14,7 @@ export async function adminGuard(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profile } = await (supabase as any)
-    .from('profiles').select('role').eq('user_id', user.id).single()
+    .from('profiles').select('role').eq('id', user.id).single()
 
   const role = (profile?.role as UserRole) ?? 'user'
   if (!isAtLeast(role, minRole)) {

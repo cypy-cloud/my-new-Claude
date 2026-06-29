@@ -34,7 +34,7 @@ export async function updateSubscription(params: UpdateSubscriptionParams): Prom
 
   // 2. profiles.plan_type 업데이트
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (supabase as any).from('profiles').update({ plan_type: toPlan }).eq('user_id', userId)
+  await (supabase as any).from('profiles').update({ plan_type: toPlan }).eq('id', userId)
 }
 
 function getPlanRank(planId: PlanId): number {

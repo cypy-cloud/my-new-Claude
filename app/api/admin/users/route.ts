@@ -70,7 +70,7 @@ export async function PATCH(request: NextRequest) {
   const { error } = await (supabase as any)
     .from('profiles')
     .update({ role, updated_at: new Date().toISOString() })
-    .eq('user_id', targetUserId)
+    .eq('id', targetUserId)
 
   if (error) return NextResponse.json({ error: '역할 변경 실패' }, { status: 500 })
 

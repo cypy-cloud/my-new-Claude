@@ -65,7 +65,7 @@ export async function getAuthContext(): Promise<AuthContext | null> {
   const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('role, email')
-    .eq('user_id', user.id)
+    .eq('id', user.id)
     .single()
 
   return {
