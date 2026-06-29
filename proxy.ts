@@ -41,7 +41,6 @@ export async function proxy(request: NextRequest) {
   }
 
   if (ADMIN_PATHS.some((p) => pathname.startsWith(p))) {
-    // Use service role key to bypass broken RLS (user_id vs id column mismatch)
     const { createClient } = await import('@supabase/supabase-js')
     const adminClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -51,7 +50,7 @@ export async function proxy(request: NextRequest) {
     const { data: profile } = await adminClient
       .from('profiles')
       .select('role')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single()
 
     if (!profile || !['admin', 'super_admin'].includes(profile.role as string)) {

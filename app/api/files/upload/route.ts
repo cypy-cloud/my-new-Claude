@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
   const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('plan_type')
-    .eq('id', user.id)
+    .eq('user_id', user.id)
     .single()
 
   const planId = (profile?.plan_type as PlanId) ?? 'free'

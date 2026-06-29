@@ -62,13 +62,12 @@ export async function getAuthContext(): Promise<AuthContext | null> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  // Use admin client to bypass broken RLS policies (user_id vs id column mismatch)
   const adminClient = createAdminClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profile } = await (adminClient as any)
     .from('profiles')
     .select('role, email')
-    .eq('id', user.id)
+    .eq('user_id', user.id)
     .single()
 
   return {

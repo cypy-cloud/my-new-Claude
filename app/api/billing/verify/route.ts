@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   // 현재 플랜 확인
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profile } = await (supabase as any)
-    .from('profiles').select('plan_type').eq('id', user.id).single()
+    .from('profiles').select('plan_type').eq('user_id', user.id).single()
   const fromPlan = (profile?.plan_type as PlanId) ?? 'free'
 
   const adapter = await getBillingAdapter()
