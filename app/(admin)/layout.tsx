@@ -1,26 +1,19 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { Zap, LayoutDashboard, Users, ArrowLeft, Shield } from 'lucide-react'
+import { Zap, LayoutDashboard, Users, ArrowLeft, Shield, ShieldCheck, Crown } from 'lucide-react'
+import { requireAdmin } from '@/lib/auth/permissions'
+import type { UserRole } from '@/lib/auth/permissions'
+
+const ROLE_LABELS: Record<UserRole, string> = {
+  user: '일반',
+  manager: '매니저',
+  admin: '관리자',
+  super_admin: '슈퍼관리자',
+}
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('user_id, role, status')
-    .eq('user_id', user.id)
-    .single()
-
-  const profileRole = (profile as { role?: string } | null)?.role
-  const profileStatus = (profile as { status?: string } | null)?.status
-
-  if (!profileRole || !['admin', 'super_admin'].includes(profileRole) || profileStatus !== 'active') {
-    redirect('/dashboard')
-  }
+  // requireAdmin: admin 미만이면 /dashboard 로 redirect
+  const { role } = await requireAdmin()
+  const isSuperAdmin = role === 'super_admin'
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -33,7 +26,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <span className="text-sm font-bold">FP AI Assistant</span>
             <div className="flex items-center gap-1 mt-0.5">
               <Shield className="h-3 w-3 text-orange-400" />
-              <p className="text-xs text-orange-400 font-medium">관리자 모드</p>
+              <p className="text-xs text-orange-400 font-medium">{ROLE_LABELS[role]} 모드</p>
             </div>
           </div>
         </div>
@@ -45,8 +38,20 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/users" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 hover:bg-white/10 hover:text-white transition-colors">
             <Users className="h-4 w-4" /> 사용자 관리
           </Link>
+          {isSuperAdmin && (
+            <>
+              <p className="text-xs text-white/40 font-semibold uppercase tracking-wider px-3 mb-3 mt-6">슈퍼관리자</p>
+              <Link href="/admin/permissions" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 hover:bg-white/10 hover:text-white transition-colors">
+                <ShieldCheck className="h-4 w-4" /> 권한 관리
+              </Link>
+            </>
+          )}
         </nav>
         <div className="px-4 py-4 border-t border-white/10">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 mb-2">
+            <Crown className="h-3.5 w-3.5 text-orange-400" />
+            <span className="text-xs text-white/40">{ROLE_LABELS[role]}</span>
+          </div>
           <Link href="/dashboard" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/50 hover:bg-white/10 hover:text-white transition-colors">
             <ArrowLeft className="h-4 w-4" /> 사용자 화면으로
           </Link>

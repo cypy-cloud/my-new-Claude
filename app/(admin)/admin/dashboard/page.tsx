@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { requireAdmin } from "@/lib/auth/permissions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Users, CreditCard, Zap, TrendingUp, MessageSquare, BookOpen, FileText, AlertCircle } from "lucide-react"
@@ -29,10 +29,7 @@ const AI_USAGE = [
 ]
 
 export default async function AdminDashboardPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = await supabase.from("profiles").select("role").eq("user_id", user!.id).single()
-  const role = (profile as { role?: string } | null)?.role ?? "admin"
+  const { role } = await requireAdmin()
 
   return (
     <div className="space-y-8">
