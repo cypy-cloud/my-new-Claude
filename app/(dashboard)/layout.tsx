@@ -21,41 +21,23 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .eq("id", user.id)
     .single()
 
-  if (!profile) {
-    // Profile missing — create via admin client (bypasses RLS)
-    const { data: newProfile } = await (adminSupabase as any)
-      .from("profiles")
-      .insert({
-        id: user.id,
-        email: user.email,
-        name: user.email?.split("@")[0] ?? "사용자",
-        role: user.email === "gocypy@gmail.com" ? "super_admin" : "user",
-      })
-      .select("*")
-      .single()
-    if (newProfile) {
-      const planName2 = PLAN_LABELS[(newProfile?.plan_type) as keyof typeof PLAN_LABELS] ?? "무료"
-      return (
-        <div className="min-h-screen bg-gray-50">
-          <Sidebar profile={newProfile} planName={planName2} />
-          <DashboardShell profile={newProfile} planName={planName2}>
-            {children}
-          </DashboardShell>
-        </div>
-      )
-    }
-  } else if (profile.role !== "super_admin" && user.email === "gocypy@gmail.com") {
-    await (adminSupabase as any).from("profiles").update({ role: "super_admin" }).eq("id", user.id)
-    profile.role = "super_admin"
-  }
-  if (profile?.status === "suspended" || profile?.status === "deleted") redirect("/login")
+  // Force super_admin for known admin email regardless of DB state
+  const isKnownAdmin = user.email === "gocypy@gmail.com"
+  const effectiveProfile = profile
+    ? { ...profile, role: isKnownAdmin ? "super_admin" : profile.role }
+    : isKnownAdmin
+      ? { id: user.id, email: user.email, name: "관리자", role: "super_admin", plan_type: "free", status: "active" }
+      : null
 
-  const planName = PLAN_LABELS[(profile?.plan_type) as keyof typeof PLAN_LABELS] ?? "무료"
+  if (!effectiveProfile) redirect("/login")
+  if (effectiveProfile.status === "suspended" || effectiveProfile.status === "deleted") redirect("/login")
+
+  const planName = PLAN_LABELS[(effectiveProfile.plan_type) as keyof typeof PLAN_LABELS] ?? "무료"
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Sidebar profile={profile} planName={planName} />
-      <DashboardShell profile={profile} planName={planName}>
+      <Sidebar profile={effectiveProfile} planName={planName} />
+      <DashboardShell profile={effectiveProfile} planName={planName}>
         {children}
       </DashboardShell>
     </div>
