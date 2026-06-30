@@ -16,7 +16,10 @@ export async function GET() {
     .order('created_at', { ascending: false })
     .limit(50)
 
-  if (error) return NextResponse.json({ error: '조회에 실패했습니다' }, { status: 500 })
+  if (error) {
+    console.error('[files] list error:', JSON.stringify(error))
+    return NextResponse.json({ error: '조회에 실패했습니다', detail: error.message }, { status: 500 })
+  }
 
   return NextResponse.json({ files: data ?? [] })
 }
