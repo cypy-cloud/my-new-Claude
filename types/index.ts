@@ -101,3 +101,36 @@ export const CUSTOMER_STATUS_LABELS: Record<CustomerStatus, string> = {
   contracted: '계약완료',
   lost: '이탈',
 }
+
+export type InteractionType = 'call' | 'meeting' | 'kakao' | 'sms' | 'contract' | 'followup' | 'memo'
+export type InteractionSentiment = 'positive' | 'neutral' | 'negative' | 'unknown'
+
+export interface CustomerInteraction {
+  id: string
+  customer_id: string
+  interaction_type: InteractionType
+  title: string
+  content: string | null
+  next_action: string | null
+  next_action_date: string | null
+  sentiment: InteractionSentiment
+  created_at: string
+  updated_at: string
+}
+
+export const INTERACTION_TYPE_LABELS: Record<InteractionType, string> = {
+  call: '전화 상담',
+  meeting: '대면 미팅',
+  kakao: '카카오톡',
+  sms: '문자',
+  contract: '계약',
+  followup: '후속 연락',
+  memo: '메모',
+}
+
+export const INTERACTION_SENTIMENT_LABELS: Record<InteractionSentiment, string> = {
+  positive: '긍정적',
+  neutral: '보통',
+  negative: '부정적',
+  unknown: '미평가',
+}

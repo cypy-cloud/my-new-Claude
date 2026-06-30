@@ -6,9 +6,9 @@ import { getMonthlyUsage } from "@/lib/subscription/usage"
 export default async function AiMessagePage({
   searchParams,
 }: {
-  searchParams: Promise<{ customerId?: string }>
+  searchParams: Promise<{ customerId?: string; interactionId?: string }>
 }) {
-  const { customerId } = await searchParams
+  const { customerId, interactionId } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -23,7 +23,15 @@ export default async function AiMessagePage({
   const limits = getPlanLimits(planId)
   const usage = await getMonthlyUsage(user!.id)
 
-  let initialData
+  let initialData: {
+    customerId: string
+    customerName: string
+    ageGroup?: string
+    occupation?: string
+    relationship?: string
+    productField?: string
+    extraNotes?: string
+  } | undefined
   if (customerId) {
     const { data: customer } = await (supabase as any)
       .from("customers")
@@ -41,6 +49,20 @@ export default async function AiMessagePage({
         relationship: customer.relationship_type ?? undefined,
         productField: Array.isArray(customer.interest_products) ? customer.interest_products[0] : undefined,
       }
+    }
+  }
+
+  if (interactionId && initialData) {
+    const { data: interaction } = await (supabase as any)
+      .from("customer_interactions")
+      .select("id, content, next_action")
+      .eq("id", interactionId)
+      .eq("user_id", user!.id)
+      .maybeSingle()
+
+    if (interaction) {
+      const extraNotes = [interaction.next_action, interaction.content].filter(Boolean).join(" — ")
+      initialData = { ...initialData, extraNotes }
     }
   }
 

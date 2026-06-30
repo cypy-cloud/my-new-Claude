@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { CUSTOMER_STATUS_LABELS, type Customer, type CustomerStatus } from "@/types"
+import { InteractionTimeline } from "@/components/customers/interaction-timeline"
 
 const STATUS_VARIANT: Record<CustomerStatus, "default" | "secondary" | "destructive" | "outline"> = {
   prospect: "outline",
@@ -121,6 +122,8 @@ export function CustomerDetail({ customer }: { customer: Customer }) {
           <Trash2 className="mr-2 h-4 w-4" />삭제
         </Button>
       </div>
+
+      <InteractionTimeline customerId={customer.id} />
     </div>
   )
 }

@@ -66,6 +66,7 @@ interface InitialData {
   incomeLevel?: string
   productInterest?: string
   extraNotes?: string
+  expectedObjections?: string
 }
 
 interface Props {
@@ -90,7 +91,7 @@ export function ScriptGenerator({ initialUsage, limit, planName, initialData }: 
   const [productInterest, setProductInterest] = useState(initialData?.productInterest ?? "")
   const [consultationPurpose, setConsultationPurpose] = useState("")
   const [customerPersonality, setCustomerPersonality] = useState("")
-  const [expectedObjections, setExpectedObjections] = useState("")
+  const [expectedObjections, setExpectedObjections] = useState(initialData?.expectedObjections ?? "")
   const [agentStyle, setAgentStyle] = useState("친근하고 따뜻하게")
   const [extraNotes, setExtraNotes] = useState(initialData?.extraNotes ?? "")
   const [categoryId, setCategoryId] = useState("")

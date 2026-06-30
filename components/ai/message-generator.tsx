@@ -48,6 +48,7 @@ interface InitialData {
   occupation?: string
   relationship?: string
   productField?: string
+  extraNotes?: string
 }
 
 interface Props {
@@ -70,7 +71,7 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
   const [categoryId, setCategoryId] = useState("")
   const [tone, setTone] = useState("친근체")
   const [length, setLength] = useState("보통 (100자 이내)")
-  const [extraNotes, setExtraNotes] = useState("")
+  const [extraNotes, setExtraNotes] = useState(initialData?.extraNotes ?? "")
   const [showAdvanced, setShowAdvanced] = useState(!!(initialData?.occupation || initialData?.relationship))
 
   // Result state
