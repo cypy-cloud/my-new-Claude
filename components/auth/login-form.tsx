@@ -33,7 +33,8 @@ export function LoginForm() {
       clientTrackEvent('login', { metadata: { email } })
       router.push("/dashboard")
       router.refresh()
-    } catch {
+    } catch (err) {
+      console.error("[login] unexpected error:", err)
       toast.error("로그인 중 오류가 발생했습니다.")
     } finally {
       setIsLoading(false)
