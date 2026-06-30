@@ -374,6 +374,29 @@ export type Database = {
         }
         Update: Partial<Database['public']['Tables']['feedback']['Insert']>
       }
+      user_onboarding: {
+        Row: {
+          id: string
+          user_id: string
+          completed_intro: boolean
+          completed_sms_tutorial: boolean
+          completed_script_tutorial: boolean
+          completed_pdf_tutorial: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          completed_intro?: boolean
+          completed_sms_tutorial?: boolean
+          completed_script_tutorial?: boolean
+          completed_pdf_tutorial?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['user_onboarding']['Insert']>
+      }
       uploaded_files: {
         Row: {
           id: string

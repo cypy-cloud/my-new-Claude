@@ -12,6 +12,7 @@ export type Plan = Database['public']['Tables']['plans']['Row']
 export type AiCache = Database['public']['Tables']['ai_cache']['Row']
 export type Announcement = Database['public']['Tables']['announcements']['Row']
 export type Feedback = Database['public']['Tables']['feedback']['Row']
+export type UserOnboarding = Database['public']['Tables']['user_onboarding']['Row']
 export type PromptVersion = Database['public']['Tables']['prompt_versions']['Row']
 
 export type UserRole = 'user' | 'manager' | 'admin' | 'super_admin'
