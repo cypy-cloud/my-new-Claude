@@ -1,11 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { getPlanLimits, type PlanId, type PlanLimits } from './plans'
 
-export type UsageFeature = 'sms' | 'script' | 'pdf_upload' | 'pdf_analysis'
+export type UsageFeature = 'sms' | 'script' | 'followup' | 'pdf_upload' | 'pdf_analysis'
 
 export interface MonthlyUsageData {
   smsCount: number
   scriptCount: number
+  followupCount: number
   pdfUploadCount: number
   pdfAnalysisCount: number
   storageMb: number
@@ -48,7 +49,7 @@ export async function getMonthlyUsage(userId: string): Promise<MonthlyUsageData>
 
   const { data } = await (supabase as any)
     .from('usage_records')
-    .select('sms_count, script_count, pdf_upload_count, pdf_analysis_count, storage_used_mb, ai_token_input, ai_token_output, ai_cost_estimate')
+    .select('sms_count, script_count, followup_count, pdf_upload_count, pdf_analysis_count, storage_used_mb, ai_token_input, ai_token_output, ai_cost_estimate')
     .eq('user_id', userId)
     .eq('usage_month', month)
     .maybeSingle()
@@ -56,6 +57,7 @@ export async function getMonthlyUsage(userId: string): Promise<MonthlyUsageData>
   return {
     smsCount: data?.sms_count ?? 0,
     scriptCount: data?.script_count ?? 0,
+    followupCount: data?.followup_count ?? 0,
     pdfUploadCount: data?.pdf_upload_count ?? 0,
     pdfAnalysisCount: data?.pdf_analysis_count ?? 0,
     storageMb: data?.storage_used_mb ?? 0,
@@ -93,9 +95,11 @@ export async function incrementUsage(
     p_storage_mb: opts.storageMb ?? 0,
   })
 
-  // Keep legacy monthly_usage in sync
-  const legacyFeature = feature === 'sms' ? 'ai_message' : feature === 'script' ? 'ai_script' : 'ai_document'
-  await (supabase as any).rpc('increment_usage', { p_user_id: userId, p_feature: legacyFeature })
+  // Keep legacy monthly_usage in sync (no legacy column exists for 'followup', so skip it)
+  if (feature !== 'followup') {
+    const legacyFeature = feature === 'sms' ? 'ai_message' : feature === 'script' ? 'ai_script' : 'ai_document'
+    await (supabase as any).rpc('increment_usage', { p_user_id: userId, p_feature: legacyFeature })
+  }
 }
 
 export function estimateAiCost(inputTokens: number, outputTokens: number): number {
@@ -127,6 +131,7 @@ function getFeatureCounts(
   switch (feature) {
     case 'sms':          return { used: usage.smsCount,         limit: limits.smsLimit }
     case 'script':       return { used: usage.scriptCount,      limit: limits.scriptLimit }
+    case 'followup':     return { used: usage.followupCount,    limit: limits.followupLimit }
     case 'pdf_upload':   return { used: usage.pdfUploadCount,   limit: limits.pdfUploadLimit }
     case 'pdf_analysis': return { used: usage.pdfAnalysisCount, limit: limits.pdfAnalysisLimit }
   }

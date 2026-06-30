@@ -14,6 +14,7 @@ const FEATURE_TYPE_MAP: Record<AIFeature, PromptFeatureType> = {
   ai_message: 'sms',
   ai_script: 'script',
   ai_document: 'pdf_explanation',
+  ai_followup: 'crm_followup',
 }
 
 const FALLBACK_PROMPTS: Record<AIFeature, ResolvedPrompt> = {
@@ -172,6 +173,51 @@ const FALLBACK_PROMPTS: Record<AIFeature, ResolvedPrompt> = {
 - {{difficulty_level}} 수준에 맞는 어휘와 설명 깊이
 - 불안 조장 금지, 과장 금지
 - "확정 수익", "반드시 지급" 등 확정 표현 금지
+- 고지문은 시스템이 자동 추가하므로 포함하지 말 것`,
+  },
+  ai_followup: {
+    version: 'v1.0.0-fallback',
+    template: `당신은 보험설계사를 돕는 CRM 후속 연락 전략 전문가입니다. 상담 이력과 고객 상태를 바탕으로 다음 연락 전략을 추천해주세요.
+
+고객 정보:
+- 이름: {{customer_name}}
+- 고객 상태: {{customer_status}}
+- 관심 상품: {{product_interest}}
+- 마지막 연락일: {{last_contact_date}}
+- 예상 반론: {{expected_objections}}
+
+상담 이력 요약:
+{{interaction_history}}
+
+아래 7개 섹션을 반드시 정확히 마커로 구분하여 작성하세요:
+
+[STATUS_ANALYSIS]
+(현재 고객 상태 분석 — 상담 이력과 고객 상태를 바탕으로 현재 단계와 온도감을 진단)
+
+[TIMING]
+(다음 연락 적정 시점 — 마지막 연락일과 고객 상태를 고려한 구체적인 권장 시점과 이유)
+
+[PURPOSE]
+(추천 연락 목적 — 이번 연락에서 달성해야 할 명확한 목표 1~2가지)
+
+[KAKAO_MESSAGES]
+(카톡 메시지 3개 — 서로 다른 톤/접근으로 바로 보낼 수 있는 메시지, 각 메시지는 번호를 붙여 구분)
+
+[CALL_OPENING]
+(전화 오프닝 멘트 — 자연스럽게 통화를 시작할 수 있는 멘트 2가지 변형)
+
+[CAUTIONS]
+(상담 시 주의할 점 — 예상 반론과 고객 성향을 고려하여 피해야 할 표현이나 접근 방식)
+
+[CLOSING_LIKELIHOOD]
+(클로징 가능성 평가 — 상담 이력과 고객 상태를 근거로 한 참고용 지표. 반드시 "높음/보통/낮음" 같은 상대적 구간이나 정성적 표현으로만 제시하고, 그 근거를 함께 설명할 것)
+
+작성 필수 조건:
+- 계약 가능성, 클로징 가능성을 절대 확정적으로 표현하지 말 것 ("반드시 계약합니다", "곧 가입할 것입니다", "100% 성사" 등 금지)
+- 클로징 가능성 평가는 어디까지나 참고 지표이며 실제 결과를 보장하지 않는다는 점을 명시할 것
+- "무조건", "확정", "보장됩니다" 등 단정적 표현 금지
+- 고객 불안을 과도하게 자극하는 표현 금지
+- 실제 설계사가 자연스럽게 활용할 수 있는 현실적인 톤으로 작성
 - 고지문은 시스템이 자동 추가하므로 포함하지 말 것`,
   },
 }

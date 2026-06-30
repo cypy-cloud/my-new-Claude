@@ -1,6 +1,6 @@
 export type AIProviderName = 'anthropic' | 'openai' | 'gemini' | 'mock'
 
-export type AIFeature = 'ai_message' | 'ai_script' | 'ai_document'
+export type AIFeature = 'ai_message' | 'ai_script' | 'ai_document' | 'ai_followup'
 
 export type AIRequestStatus = 'success' | 'failed' | 'cached'
 

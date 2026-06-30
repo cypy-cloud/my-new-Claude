@@ -3,6 +3,7 @@ export type PlanId = 'free' | 'basic' | 'pro' | 'premium'
 export interface PlanLimits {
   smsLimit: number
   scriptLimit: number
+  followupLimit: number
   pdfUploadLimit: number
   pdfAnalysisLimit: number
   maxFileSizeMb: number
@@ -28,6 +29,7 @@ export const PLANS: Record<PlanId, Plan> = {
     interval: 'month',
     smsLimit: 5,
     scriptLimit: 3,
+    followupLimit: 3,
     pdfUploadLimit: 1,
     pdfAnalysisLimit: 1,
     maxFileSizeMb: 5,
@@ -43,6 +45,7 @@ export const PLANS: Record<PlanId, Plan> = {
     interval: 'month',
     smsLimit: 50,
     scriptLimit: 20,
+    followupLimit: 20,
     pdfUploadLimit: 3,
     pdfAnalysisLimit: 3,
     maxFileSizeMb: 10,
@@ -58,6 +61,7 @@ export const PLANS: Record<PlanId, Plan> = {
     interval: 'month',
     smsLimit: 300,
     scriptLimit: 100,
+    followupLimit: 100,
     pdfUploadLimit: 20,
     pdfAnalysisLimit: 20,
     maxFileSizeMb: 30,
@@ -73,6 +77,7 @@ export const PLANS: Record<PlanId, Plan> = {
     interval: 'month',
     smsLimit: 1000,
     scriptLimit: 300,
+    followupLimit: 300,
     pdfUploadLimit: 50,
     pdfAnalysisLimit: 50,
     maxFileSizeMb: 50,

@@ -27,7 +27,7 @@ function getProvider(name: AIProviderName): AIProvider {
 export function selectProvider(feature?: AIFeature): AIProvider {
   let providerName: string | undefined
   if (feature) {
-    const key = feature === 'ai_message' ? 'SMS' : feature === 'ai_script' ? 'SCRIPT' : 'DOCUMENT'
+    const key = feature === 'ai_message' ? 'SMS' : feature === 'ai_script' ? 'SCRIPT' : feature === 'ai_followup' ? 'FOLLOWUP' : 'DOCUMENT'
     providerName = process.env[`AI_PROVIDER_${key}`]
   }
   providerName ??= process.env.AI_PROVIDER ?? 'mock'

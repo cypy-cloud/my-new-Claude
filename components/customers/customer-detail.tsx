@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { MessageSquare, BookOpen, Pencil, Trash2, Phone, ShieldAlert } from "lucide-react"
+import { MessageSquare, BookOpen, Pencil, Trash2, Phone, ShieldAlert, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -113,6 +113,11 @@ export function CustomerDetail({ customer }: { customer: Customer }) {
         <Link href={`/ai-script?customerId=${customer.id}`}>
           <Button className="bg-purple-600 hover:bg-purple-700">
             <BookOpen className="mr-2 h-4 w-4" />상담 스크립트 생성
+          </Button>
+        </Link>
+        <Link href={`/ai-followup?customerId=${customer.id}`}>
+          <Button className="bg-emerald-600 hover:bg-emerald-700">
+            <Sparkles className="mr-2 h-4 w-4" />후속 연락 추천
           </Button>
         </Link>
         <Link href={`/customers/${customer.id}/edit`}>
