@@ -53,7 +53,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const { error } = await (admin as any).from('team_members').delete().eq('id', id)
   if (error) return NextResponse.json({ error: '제거 실패' }, { status: 500 })
 
-  await (admin as any).from('profiles').update({ team_id: null }).eq('id', target.user_id)
+  await (admin as any).from('profiles').update({ team_id: null }).eq('user_id', target.user_id)
 
   return NextResponse.json({ ok: true })
 }
