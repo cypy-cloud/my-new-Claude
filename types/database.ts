@@ -511,6 +511,25 @@ export type Database = {
         }
         Update: Partial<Database['public']['Tables']['prompt_versions']['Insert']>
       }
+      backup_logs: {
+        Row: {
+          id: string
+          user_id: string | null
+          backup_type: 'user_zip' | 'admin_csv' | 'system'
+          status: 'processing' | 'completed' | 'failed'
+          file_path: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          backup_type: 'user_zip' | 'admin_csv' | 'system'
+          status?: 'processing' | 'completed' | 'failed'
+          file_path?: string | null
+          created_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['backup_logs']['Insert']>
+      }
     }
     Functions: {
       increment_usage: {
