@@ -55,30 +55,44 @@ const OUTPUT_TABS = [
 
 type TabKey = typeof OUTPUT_TABS[number]["key"]
 
+interface InitialData {
+  customerId?: string
+  customerName?: string
+  gender?: string
+  ageGroup?: string
+  occupation?: string
+  maritalStatus?: string
+  hasChildren?: string
+  incomeLevel?: string
+  productInterest?: string
+  extraNotes?: string
+}
+
 interface Props {
   initialUsage: number
   limit: number
   planName: string
+  initialData?: InitialData
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function ScriptGenerator({ initialUsage, limit, planName }: Props) {
+export function ScriptGenerator({ initialUsage, limit, planName, initialData }: Props) {
   // Form state
-  const [customerName, setCustomerName] = useState("")
-  const [gender, setGender] = useState("")
-  const [ageGroup, setAgeGroup] = useState("")
-  const [occupation, setOccupation] = useState("")
-  const [maritalStatus, setMaritalStatus] = useState("")
-  const [hasChildren, setHasChildren] = useState("")
-  const [incomeLevel, setIncomeLevel] = useState("")
+  const [customerName, setCustomerName] = useState(initialData?.customerName ?? "")
+  const [gender, setGender] = useState(initialData?.gender ?? "")
+  const [ageGroup, setAgeGroup] = useState(initialData?.ageGroup ?? "")
+  const [occupation, setOccupation] = useState(initialData?.occupation ?? "")
+  const [maritalStatus, setMaritalStatus] = useState(initialData?.maritalStatus ?? "")
+  const [hasChildren, setHasChildren] = useState(initialData?.hasChildren ?? "")
+  const [incomeLevel, setIncomeLevel] = useState(initialData?.incomeLevel ?? "")
   const [existingInsurance, setExistingInsurance] = useState("")
-  const [productInterest, setProductInterest] = useState("")
+  const [productInterest, setProductInterest] = useState(initialData?.productInterest ?? "")
   const [consultationPurpose, setConsultationPurpose] = useState("")
   const [customerPersonality, setCustomerPersonality] = useState("")
   const [expectedObjections, setExpectedObjections] = useState("")
   const [agentStyle, setAgentStyle] = useState("친근하고 따뜻하게")
-  const [extraNotes, setExtraNotes] = useState("")
+  const [extraNotes, setExtraNotes] = useState(initialData?.extraNotes ?? "")
   const [categoryId, setCategoryId] = useState("")
 
   // Result state
@@ -263,6 +277,13 @@ export function ScriptGenerator({ initialUsage, limit, planName }: Props) {
           {isLimitReached && <Badge variant="destructive" className="text-xs">한도 초과</Badge>}
           {!isLimitReached && state.remaining <= 3 && <Badge className="text-xs bg-yellow-500 text-white">{state.remaining}회 남음</Badge>}
         </div>
+
+        {initialData?.customerId && (
+          <div className="flex items-center gap-1.5 text-xs text-purple-700 bg-purple-50 border border-purple-100 rounded-lg px-3 py-2">
+            <CheckCircle className="h-3.5 w-3.5" />
+            <span>고객 정보 &ldquo;{initialData.customerName}&rdquo;가 자동으로 입력되었습니다</span>
+          </div>
+        )}
 
         {/* 필수: 관심 상품 + 상담 목적 */}
         <ChipSelect label="관심 상품" required value={productInterest} onChange={setProductInterest} options={PRODUCT_INTERESTS} columns={3} />

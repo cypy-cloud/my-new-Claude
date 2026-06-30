@@ -72,3 +72,32 @@ export interface DashboardStats {
   recentActivity: UsageLog[]
   announcements: Announcement[]
 }
+
+export type CustomerStatus = 'prospect' | 'active' | 'dormant' | 'contracted' | 'lost'
+
+export interface Customer {
+  id: string
+  name: string
+  phone: string | null
+  age_group: string | null
+  gender: string | null
+  job: string | null
+  relationship_type: string | null
+  family_status: string | null
+  children_status: string | null
+  income_level: string | null
+  interest_products: string[]
+  memo: string | null
+  tags: string[]
+  status: CustomerStatus
+  created_at: string
+  updated_at: string
+}
+
+export const CUSTOMER_STATUS_LABELS: Record<CustomerStatus, string> = {
+  prospect: '잠재고객',
+  active: '활성고객',
+  dormant: '휴면고객',
+  contracted: '계약완료',
+  lost: '이탈',
+}

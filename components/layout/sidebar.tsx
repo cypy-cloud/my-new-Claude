@@ -11,13 +11,14 @@ import { Button } from "@/components/ui/button"
 import {
   LayoutDashboard, MessageSquare, FileText, BookOpen,
   Settings, LogOut, Zap, Archive, CreditCard,
-  Bell, BookMarked, MessageCircle, Shield, Rocket,
+  Bell, BookMarked, MessageCircle, Shield, Rocket, Users,
 } from "lucide-react"
 import { PLAN_LABELS } from "@/types"
 import type { Profile } from "@/types"
 
 const mainNav = [
   { href: "/dashboard", label: "대시보드", icon: LayoutDashboard },
+  { href: "/customers", label: "고객 관리", icon: Users },
   { href: "/ai-message", label: "AI 문자/카톡", icon: MessageSquare },
   { href: "/ai-script", label: "AI 상담 스크립트", icon: BookOpen },
   { href: "/ai-document", label: "AI PDF 분석", icon: FileText },

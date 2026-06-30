@@ -41,27 +41,37 @@ const OUTPUT_TABS = [
 
 type TabKey = typeof OUTPUT_TABS[number]["key"]
 
+interface InitialData {
+  customerId?: string
+  customerName?: string
+  ageGroup?: string
+  occupation?: string
+  relationship?: string
+  productField?: string
+}
+
 interface Props {
   initialUsage: number
   limit: number
   planName: string
+  initialData?: InitialData
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function MessageGenerator({ initialUsage, limit, planName }: Props) {
+export function MessageGenerator({ initialUsage, limit, planName, initialData }: Props) {
   // Form state
-  const [customerName, setCustomerName] = useState("")
-  const [ageGroup, setAgeGroup] = useState("")
-  const [occupation, setOccupation] = useState("")
-  const [relationship, setRelationship] = useState("")
+  const [customerName, setCustomerName] = useState(initialData?.customerName ?? "")
+  const [ageGroup, setAgeGroup] = useState(initialData?.ageGroup ?? "")
+  const [occupation, setOccupation] = useState(initialData?.occupation ?? "")
+  const [relationship, setRelationship] = useState(initialData?.relationship ?? "")
   const [purpose, setPurpose] = useState("")
-  const [productField, setProductField] = useState("")
+  const [productField, setProductField] = useState(initialData?.productField ?? "")
   const [categoryId, setCategoryId] = useState("")
   const [tone, setTone] = useState("친근체")
   const [length, setLength] = useState("보통 (100자 이내)")
   const [extraNotes, setExtraNotes] = useState("")
-  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(!!(initialData?.occupation || initialData?.relationship))
 
   // Result state
   const [activeTab, setActiveTab] = useState<TabKey>("SMS")
@@ -201,6 +211,13 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
           {isLimitReached && <Badge variant="destructive" className="text-xs">한도 초과</Badge>}
           {!isLimitReached && state.remaining <= 3 && <Badge className="text-xs bg-yellow-500 text-white">{state.remaining}회 남음</Badge>}
         </div>
+
+        {initialData?.customerId && (
+          <div className="flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+            <CheckCircle className="h-3.5 w-3.5" />
+            <span>고객 정보 &ldquo;{initialData.customerName}&rdquo;가 자동으로 입력되었습니다</span>
+          </div>
+        )}
 
         {/* 필수 항목 */}
         <div className="grid grid-cols-2 gap-3">

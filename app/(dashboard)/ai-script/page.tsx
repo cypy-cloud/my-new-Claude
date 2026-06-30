@@ -3,7 +3,12 @@ import { ScriptGenerator } from "@/components/ai/script-generator"
 import { getPlanLimits, PLAN_LABELS, type PlanId } from "@/lib/subscription/plans"
 import { getMonthlyUsage } from "@/lib/subscription/usage"
 
-export default async function AiScriptPage() {
+export default async function AiScriptPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ customerId?: string }>
+}) {
+  const { customerId } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -18,6 +23,31 @@ export default async function AiScriptPage() {
   const limits = getPlanLimits(planId)
   const usage = await getMonthlyUsage(user!.id)
 
+  let initialData
+  if (customerId) {
+    const { data: customer } = await (supabase as any)
+      .from("customers")
+      .select("id, name, gender, age_group, job, family_status, children_status, income_level, interest_products, memo")
+      .eq("id", customerId)
+      .eq("user_id", user!.id)
+      .maybeSingle()
+
+    if (customer) {
+      initialData = {
+        customerId: customer.id,
+        customerName: customer.name,
+        gender: customer.gender ?? undefined,
+        ageGroup: customer.age_group ?? undefined,
+        occupation: customer.job ?? undefined,
+        maritalStatus: customer.family_status ?? undefined,
+        hasChildren: customer.children_status ?? undefined,
+        incomeLevel: customer.income_level ?? undefined,
+        productInterest: Array.isArray(customer.interest_products) ? customer.interest_products[0] : undefined,
+        extraNotes: customer.memo ?? undefined,
+      }
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -29,6 +59,7 @@ export default async function AiScriptPage() {
         initialUsage={usage.scriptCount}
         limit={limits.scriptLimit}
         planName={planName}
+        initialData={initialData}
       />
     </div>
   )
