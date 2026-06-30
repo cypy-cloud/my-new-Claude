@@ -18,6 +18,7 @@ export type EventName =
   | 'upgrade_click'
   | 'feedback_submit'
   | 'notice_view'
+  | 'changelog_view'
   | 'tutorial_complete'
 
 export type FeatureType = 'ai_message' | 'ai_script' | 'ai_document'

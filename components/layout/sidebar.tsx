@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import {
   LayoutDashboard, MessageSquare, FileText, BookOpen,
   Settings, LogOut, Zap, Archive, CreditCard,
-  Bell, BookMarked, MessageCircle, Shield,
+  Bell, BookMarked, MessageCircle, Shield, Rocket,
 } from "lucide-react"
 import { PLAN_LABELS } from "@/types"
 import type { Profile } from "@/types"
@@ -27,6 +27,7 @@ const mainNav = [
 
 const supportNav = [
   { href: "/notices", label: "공지사항", icon: Bell },
+  { href: "/changelog", label: "변경사항", icon: Rocket },
   { href: "/guide", label: "사용 가이드", icon: BookMarked },
   { href: "/feedback", label: "고객 피드백", icon: MessageCircle },
 ]
