@@ -56,7 +56,7 @@ export function AdminBackup() {
       const res = await fetch(`/api/admin/export?type=${type}`)
       if (!res.ok) {
         const data = await res.json()
-        toast.error(data.error ?? "내보내기 실패")
+        toast.error(data.detail ?? data.error ?? "내보내기 실패")
         return
       }
       const blob = await res.blob()
