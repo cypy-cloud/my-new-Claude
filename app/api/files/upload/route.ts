@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getPlanLimits, type PlanId } from '@/lib/subscription/plans'
 import { incrementUsage } from '@/lib/subscription/usage'
 import { trackEvent } from '@/lib/analytics/track'
@@ -77,8 +78,9 @@ export async function POST(request: NextRequest) {
   }
 
   // Create DB record with processing status
+  const adminClient = createAdminClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: fileRecord, error: insertError } = await (supabase as any)
+  const { data: fileRecord, error: insertError } = await (adminClient as any)
     .from('uploaded_files')
     .insert({
       user_id: user.id,
@@ -138,7 +140,7 @@ export async function POST(request: NextRequest) {
 
   // Update DB record
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (supabase as any)
+  await (adminClient as any)
     .from('uploaded_files')
     .update({
       status,
