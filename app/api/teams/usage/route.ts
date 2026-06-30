@@ -19,7 +19,7 @@ export async function GET() {
   if (userIds.length === 0) return NextResponse.json({ month, members: [], totals: emptyTotals() })
 
   const [{ data: profiles }, { data: usageRows }] = await Promise.all([
-    (admin as any).from('profiles').select('user_id, name, email').in('user_id', userIds),
+    (admin as any).from('profiles').select('id, full_name, email').in('id', userIds),
     (admin as any)
       .from('usage_records')
       .select('user_id, sms_count, script_count, followup_count, pdf_upload_count, pdf_analysis_count, ai_cost_estimate')
@@ -27,7 +27,7 @@ export async function GET() {
       .in('user_id', userIds),
   ])
 
-  const profileMap = new Map<string, any>((profiles ?? []).map((p: any) => [p.user_id, p]))
+  const profileMap = new Map<string, any>((profiles ?? []).map((p: any) => [p.id, p]))
   const usageMap = new Map<string, any>((usageRows ?? []).map((u: any) => [u.user_id, u]))
   const roleMap = new Map<string, any>((members ?? []).map((m: any) => [m.user_id, m.role]))
 
@@ -35,7 +35,7 @@ export async function GET() {
     const u = usageMap.get(userId)
     return {
       userId,
-      name: profileMap.get(userId)?.name ?? null,
+      name: profileMap.get(userId)?.full_name ?? null,
       email: profileMap.get(userId)?.email ?? '',
       role: roleMap.get(userId),
       smsCount: u?.sms_count ?? 0,

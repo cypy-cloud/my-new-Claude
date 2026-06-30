@@ -19,17 +19,17 @@ export async function GET() {
 
   const userIds = (rawMembers ?? []).map((m: any) => m.user_id)
   const { data: profiles } = userIds.length > 0
-    ? await (admin as any).from('profiles').select('user_id, name, email').in('user_id', userIds)
+    ? await (admin as any).from('profiles').select('id, full_name, email').in('id', userIds)
     : { data: [] }
 
-  const profileMap = new Map<string, any>((profiles ?? []).map((p: any) => [p.user_id, p]))
+  const profileMap = new Map<string, any>((profiles ?? []).map((p: any) => [p.id, p]))
   const members = (rawMembers ?? []).map((m: any) => ({
     id: m.id,
     team_id: m.team_id,
     user_id: m.user_id,
     role: m.role,
     joined_at: m.joined_at,
-    name: profileMap.get(m.user_id)?.name ?? null,
+    name: profileMap.get(m.user_id)?.full_name ?? null,
     email: profileMap.get(m.user_id)?.email ?? '',
   }))
 

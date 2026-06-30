@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
   await (supabase as any)
     .from('profiles')
     .update({ team_id: team.id })
-    .eq('user_id', user.id)
+    .eq('id', user.id)
 
   return NextResponse.json({ team, myRole: 'owner' })
 }

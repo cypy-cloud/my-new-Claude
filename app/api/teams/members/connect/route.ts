@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
   const { data: profile } = await (admin as any)
     .from('profiles')
-    .select('user_id, team_id')
+    .select('id, team_id')
     .ilike('email', normalizedEmail)
     .maybeSingle()
 
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
   const { error: memberError } = await (admin as any)
     .from('team_members')
-    .insert({ team_id: guard.ctx.teamId, user_id: profile.user_id, role })
+    .insert({ team_id: guard.ctx.teamId, user_id: profile.id, role })
 
   if (memberError) {
     if (memberError.code === '23505') {
@@ -58,12 +58,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '연결 실패' }, { status: 500 })
   }
 
-  await (admin as any).from('profiles').update({ team_id: guard.ctx.teamId }).eq('user_id', profile.user_id)
+  await (admin as any).from('profiles').update({ team_id: guard.ctx.teamId }).eq('id', profile.id)
 
   await (admin as any)
     .from('team_invites')
     .upsert(
-      { team_id: guard.ctx.teamId, email: normalizedEmail, role, status: 'connected', invited_by: guard.ctx.userId, connected_user_id: profile.user_id, connected_at: new Date().toISOString() },
+      { team_id: guard.ctx.teamId, email: normalizedEmail, role, status: 'connected', invited_by: guard.ctx.userId, connected_user_id: profile.id, connected_at: new Date().toISOString() },
       { onConflict: 'team_id,email' }
     )
 
