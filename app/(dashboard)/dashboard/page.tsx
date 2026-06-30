@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { MessageSquare, BookOpen, FileText, ArrowRight, TrendingUp, Zap, CreditCard, AlertCircle } from "lucide-react"
+import { MessageSquare, BookOpen, FileText, ArrowRight, TrendingUp, Zap, CreditCard, AlertCircle, MessageCircle } from "lucide-react"
 import { getPlanLimits, PLAN_LABELS, type PlanId } from "@/lib/subscription/plans"
 import { getMonthlyUsage } from "@/lib/subscription/usage"
 
@@ -257,6 +257,27 @@ export default async function DashboardPage() {
           <p className="text-sm text-orange-700">
             AI 문자 생성 시 <strong>고객 이름</strong>과 <strong>구체적인 상황</strong>을 입력할수록 더 개인화된 메시지가 생성됩니다.
           </p>
+        </CardContent>
+      </Card>
+
+      {/* Feedback CTA */}
+      <Card className="border-0 shadow-sm">
+        <CardContent className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-[#1e3a5f]/10 rounded-xl flex items-center justify-center">
+              <MessageCircle className="h-5 w-5 text-[#1e3a5f]" />
+            </div>
+            <div>
+              <p className="font-semibold text-[#1e3a5f] text-sm">서비스가 더 나아질 수 있도록 도와주세요</p>
+              <p className="text-xs text-gray-500 mt-0.5">버그, 기능 제안 등 의견을 자유롭게 보내주세요</p>
+            </div>
+          </div>
+          <Button asChild variant="outline" className="flex-shrink-0 border-[#1e3a5f]/30 text-[#1e3a5f] hover:bg-[#1e3a5f]/5">
+            <Link href="/feedback">
+              <MessageCircle className="h-4 w-4 mr-2" />
+              서비스 개선 의견 보내기
+            </Link>
+          </Button>
         </CardContent>
       </Card>
     </div>

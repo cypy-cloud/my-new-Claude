@@ -351,20 +351,26 @@ export type Database = {
         Row: {
           id: string
           user_id: string
-          feature: string | null
-          rating: number | null
-          comment: string | null
-          status: 'pending' | 'reviewed' | 'resolved'
+          category: 'bug' | 'feature_request' | 'improvement' | 'billing' | 'other'
+          title: string | null
+          content: string
+          status: 'open' | 'reviewing' | 'planned' | 'resolved' | 'closed'
+          priority: 'low' | 'medium' | 'high'
+          admin_memo: string | null
           created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
           user_id: string
-          feature?: string | null
-          rating?: number | null
-          comment?: string | null
-          status?: 'pending' | 'reviewed' | 'resolved'
+          category: 'bug' | 'feature_request' | 'improvement' | 'billing' | 'other'
+          title?: string | null
+          content: string
+          status?: 'open' | 'reviewing' | 'planned' | 'resolved' | 'closed'
+          priority?: 'low' | 'medium' | 'high'
+          admin_memo?: string | null
           created_at?: string
+          updated_at?: string
         }
         Update: Partial<Database['public']['Tables']['feedback']['Insert']>
       }
