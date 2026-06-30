@@ -37,6 +37,26 @@ interface SidebarProps {
   planName?: string
 }
 
+function NavLink({ href, label, icon: Icon, pathname }: {
+  href: string; label: string; icon: React.ElementType; pathname: string
+}) {
+  const isActive = pathname === href || pathname.startsWith(href + "/")
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+        isActive
+          ? "bg-orange-500 text-white shadow-sm"
+          : "text-blue-100 hover:bg-white/10 hover:text-white"
+      )}
+    >
+      <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-white" : "text-blue-300")} />
+      <span>{label}</span>
+    </Link>
+  )
+}
+
 export function Sidebar({ profile, planName }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
@@ -50,24 +70,6 @@ export function Sidebar({ profile, planName }: SidebarProps) {
     await supabase.auth.signOut()
     toast.success("로그아웃 되었습니다.")
     router.push("/login")
-  }
-
-  function NavLink({ href, label, icon: Icon }: { href: string; label: string; icon: React.ElementType }) {
-    const isActive = pathname === href || pathname.startsWith(href + "/")
-    return (
-      <Link
-        href={href}
-        className={cn(
-          "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-          isActive
-            ? "bg-orange-500 text-white shadow-sm"
-            : "text-blue-100 hover:bg-white/10 hover:text-white"
-        )}
-      >
-        <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-white" : "text-blue-300")} />
-        <span>{label}</span>
-      </Link>
-    )
   }
 
   return (
@@ -86,18 +88,18 @@ export function Sidebar({ profile, planName }: SidebarProps) {
 
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         <p className="text-xs font-semibold text-blue-400 px-3 mb-2 uppercase tracking-wider">AI 기능</p>
-        {mainNav.map((item) => <NavLink key={item.href} {...item} />)}
+        {mainNav.map((item) => <NavLink key={item.href} {...item} pathname={pathname} />)}
 
         <div className="my-4 border-t border-white/10" />
 
         <p className="text-xs font-semibold text-blue-400 px-3 mb-2 uppercase tracking-wider">고객지원</p>
-        {supportNav.map((item) => <NavLink key={item.href} {...item} />)}
+        {supportNav.map((item) => <NavLink key={item.href} {...item} pathname={pathname} />)}
 
         {isAdmin && (
           <>
             <div className="my-4 border-t border-white/10" />
             <p className="text-xs font-semibold text-blue-400 px-3 mb-2 uppercase tracking-wider">관리자</p>
-            <NavLink href="/admin/dashboard" label="관리자 페이지" icon={Shield} />
+            <NavLink href="/admin/dashboard" label="관리자 페이지" icon={Shield} pathname={pathname} />
           </>
         )}
       </nav>

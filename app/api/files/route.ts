@@ -8,7 +8,6 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('uploaded_files')
     .select('id, original_file_name, file_size_mb, status, extracted_text, summary_text, delete_after, created_at')
@@ -35,7 +34,6 @@ export async function DELETE(request: NextRequest) {
   const id = request.nextUrl.searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'id가 필요합니다' }, { status: 400 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: fileRow } = await (supabase as any)
     .from('uploaded_files')
     .select('storage_path')
@@ -46,13 +44,11 @@ export async function DELETE(request: NextRequest) {
   // Remove from storage if exists (best effort)
   if (fileRow?.storage_path) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase as any).storage.from('pdf-uploads').remove([fileRow.storage_path])
     } catch { /* non-critical */ }
   }
 
   // Soft delete
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
     .from('uploaded_files')
     .update({ status: 'deleted', extracted_text: null, updated_at: new Date().toISOString() })

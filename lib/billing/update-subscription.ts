@@ -19,7 +19,6 @@ export async function updateSubscription(params: UpdateSubscriptionParams): Prom
   const eventType = getPlanRank(toPlan) > getPlanRank(fromPlan) ? 'upgrade' : 'downgrade'
 
   // 1. 구독 이벤트 기록
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (supabase as any).from('subscription_events').insert({
     user_id: userId,
     event_type: eventType,
@@ -33,7 +32,6 @@ export async function updateSubscription(params: UpdateSubscriptionParams): Prom
   })
 
   // 2. profiles.plan_type 업데이트
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (supabase as any).from('profiles').update({ plan_type: toPlan }).eq('id', userId)
 }
 

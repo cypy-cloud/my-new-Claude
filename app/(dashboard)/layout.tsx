@@ -11,10 +11,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (!user) redirect("/login")
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const adminSupabase = createAdminClient()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profile } = await (adminSupabase as any)
     .from("profiles")
     .select("*")

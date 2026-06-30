@@ -18,7 +18,6 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(parseInt(sp.get('limit') ?? '100'), 200)
 
   const supabase = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
     .from('feedback')
     .select('id, user_id, category, title, content, status, priority, admin_memo, created_at, updated_at')
@@ -34,7 +33,6 @@ export async function GET(request: NextRequest) {
   const rows = data ?? []
   const userIds = [...new Set(rows.map((r: { user_id: string }) => r.user_id))]
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profiles } = await (supabase as any)
     .from('profiles')
     .select('id, full_name, email')
@@ -76,7 +74,6 @@ export async function PATCH(request: NextRequest) {
   if (adminMemo !== undefined) updates.admin_memo = adminMemo?.trim() || null
 
   const supabase = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
     .from('feedback')
     .update(updates)

@@ -19,7 +19,6 @@ export async function acquireRequestLock(
   inputHash: string
 ): Promise<LockResult> {
   const supabase = await createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
 
   // Check for active (non-expired) lock first
@@ -58,7 +57,6 @@ export async function releaseRequestLock(
   status: 'completed' | 'failed' = 'completed'
 ): Promise<void> {
   const supabase = await createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (supabase as any)
     .from('request_locks')
     .update({ status })

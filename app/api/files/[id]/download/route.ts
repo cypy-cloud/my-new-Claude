@@ -11,7 +11,6 @@ export async function GET(
 
   const { id } = await params
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: fileRow } = await (supabase as any)
     .from('uploaded_files')
     .select('original_file_name, extracted_text, status')

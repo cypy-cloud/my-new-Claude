@@ -5,7 +5,6 @@ import { createAdminClient } from "@/lib/supabase/admin"
 
 async function getCurrentVersion(): Promise<string | null> {
   const supabase = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data } = await (supabase as any)
     .from('app_versions')
     .select('version')

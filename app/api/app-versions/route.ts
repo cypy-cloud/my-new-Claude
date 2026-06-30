@@ -8,7 +8,6 @@ export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams
   const limit = Math.min(parseInt(sp.get('limit') ?? '20'), 50)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('app_versions')
     .select('id, version, title, description, changes, release_date, is_current, created_at')
@@ -20,7 +19,6 @@ export async function GET(request: NextRequest) {
 
   let readIds = new Set<string>()
   if (user) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: reads } = await (supabase as any)
       .from('app_version_reads')
       .select('version_id')

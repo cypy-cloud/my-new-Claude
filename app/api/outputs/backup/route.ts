@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { trackEvent } from '@/lib/analytics/track'
 import { toCSV } from '@/lib/files/csv'
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const JSZip = require('jszip') as new () => import('jszip')
 
 function sanitizeFilename(name: string): string {
@@ -17,7 +16,6 @@ export async function GET() {
   const zip = new JSZip()
 
   // ── 1. Generated outputs (문자카톡 / 상담스크립트 / 고객설명자료) ──────────
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: outputs } = await (supabase as any)
     .from('generated_outputs')
     .select('id, type, title, output_text, created_at')
@@ -38,7 +36,6 @@ export async function GET() {
   }
 
   // ── 2. Uploaded files — extracted text + original PDF (if not expired) ──
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: uploadedFiles } = await (supabase as any)
     .from('uploaded_files')
     .select('id, original_file_name, file_size_mb, status, extracted_text, storage_path, delete_after, created_at')
@@ -65,7 +62,6 @@ export async function GET() {
 
   for (const f of pdfFiles) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: fileData, error } = await (supabase as any).storage
         .from('pdf-uploads')
         .download(f.storage_path)
@@ -93,7 +89,6 @@ export async function GET() {
   ))
 
   // ── 4. 사용량기록.csv ─────────────────────────────────────────────────────
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: usageRows } = await (supabase as any)
     .from('usage_records')
     .select('usage_month, sms_count, script_count, pdf_upload_count, pdf_analysis_count, ai_token_input, ai_token_output, ai_cost_estimate')
@@ -130,7 +125,6 @@ export async function GET() {
   const date = new Date().toISOString().slice(0, 10)
   const fileName = `FP_AI_백업_${date}.zip`
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (supabase as any).from('backup_logs').insert({
     user_id: user.id,
     backup_type: 'user_zip',

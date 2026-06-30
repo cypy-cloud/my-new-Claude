@@ -14,7 +14,6 @@ export async function GET(request: NextRequest) {
   const featureType = sp.get('featureType')
 
   const supabase = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
     .from('prompt_versions')
     .select('id, feature_type, version, title, system_prompt, user_prompt_template, is_active, created_by, created_at, updated_at')
@@ -53,7 +52,6 @@ export async function POST(request: NextRequest) {
 
   // 새 버전을 즉시 활성화하려면, 같은 기능의 기존 활성 버전을 먼저 비활성화한다
   if (activate) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any)
       .from('prompt_versions')
       .update({ is_active: false })
@@ -61,7 +59,6 @@ export async function POST(request: NextRequest) {
       .eq('is_active', true)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('prompt_versions')
     .insert({
@@ -97,7 +94,6 @@ export async function PATCH(request: NextRequest) {
 
   const supabase = createAdminClient()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: target } = await (supabase as any)
     .from('prompt_versions')
     .select('id, feature_type')
@@ -106,13 +102,11 @@ export async function PATCH(request: NextRequest) {
 
   if (!target) return NextResponse.json({ error: '대상을 찾을 수 없습니다' }, { status: 404 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (supabase as any)
     .from('prompt_versions')
     .update({ is_active: false })
     .eq('feature_type', target.feature_type)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
     .from('prompt_versions')
     .update({ is_active: true })

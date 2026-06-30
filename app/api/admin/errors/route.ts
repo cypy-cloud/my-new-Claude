@@ -14,7 +14,6 @@ export async function GET(request: NextRequest) {
   const resolved = sp.get('resolved') ?? ''
   const limit = Math.min(parseInt(sp.get('limit') ?? '50'), 100)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
     .from('error_logs')
     .select('id, user_id, area, error_message, severity, resolved, resolved_at, created_at, metadata')
@@ -63,7 +62,6 @@ export async function POST(request: NextRequest) {
 
   if (action === 'detail') {
     const supabase = createAdminClient()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)
       .from('error_logs')
       .select('*')

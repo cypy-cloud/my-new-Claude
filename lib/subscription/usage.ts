@@ -33,7 +33,6 @@ export async function getCurrentUserPlan(): Promise<PlanId> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return 'free'
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('plan_type')
@@ -47,7 +46,6 @@ export async function getMonthlyUsage(userId: string): Promise<MonthlyUsageData>
   const supabase = await createClient()
   const month = new Date().toISOString().slice(0, 7)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data } = await (supabase as any)
     .from('usage_records')
     .select('sms_count, script_count, pdf_upload_count, pdf_analysis_count, storage_used_mb, ai_token_input, ai_token_output, ai_cost_estimate')
@@ -86,7 +84,6 @@ export async function incrementUsage(
   const supabase = await createClient()
   const cost = estimateAiCost(opts.tokenInput ?? 0, opts.tokenOutput ?? 0)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (supabase as any).rpc('increment_usage_record', {
     p_user_id: userId,
     p_feature: feature,
@@ -98,7 +95,6 @@ export async function incrementUsage(
 
   // Keep legacy monthly_usage in sync
   const legacyFeature = feature === 'sms' ? 'ai_message' : feature === 'script' ? 'ai_script' : 'ai_document'
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (supabase as any).rpc('increment_usage', { p_user_id: userId, p_feature: legacyFeature })
 }
 

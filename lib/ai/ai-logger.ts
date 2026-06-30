@@ -18,7 +18,6 @@ export interface AiRequestLog {
 export async function logAiRequest(log: AiRequestLog): Promise<void> {
   try {
     const supabase = await createClient()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any).from('ai_requests').insert({
       user_id: log.userId,
       feature_type: log.feature,

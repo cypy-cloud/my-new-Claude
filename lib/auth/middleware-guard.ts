@@ -14,7 +14,6 @@ export async function adminGuard(
 
   const { createAdminClient } = await import('@/lib/supabase/admin')
   const adminClient = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profile } = await (adminClient as any)
     .from('profiles').select('role').eq('id', user.id).single()
 

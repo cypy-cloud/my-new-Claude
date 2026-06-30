@@ -32,7 +32,6 @@ export async function checkCache(
   const supabase = await createClient()
   const now = new Date().toISOString()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
 
   // 1. Try user-specific cache first
@@ -95,7 +94,6 @@ export async function saveCache(
     Date.now() + (opts.ttlHours ?? 24) * 3_600_000
   ).toISOString()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (supabase as any).from('ai_cache').upsert(
     {
       user_id: opts.userId ?? null,

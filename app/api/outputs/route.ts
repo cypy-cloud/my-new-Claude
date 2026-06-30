@@ -13,7 +13,6 @@ export async function GET(request: NextRequest) {
   const favorite = sp.get('favorite')
   const limit = parseInt(sp.get('limit') ?? '100')
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
     .from('generated_outputs')
     .select('id, type, title, output_text, ai_provider, model, is_favorite, created_at, updated_at')
@@ -52,7 +51,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '필수 항목이 누락되었습니다' }, { status: 400 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('generated_outputs')
     .insert({
@@ -88,7 +86,6 @@ export async function PATCH(request: NextRequest) {
   if (isFavorite !== undefined) updates.is_favorite = isFavorite
   if (title !== undefined) updates.title = title
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
     .from('generated_outputs')
     .update(updates)
@@ -109,7 +106,6 @@ export async function DELETE(request: NextRequest) {
   const id = request.nextUrl.searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'id가 필요합니다' }, { status: 400 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
     .from('generated_outputs')
     .delete()

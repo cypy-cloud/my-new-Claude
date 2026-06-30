@@ -445,7 +445,7 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
               <div className="flex flex-col items-center justify-center min-h-[400px] text-gray-400 space-y-3">
                 <Sparkles className="h-10 w-10 text-gray-200" />
                 <p className="text-sm">목적과 상품 분야를 선택하고</p>
-                <p className="text-sm">"메시지 5가지 버전 생성하기"를 클릭하세요</p>
+                <p className="text-sm">&ldquo;메시지 5가지 버전 생성하기&rdquo;를 클릭하세요</p>
                 <div className="flex flex-wrap gap-2 mt-2 justify-center">
                   {OUTPUT_TABS.map(t => {
                     const Icon = t.icon

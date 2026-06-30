@@ -13,7 +13,6 @@ export default async function DashboardPage() {
 
   const yearMonth = new Date().toISOString().slice(0, 7)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profile } = await (supabase as any)
     .from("profiles")
     .select("name, email, plan_type")

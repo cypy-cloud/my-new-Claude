@@ -21,7 +21,6 @@ export async function POST(request: NextRequest) {
   const userId = targetUserId ?? guard.ctx.userId
 
   // 대상 사용자의 현재 플랜 확인
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: targetProfile } = await (supabase as any)
     .from('profiles').select('plan_type').eq('id', userId).single()
   const fromPlan = (targetProfile?.plan_type as PlanId) ?? 'free'

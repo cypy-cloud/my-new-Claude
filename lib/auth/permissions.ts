@@ -63,7 +63,6 @@ export async function getAuthContext(): Promise<AuthContext | null> {
   if (!user) return null
 
   const adminClient = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profile } = await (adminClient as any)
     .from('profiles')
     .select('role, email')

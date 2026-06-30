@@ -10,7 +10,6 @@ export async function GET(request: NextRequest) {
   const supabase = createAdminClient()
   const limit = Math.min(parseInt(request.nextUrl.searchParams.get('limit') ?? '50'), 100)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('app_versions')
     .select('id, version, title, description, changes, release_date, is_current, created_by, created_at, updated_at')
@@ -37,11 +36,9 @@ export async function POST(request: NextRequest) {
   const supabase = createAdminClient()
 
   if (isCurrent) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any).from('app_versions').update({ is_current: false }).eq('is_current', true)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('app_versions')
     .insert({
@@ -73,7 +70,6 @@ export async function PATCH(request: NextRequest) {
   const supabase = createAdminClient()
 
   if (isCurrent) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any).from('app_versions').update({ is_current: false }).eq('is_current', true).neq('id', id)
   }
 
@@ -85,7 +81,6 @@ export async function PATCH(request: NextRequest) {
   if (releaseDate !== undefined) updates.release_date = releaseDate
   if (isCurrent !== undefined) updates.is_current = isCurrent
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
     .from('app_versions')
     .update(updates)
@@ -104,7 +99,6 @@ export async function DELETE(request: NextRequest) {
   if (!id) return NextResponse.json({ error: 'id 필요' }, { status: 400 })
 
   const supabase = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
     .from('app_versions')
     .delete()

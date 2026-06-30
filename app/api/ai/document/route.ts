@@ -49,7 +49,6 @@ export async function POST(request: NextRequest) {
   if (!explanationPurpose) return NextResponse.json({ error: '설명 목적을 입력해주세요' }, { status: 400 })
 
   // Fetch the uploaded file's extracted text
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: fileRow } = await (supabase as any)
     .from('uploaded_files')
     .select('original_file_name, extracted_text, status')

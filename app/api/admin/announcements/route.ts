@@ -10,7 +10,6 @@ export async function GET(request: NextRequest) {
   const supabase = createAdminClient()
   const limit = Math.min(parseInt(request.nextUrl.searchParams.get('limit') ?? '50'), 100)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('announcements')
     .select('id, title, content, type, target_plan, target_role, is_pinned, is_active, starts_at, ends_at, created_by, created_at, updated_at')
@@ -35,7 +34,6 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('announcements')
     .insert({
@@ -81,7 +79,6 @@ export async function PATCH(request: NextRequest) {
   if (endsAt !== undefined) updates.ends_at = endsAt
 
   const supabase = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
     .from('announcements')
     .update(updates)
@@ -100,7 +97,6 @@ export async function DELETE(request: NextRequest) {
   if (!id) return NextResponse.json({ error: 'id 필요' }, { status: 400 })
 
   const supabase = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
     .from('announcements')
     .delete()

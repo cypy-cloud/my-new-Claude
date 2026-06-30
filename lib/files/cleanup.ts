@@ -13,7 +13,6 @@ export interface ExpiredFile {
 // delete_after 기준 삭제 대상 조회 — 보관 기간이 지났고 아직 원본이 정리되지 않은 파일
 export async function getExpiredFiles(): Promise<ExpiredFile[]> {
   const supabase = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('uploaded_files')
     .select('id, storage_path, original_file_name')
@@ -29,14 +28,12 @@ export async function getExpiredFiles(): Promise<ExpiredFile[]> {
 export async function deleteOriginalFile(storagePath: string | null): Promise<void> {
   if (!storagePath) return
   const supabase = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (supabase as any).storage.from(STORAGE_BUCKET).remove([storagePath])
 }
 
 // DB 상태를 original_expired로 변경 — extracted_text / summary_text / 생성 결과물은 그대로 유지
 export async function markFileAsDeleted(fileId: string): Promise<void> {
   const supabase = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
     .from('uploaded_files')
     .update({

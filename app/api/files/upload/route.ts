@@ -31,7 +31,6 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
 
   // Get user plan
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('plan_type')
@@ -43,7 +42,6 @@ export async function POST(request: NextRequest) {
 
   // Check monthly upload count
   const month = new Date().toISOString().slice(0, 7)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: usageRow } = await (supabase as any)
     .from('usage_records')
     .select('pdf_upload_count')
@@ -79,7 +77,6 @@ export async function POST(request: NextRequest) {
 
   // Create DB record with processing status
   const adminClient = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: fileRecord, error: insertError } = await (adminClient as any)
     .from('uploaded_files')
     .insert({
@@ -130,7 +127,6 @@ export async function POST(request: NextRequest) {
     const storageBucket = 'pdf-uploads'
     const objectPath = `${user.id}/${fileId}/${file.name}`
     const buffer = Buffer.from(await file.arrayBuffer())
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: uploadError } = await (supabase as any).storage
       .from(storageBucket)
       .upload(objectPath, buffer, { contentType: 'application/pdf', upsert: false })
@@ -140,7 +136,6 @@ export async function POST(request: NextRequest) {
   }
 
   // Update DB record
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (adminClient as any)
     .from('uploaded_files')
     .update({

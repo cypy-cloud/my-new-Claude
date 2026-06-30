@@ -434,7 +434,7 @@ export function ScriptGenerator({ initialUsage, limit, planName }: Props) {
               <div className="flex flex-col items-center justify-center min-h-[480px] text-gray-400 space-y-3">
                 <BookOpen className="h-12 w-12 text-gray-200" />
                 <p className="text-sm">관심 상품과 상담 목적을 선택하고</p>
-                <p className="text-sm">"상담 스크립트 생성하기"를 클릭하세요</p>
+                <p className="text-sm">&ldquo;상담 스크립트 생성하기&rdquo;를 클릭하세요</p>
                 <div className="flex flex-wrap gap-1.5 mt-2 justify-center max-w-sm">
                   {OUTPUT_TABS.map(t => {
                     const Icon = t.icon

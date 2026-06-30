@@ -13,7 +13,6 @@ const EXPORT_LABELS: Record<ExportType, string> = {
   errors: '에러로그',
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function buildCSV(supabase: any, type: ExportType): Promise<string> {
   if (type === 'files') {
     const { data, error } = await supabase
@@ -85,7 +84,6 @@ export async function GET(request: NextRequest) {
   const supabase = createAdminClient()
 
   if (request.nextUrl.searchParams.get('logs') === '1') {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await (supabase as any)
       .from('backup_logs')
       .select('id, user_id, backup_type, status, file_path, created_at')
@@ -104,7 +102,6 @@ export async function GET(request: NextRequest) {
     const date = new Date().toISOString().slice(0, 10)
     const fileName = `${EXPORT_LABELS[type]}_${date}.csv`
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any).from('backup_logs').insert({
       user_id: guard.ctx.userId,
       backup_type: 'admin_csv',
@@ -119,7 +116,6 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (err) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any).from('backup_logs').insert({
       user_id: guard.ctx.userId,
       backup_type: 'admin_csv',

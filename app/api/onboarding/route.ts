@@ -11,7 +11,6 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: existing } = await (supabase as any)
     .from('user_onboarding')
     .select('id, completed_intro, completed_sms_tutorial, completed_script_tutorial, completed_pdf_tutorial')
@@ -20,7 +19,6 @@ export async function GET() {
 
   if (existing) return NextResponse.json({ onboarding: existing })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: created, error } = await (supabase as any)
     .from('user_onboarding')
     .insert({ user_id: user.id })
@@ -46,7 +44,6 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: '변경할 항목이 없습니다' }, { status: 400 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('user_onboarding')
     .upsert({ user_id: user.id, ...updates }, { onConflict: 'user_id' })

@@ -16,7 +16,6 @@ export async function GET(request: NextRequest) {
   const roleFilter = sp.get('role') ?? ''
   const limit = Math.min(parseInt(sp.get('limit') ?? '50'), 100)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
     .from('profiles')
     .select('user_id, name, email, plan_type, role, status, created_at, company_name')
@@ -66,7 +65,6 @@ export async function PATCH(request: NextRequest) {
   }
 
   const supabase = await createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
     .from('profiles')
     .update({ role, updated_at: new Date().toISOString() })

@@ -307,7 +307,7 @@ export function PdfUploader({ initialUploadCount, uploadLimit, maxFileSizeMb, st
             ) : (
               <div className="flex flex-col items-center justify-center min-h-[200px] text-gray-400 space-y-2">
                 <Eye className="h-8 w-8 text-gray-200" />
-                <p className="text-xs">파일 목록에서 "미리보기"를 클릭하세요</p>
+                <p className="text-xs">파일 목록에서 &ldquo;미리보기&rdquo;를 클릭하세요</p>
               </div>
             )}
           </CardContent>

@@ -499,7 +499,7 @@ export function DocumentGenerator({ initialAnalysisCount, analysisLimit, planNam
               <div className="flex flex-col items-center justify-center min-h-[480px] text-gray-400 space-y-3">
                 <FileText className="h-12 w-12 text-gray-200" />
                 <p className="text-sm">PDF 파일을 선택하고 설명 목적을 고른 후</p>
-                <p className="text-sm">"설명자료 생성하기"를 클릭하세요</p>
+                <p className="text-sm">&ldquo;설명자료 생성하기&rdquo;를 클릭하세요</p>
                 <div className="flex flex-wrap gap-1.5 mt-2 justify-center max-w-sm">
                   {OUTPUT_TABS.map(t => {
                     const Icon = t.icon

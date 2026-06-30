@@ -9,7 +9,6 @@ export async function POST(request: NextRequest) {
   const { announcementId } = await request.json()
   if (!announcementId) return NextResponse.json({ error: 'announcementId 필요' }, { status: 400 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (supabase as any)
     .from('announcement_reads')
     .upsert({ announcement_id: announcementId, user_id: user.id }, { onConflict: 'announcement_id,user_id' })
@@ -26,7 +25,6 @@ export async function DELETE(request: NextRequest) {
   const id = request.nextUrl.searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'id 필요' }, { status: 400 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (supabase as any)
     .from('announcement_reads')
     .delete()

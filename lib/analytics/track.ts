@@ -36,7 +36,6 @@ export async function trackEvent(
 ): Promise<void> {
   try {
     const supabase = await createClient()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any).from('event_logs').insert({
       user_id: options.userId ?? null,
       event_name: eventName,

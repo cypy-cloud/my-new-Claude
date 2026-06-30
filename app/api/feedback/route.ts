@@ -13,7 +13,6 @@ export async function GET(request: NextRequest) {
 
   const limit = Math.min(parseInt(request.nextUrl.searchParams.get('limit') ?? '50'), 100)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('feedback')
     .select('id, category, title, content, status, priority, admin_memo, created_at, updated_at')
@@ -42,7 +41,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '내용을 입력해주세요' }, { status: 400 })
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)
       .from('feedback')
       .insert({

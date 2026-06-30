@@ -9,7 +9,6 @@ export async function GET() {
   if (isGuardError(guard)) return guard
 
   const supabase = await createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('admin_permissions')
     .select('*')
@@ -34,7 +33,6 @@ export async function PATCH(request: NextRequest) {
   }
 
   const supabase = await createClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
     .from('admin_permissions')
     .upsert({ role, permission_key: permissionKey, enabled }, { onConflict: 'role,permission_key' })

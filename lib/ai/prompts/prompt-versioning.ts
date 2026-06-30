@@ -173,7 +173,6 @@ const FALLBACK_PROMPTS: Record<AIFeature, ResolvedPrompt> = {
 export async function getActivePrompt(feature: AIFeature): Promise<ResolvedPrompt> {
   try {
     const supabase = await createClient()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await (supabase as any)
       .from('prompt_versions')
       .select('system_prompt, user_prompt_template, version')

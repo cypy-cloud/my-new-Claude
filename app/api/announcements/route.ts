@@ -12,7 +12,6 @@ export async function GET(request: NextRequest) {
   let userRole: UserRole = 'user'
 
   if (user) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: profile } = await (supabase as any)
       .from('profiles')
       .select('plan_type, role')
@@ -27,7 +26,6 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(parseInt(sp.get('limit') ?? '20'), 50)
   const now = new Date().toISOString()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
     .from('announcements')
     .select('id, title, content, type, target_plan, target_role, is_pinned, is_active, starts_at, ends_at, created_at')
@@ -55,7 +53,6 @@ export async function GET(request: NextRequest) {
   // 읽음 여부 조회
   let readIds = new Set<string>()
   if (user) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: reads } = await (supabase as any)
       .from('announcement_reads')
       .select('announcement_id')

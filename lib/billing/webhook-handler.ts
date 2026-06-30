@@ -18,7 +18,6 @@ export async function handleWebhook(payload: WebhookPayload): Promise<void> {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleTossWebhook(_supabase: any, payload: WebhookPayload): Promise<void> {
   // TODO: Toss 웹훅 이벤트 처리
   // 이벤트 종류: PAYMENT_STATUS_CHANGED, BILLING_AUTH_STATUS_CHANGED
@@ -36,7 +35,6 @@ async function handleTossWebhook(_supabase: any, payload: WebhookPayload): Promi
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleStripeWebhook(_supabase: any, payload: WebhookPayload): Promise<void> {
   // TODO: Stripe 웹훅 이벤트 처리
   // 이벤트 종류: customer.subscription.updated, invoice.payment_succeeded, invoice.payment_failed

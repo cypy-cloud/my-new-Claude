@@ -58,7 +58,6 @@ export async function logError(
 
   try {
     const supabase = createAdminClient()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await (supabase as any)
       .from('error_logs')
       .insert({
@@ -88,7 +87,6 @@ export async function markErrorResolved(
 ): Promise<boolean> {
   try {
     const supabase = createAdminClient()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any)
       .from('error_logs')
       .update({

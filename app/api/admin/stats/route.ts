@@ -23,17 +23,11 @@ export async function GET() {
     { count: monthSignups },
     { count: activeUsers },
   ] = await Promise.all([
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any).from('profiles').select('*', { count: 'exact', head: true }).neq('status', 'deleted'),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any).from('profiles').select('*', { count: 'exact', head: true }).eq('plan_type', 'free').neq('status', 'deleted'),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any).from('profiles').select('*', { count: 'exact', head: true }).neq('plan_type', 'free').neq('status', 'deleted'),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any).from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', todayStart),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any).from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', monthStart),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any).from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'active'),
   ])
 
@@ -45,15 +39,10 @@ export async function GET() {
     { count: scriptCount },
     { count: pdfExplCount },
   ] = await Promise.all([
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any).from('generated_outputs').select('*', { count: 'exact', head: true }).gte('created_at', todayStart),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any).from('generated_outputs').select('*', { count: 'exact', head: true }).gte('created_at', monthStart),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any).from('generated_outputs').select('*', { count: 'exact', head: true }).eq('type', 'sms'),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any).from('generated_outputs').select('*', { count: 'exact', head: true }).eq('type', 'script'),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any).from('generated_outputs').select('*', { count: 'exact', head: true }).eq('type', 'pdf_explanation'),
   ])
 

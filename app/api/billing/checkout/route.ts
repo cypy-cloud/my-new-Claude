@@ -19,7 +19,6 @@ export async function POST(request: NextRequest) {
   }
 
   // 현재 플랜 확인
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profile } = await (supabase as any)
     .from('profiles').select('plan_type').eq('id', user.id).single()
   const currentPlan = (profile?.plan_type as PlanId) ?? 'free'
@@ -44,7 +43,6 @@ export async function POST(request: NextRequest) {
     metadata: { fromPlan: currentPlan, toPlan: planId, provider: session.provider, amount: plan.price },
   })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (supabase as any).from('subscription_events').insert({
     user_id: user.id,
     event_type: 'checkout_initiated',
