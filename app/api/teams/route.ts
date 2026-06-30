@@ -73,7 +73,8 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (teamError || !team) {
-    return NextResponse.json({ error: '팀 생성 실패' }, { status: 500 })
+    console.error('[teams.create] team insert failed:', teamError)
+    return NextResponse.json({ error: '팀 생성 실패', detail: teamError?.message }, { status: 500 })
   }
 
   const { error: memberError } = await (supabase as any)
@@ -81,7 +82,8 @@ export async function POST(request: NextRequest) {
     .insert({ team_id: team.id, user_id: user.id, role: 'owner' })
 
   if (memberError) {
-    return NextResponse.json({ error: '팀 생성 실패 (멤버 등록)' }, { status: 500 })
+    console.error('[teams.create] member insert failed:', memberError)
+    return NextResponse.json({ error: '팀 생성 실패 (멤버 등록)', detail: memberError.message }, { status: 500 })
   }
 
   await (supabase as any)
