@@ -37,10 +37,15 @@ export async function GET(request: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profiles } = await (supabase as any)
     .from('profiles')
-    .select('user_id, name, email')
-    .in('user_id', userIds.length > 0 ? userIds : ['00000000-0000-0000-0000-000000000000'])
+    .select('id, full_name, email')
+    .in('id', userIds.length > 0 ? userIds : ['00000000-0000-0000-0000-000000000000'])
 
-  const profileMap = new Map((profiles ?? []).map((p: { user_id: string }) => [p.user_id, p]))
+  const profileMap = new Map(
+    (profiles ?? []).map((p: { id: string; full_name: string | null; email: string }) => [
+      p.id,
+      { name: p.full_name, email: p.email },
+    ])
+  )
   const result = rows.map((r: { user_id: string }) => ({
     ...r,
     profile: profileMap.get(r.user_id) ?? null,
