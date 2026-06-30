@@ -39,7 +39,7 @@ export async function checkCache(
   if (userId) {
     const { data: userCached } = await db
       .from('ai_cache')
-      .select('output_text, provider, model, input_tokens, output_tokens, prompt_version')
+      .select('id, hit_count, output_text, provider, model, input_tokens, output_tokens, prompt_version')
       .eq('user_id', userId)
       .eq('feature_type', feature)
       .eq('input_hash', inputHash)
@@ -48,8 +48,8 @@ export async function checkCache(
 
     if (userCached) {
       await db.from('ai_cache')
-        .update({ hit_count: db.rpc('increment', { row_id: userCached.id }) })
-        .eq('user_id', userId).eq('feature_type', feature).eq('input_hash', inputHash)
+        .update({ hit_count: ((userCached.hit_count as number) ?? 0) + 1 })
+        .eq('id', userCached.id)
       return toCachedResult(userCached)
     }
   }
