@@ -5,12 +5,13 @@ import { getActivePrompt, renderPrompt } from '@/lib/ai/prompts/prompt-versionin
 import { blockIfLimitExceeded, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
 import { trackFeatureComplete } from '@/lib/analytics/track'
 import { handleApiError } from '@/lib/errors/api-error-handler'
+import { resolveProductCategory, buildProductCategoryAddendum } from '@/lib/ai-core/product-category'
 
 const DISCLAIMER = '\n\n[보험 관련 유의사항] 이 스크립트는 AI가 생성한 참고용 자료입니다. 실제 상담 시 고객 상황에 맞게 조정하시기 바랍니다. 보험 상품의 보장 내용 및 보험료는 계약 조건에 따라 달라질 수 있으며, 가입 전 반드시 약관을 확인하시기 바랍니다.'
 
 const SECTION_MARKERS = ['PREP', 'GREETING', 'ICEBREAK', 'NEEDS', 'AWARENESS', 'PRODUCT', 'PERSONA', 'OBJECTION', 'CLOSING', 'FOLLOWUP']
 
-function parseOutputSections(raw: string): Record<string, string> {
+function parseOutputSections(raw: string, disclaimer: string = DISCLAIMER): Record<string, string> {
   const result: Record<string, string> = {}
 
   for (let i = 0; i < SECTION_MARKERS.length; i++) {
@@ -22,7 +23,7 @@ function parseOutputSections(raw: string): Record<string, string> {
 
     const contentStart = start + startTag.length
     const end = nextMarker ? raw.indexOf(`[${nextMarker}]`, contentStart) : raw.length
-    result[marker] = raw.slice(contentStart, end !== -1 ? end : raw.length).trim() + DISCLAIMER
+    result[marker] = raw.slice(contentStart, end !== -1 ? end : raw.length).trim() + disclaimer
   }
 
   return result
@@ -49,6 +50,7 @@ export async function POST(request: NextRequest) {
     expectedObjections,
     agentStyle,
     extraNotes,
+    categoryId,
     forceRegenerate = false,
   } = body
 
@@ -68,8 +70,10 @@ export async function POST(request: NextRequest) {
     throw err
   }
 
+  const category = await resolveProductCategory(categoryId)
+
   const { template, version } = await getActivePrompt('ai_script')
-  const prompt = renderPrompt(template, {
+  let prompt = renderPrompt(template, {
     customer_name: customerName || '고객',
     gender: gender || '정보 없음',
     age_group: ageGroup || '정보 없음',
@@ -85,11 +89,14 @@ export async function POST(request: NextRequest) {
     agent_style: agentStyle || '친근하고 전문적',
     extra_notes: extraNotes || '없음',
   })
+  const categoryAddendum = buildProductCategoryAddendum(category)
+  if (categoryAddendum) prompt = `${prompt}\n\n${categoryAddendum}`
+  const fullDisclaimer = category?.riskNotice ? `${DISCLAIMER}\n${category.riskNotice}` : DISCLAIMER
 
   const cacheInput = {
     customerName: customerName || '', gender, ageGroup, occupation, maritalStatus,
     hasChildren, incomeLevel, existingInsurance, productInterest, consultationPurpose,
-    customerPersonality, expectedObjections, agentStyle, extraNotes,
+    customerPersonality, expectedObjections, agentStyle, extraNotes, categoryId: category?.id ?? null,
   }
 
   let result
@@ -104,7 +111,7 @@ export async function POST(request: NextRequest) {
       promptVersion: version,
       forceRegenerate,
     })
-    sections = parseOutputSections(result.text)
+    sections = parseOutputSections(result.text, fullDisclaimer)
 
     // Stale cache from before a prompt/format change may not contain valid markers — bypass it once
     if (Object.keys(sections).length === 0 && result.cachedAt) {
@@ -117,7 +124,7 @@ export async function POST(request: NextRequest) {
         promptVersion: version,
         forceRegenerate: true,
       })
-      sections = parseOutputSections(result.text)
+      sections = parseOutputSections(result.text, fullDisclaimer)
     }
   } catch (err) {
     if (err instanceof DuplicateRequestError) {

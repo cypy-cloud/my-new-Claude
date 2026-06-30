@@ -5,6 +5,7 @@ import { getActivePrompt, renderPrompt } from '@/lib/ai/prompts/prompt-versionin
 import { blockIfLimitExceeded, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
 import { trackFeatureComplete } from '@/lib/analytics/track'
 import { handleApiError } from '@/lib/errors/api-error-handler'
+import { resolveProductCategory, buildProductCategoryAddendum } from '@/lib/ai-core/product-category'
 
 const DISCLAIMER = '\n\n[보험 관련 유의사항] 이 메시지는 보험 상품에 대한 일반적인 안내 목적으로 작성되었습니다. 보험 상품 가입 전 약관을 반드시 확인하시기 바랍니다. 보험료 및 보장 내용은 계약 조건에 따라 달라질 수 있습니다.'
 
@@ -40,6 +41,7 @@ export async function POST(request: NextRequest) {
     relationship,
     purpose,
     productField,
+    categoryId,
     tone,
     length,
     extraNotes,
@@ -62,8 +64,10 @@ export async function POST(request: NextRequest) {
     throw err
   }
 
+  const category = await resolveProductCategory(categoryId)
+
   const { template, version } = await getActivePrompt('ai_message')
-  const prompt = renderPrompt(template, {
+  let prompt = renderPrompt(template, {
     customer_name: customerName || '고객',
     age_group: ageGroup || '정보 없음',
     occupation: occupation || '정보 없음',
@@ -74,8 +78,10 @@ export async function POST(request: NextRequest) {
     length: length || '보통',
     extra_notes: extraNotes || '없음',
   })
+  const categoryAddendum = buildProductCategoryAddendum(category)
+  if (categoryAddendum) prompt = `${prompt}\n\n${categoryAddendum}`
 
-  const cacheInput = { customerName: customerName || '', ageGroup, occupation, relationship, purpose, productField, tone, length, extraNotes }
+  const cacheInput = { customerName: customerName || '', ageGroup, occupation, relationship, purpose, productField, categoryId: category?.id ?? null, tone, length, extraNotes }
 
   let result
   let sections: Record<string, string>
@@ -113,10 +119,11 @@ export async function POST(request: NextRequest) {
 
   const wasCached = !!result.cachedAt
 
-  // Add disclaimer to each section
+  // Add disclaimer (+ category risk notice, if any) to each section
+  const fullDisclaimer = category?.riskNotice ? `${DISCLAIMER}\n${category.riskNotice}` : DISCLAIMER
   const withDisclaimer: Record<string, string> = {}
   for (const [k, v] of Object.entries(sections)) {
-    withDisclaimer[k] = v + DISCLAIMER
+    withDisclaimer[k] = v + fullDisclaimer
   }
 
   if (!wasCached) {

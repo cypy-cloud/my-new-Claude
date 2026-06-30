@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useAIGenerate } from "@/hooks/useAIGenerate"
 import { clientTrackFeatureStart, clientTrackDownload } from "@/lib/analytics/client-track"
+import { CategorySelect } from "@/components/ai/category-select"
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -56,6 +57,7 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
   const [relationship, setRelationship] = useState("")
   const [purpose, setPurpose] = useState("")
   const [productField, setProductField] = useState("")
+  const [categoryId, setCategoryId] = useState("")
   const [tone, setTone] = useState("친근체")
   const [length, setLength] = useState("보통 (100자 이내)")
   const [extraNotes, setExtraNotes] = useState("")
@@ -91,7 +93,7 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
   }, [state.status, state.cached, state.error, hasResult])
 
   function buildParams(forceRegenerate = false) {
-    return { customerName, ageGroup, occupation, relationship, purpose, productField, tone, length, extraNotes, forceRegenerate }
+    return { customerName, ageGroup, occupation, relationship, purpose, productField, categoryId, tone, length, extraNotes, forceRegenerate }
   }
 
   function handleGenerate() {
@@ -227,6 +229,8 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
             </select>
           </div>
         </div>
+
+        <CategorySelect value={categoryId} onChange={setCategoryId} disabled={isLoading} />
 
         {/* 고객 이름 + 연령대 */}
         <div className="grid grid-cols-2 gap-3">

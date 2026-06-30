@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useAIGenerate } from "@/hooks/useAIGenerate"
 import { clientTrackFeatureStart, clientTrackDownload } from "@/lib/analytics/client-track"
+import { CategorySelect } from "@/components/ai/category-select"
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 
@@ -74,6 +75,7 @@ export function DocumentGenerator({ initialAnalysisCount, analysisLimit, planNam
   const [difficultyLevel, setDifficultyLevel] = useState("중간 (일반인)")
   const [formatStyle, setFormatStyle] = useState("친근하고 쉽게")
   const [extraRequests, setExtraRequests] = useState("")
+  const [categoryId, setCategoryId] = useState("")
   const [showAdvanced, setShowAdvanced] = useState(false)
 
   // Result state
@@ -126,7 +128,7 @@ export function DocumentGenerator({ initialAnalysisCount, analysisLimit, planNam
     return {
       fileId: selectedFileId,
       ageGroup, occupation, customerSituation, explanationPurpose,
-      difficultyLevel, formatStyle, extraRequests, forceRegenerate,
+      difficultyLevel, formatStyle, extraRequests, categoryId, forceRegenerate,
     }
   }
 
@@ -324,6 +326,8 @@ export function DocumentGenerator({ initialAnalysisCount, analysisLimit, planNam
 
         {/* 설명 목적 */}
         <ChipSelect label="설명 목적" required value={explanationPurpose} onChange={setExplanationPurpose} options={PURPOSES} columns={2} />
+
+        <CategorySelect value={categoryId} onChange={setCategoryId} disabled={isLoading} />
 
         {/* 난이도 */}
         <div className="space-y-1.5">

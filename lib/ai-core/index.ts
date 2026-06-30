@@ -19,3 +19,6 @@ export type { CoreProviderName } from './model-policy'
 
 export { resolveCompanyContext, buildCompanyPromptAddendum, resolveDisclaimer } from './company-profile'
 export type { CompanyPromptContext } from './company-profile'
+
+export { resolveProductCategory, buildProductCategoryAddendum } from './product-category'
+export type { ProductCategoryContext } from './product-category'

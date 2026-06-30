@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useAIGenerate } from "@/hooks/useAIGenerate"
 import { clientTrackFeatureStart, clientTrackDownload } from "@/lib/analytics/client-track"
+import { CategorySelect } from "@/components/ai/category-select"
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -78,6 +79,7 @@ export function ScriptGenerator({ initialUsage, limit, planName }: Props) {
   const [expectedObjections, setExpectedObjections] = useState("")
   const [agentStyle, setAgentStyle] = useState("친근하고 따뜻하게")
   const [extraNotes, setExtraNotes] = useState("")
+  const [categoryId, setCategoryId] = useState("")
 
   // Result state
   const [activeTab, setActiveTab] = useState<TabKey>("PREP")
@@ -112,7 +114,7 @@ export function ScriptGenerator({ initialUsage, limit, planName }: Props) {
     return {
       customerName, gender, ageGroup, occupation, maritalStatus, hasChildren,
       incomeLevel, existingInsurance, productInterest, consultationPurpose,
-      customerPersonality, expectedObjections, agentStyle, extraNotes, forceRegenerate,
+      customerPersonality, expectedObjections, agentStyle, extraNotes, categoryId, forceRegenerate,
     }
   }
 
@@ -265,6 +267,8 @@ export function ScriptGenerator({ initialUsage, limit, planName }: Props) {
         {/* 필수: 관심 상품 + 상담 목적 */}
         <ChipSelect label="관심 상품" required value={productInterest} onChange={setProductInterest} options={PRODUCT_INTERESTS} columns={3} />
         <ChipSelect label="상담 목적" required value={consultationPurpose} onChange={setConsultationPurpose} options={CONSULTATION_PURPOSES} columns={2} />
+
+        <CategorySelect value={categoryId} onChange={setCategoryId} disabled={isLoading} />
 
         <hr className="border-gray-100" />
 

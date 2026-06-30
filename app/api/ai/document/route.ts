@@ -5,6 +5,7 @@ import { getActivePrompt, renderPrompt } from '@/lib/ai/prompts/prompt-versionin
 import { blockIfLimitExceeded, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
 import { trackFeatureComplete } from '@/lib/analytics/track'
 import { handleApiError } from '@/lib/errors/api-error-handler'
+import { resolveProductCategory, buildProductCategoryAddendum } from '@/lib/ai-core/product-category'
 
 const DISCLAIMER = '\n\n【필수 고지문】\n본 자료는 업로드된 자료를 바탕으로 AI가 작성한 참고용 설명자료입니다. 실제 보장 여부, 보험금 지급 여부, 가입 가능 여부는 해당 보험회사의 약관, 인수기준, 심사결과에 따라 달라질 수 있습니다.'
 
@@ -12,7 +13,7 @@ const SECTION_MARKERS = ['SUMMARY', 'COVERAGE', 'MISCONCEPTIONS', 'CHECKLIST', '
 
 const PDF_CONTENT_LIMIT = 12_000
 
-function parseOutputSections(raw: string): Record<string, string> {
+function parseOutputSections(raw: string, disclaimer: string = DISCLAIMER): Record<string, string> {
   const result: Record<string, string> = {}
   for (let i = 0; i < SECTION_MARKERS.length; i++) {
     const marker = SECTION_MARKERS[i]
@@ -22,7 +23,7 @@ function parseOutputSections(raw: string): Record<string, string> {
     if (start === -1) continue
     const contentStart = start + startTag.length
     const end = nextMarker ? raw.indexOf(`[${nextMarker}]`, contentStart) : raw.length
-    result[marker] = raw.slice(contentStart, end !== -1 ? end : raw.length).trim() + DISCLAIMER
+    result[marker] = raw.slice(contentStart, end !== -1 ? end : raw.length).trim() + disclaimer
   }
   return result
 }
@@ -42,6 +43,7 @@ export async function POST(request: NextRequest) {
     difficultyLevel,
     formatStyle,
     extraRequests,
+    categoryId,
     forceRegenerate = false,
   } = body
 
@@ -80,7 +82,9 @@ export async function POST(request: NextRequest) {
   // Truncate pdf content to avoid token overflow
   const pdfContent = fileRow.extracted_text.slice(0, PDF_CONTENT_LIMIT)
 
-  const prompt = renderPrompt(template, {
+  const category = await resolveProductCategory(categoryId)
+
+  let prompt = renderPrompt(template, {
     pdf_content: pdfContent,
     age_group: ageGroup || '정보 없음',
     occupation: occupation || '정보 없음',
@@ -90,11 +94,14 @@ export async function POST(request: NextRequest) {
     format_style: formatStyle || '친근하고 쉽게',
     extra_requests: extraRequests || '없음',
   })
+  const categoryAddendum = buildProductCategoryAddendum(category)
+  if (categoryAddendum) prompt = `${prompt}\n\n${categoryAddendum}`
+  const fullDisclaimer = category?.riskNotice ? `${DISCLAIMER}\n${category.riskNotice}` : DISCLAIMER
 
   const cacheInput = {
     fileId,
     ageGroup, occupation, customerSituation, explanationPurpose,
-    difficultyLevel, formatStyle, extraRequests,
+    difficultyLevel, formatStyle, extraRequests, categoryId: category?.id ?? null,
     // Include first 500 chars of PDF text to distinguish files in cache
     pdfPreview: fileRow.extracted_text.slice(0, 500),
   }
@@ -111,7 +118,7 @@ export async function POST(request: NextRequest) {
       promptVersion: version,
       forceRegenerate,
     })
-    sections = parseOutputSections(result.text)
+    sections = parseOutputSections(result.text, fullDisclaimer)
 
     // Stale cache from before a prompt/format change may not contain valid markers — bypass it once
     if (Object.keys(sections).length === 0 && result.cachedAt) {
@@ -124,7 +131,7 @@ export async function POST(request: NextRequest) {
         promptVersion: version,
         forceRegenerate: true,
       })
-      sections = parseOutputSections(result.text)
+      sections = parseOutputSections(result.text, fullDisclaimer)
     }
   } catch (err) {
     if (err instanceof DuplicateRequestError) {

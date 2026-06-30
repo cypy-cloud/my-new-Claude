@@ -79,6 +79,7 @@ export interface AiCoreRequest {
   feature: AiCoreFeature
   userId?: string
   vars: Record<string, string>
+  categoryId?: string
   forceRegenerate?: boolean
   skipFallback?: boolean
   maxRetries?: number
@@ -96,4 +97,5 @@ export interface AiCoreResponse {
   usage: { inputTokens: number; outputTokens: number; totalTokens: number }
   warnings: SafetyWarning[]
   companyName: string | null
+  categoryName: string | null
 }

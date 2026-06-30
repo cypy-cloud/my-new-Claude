@@ -11,6 +11,7 @@ import { logRequest } from './request-logger'
 import { generate, generateMock, selectProvider } from './ai-provider'
 import { resolveModel } from './model-policy'
 import { resolveCompanyContext, buildCompanyPromptAddendum, resolveDisclaimer } from './company-profile'
+import { resolveProductCategory, buildProductCategoryAddendum } from './product-category'
 
 export class DuplicateRequestError extends Error {
   constructor(message: string) {
@@ -43,6 +44,7 @@ export async function runAiRequest(req: AiCoreRequest): Promise<AiCoreResponse> 
     feature,
     userId,
     vars,
+    categoryId,
     forceRegenerate = false,
     skipFallback = false,
     maxRetries = MAX_RETRIES_DEFAULT,
@@ -58,9 +60,16 @@ export async function runAiRequest(req: AiCoreRequest): Promise<AiCoreResponse> 
   // Per-insurance-company tone/compliance/forbidden-expression/anti-hallucination addendum
   const companyContext = await resolveCompanyContext(userId, feature)
   prompt = `${prompt}\n\n${buildCompanyPromptAddendum(companyContext)}`
-  const disclaimer = resolveDisclaimer(companyContext)
+  // Structured product category addendum + risk notice
+  const category = await resolveProductCategory(categoryId)
+  const categoryAddendum = buildProductCategoryAddendum(category)
+  if (categoryAddendum) prompt = `${prompt}\n\n${categoryAddendum}`
 
-  const inputHash = createInputHash({ feature, vars, company: companyContext.companyName })
+  const disclaimer = category?.riskNotice
+    ? `${resolveDisclaimer(companyContext)}\n${category.riskNotice}`
+    : resolveDisclaimer(companyContext)
+
+  const inputHash = createInputHash({ feature, vars, company: companyContext.companyName, categoryId: category?.id ?? null })
   let lockAcquired = false
 
   // 10. Cache check
@@ -100,6 +109,7 @@ export async function runAiRequest(req: AiCoreRequest): Promise<AiCoreResponse> 
         },
         warnings,
         companyName: companyContext.companyName,
+        categoryName: category?.name ?? null,
       }
     }
   }
@@ -202,5 +212,6 @@ export async function runAiRequest(req: AiCoreRequest): Promise<AiCoreResponse> 
     usage: response.usage,
     warnings,
     companyName: companyContext.companyName,
+    categoryName: category?.name ?? null,
   }
 }
