@@ -37,7 +37,7 @@ export async function getCurrentUserPlan(): Promise<PlanId> {
   const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('plan_type')
-    .eq('user_id', user.id)
+    .eq('id', user.id)
     .single()
 
   return (profile?.plan_type as PlanId) ?? 'free'

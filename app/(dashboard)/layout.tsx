@@ -18,16 +18,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { data: profile } = await (adminSupabase as any)
     .from("profiles")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("id", user.id)
     .single()
 
   if (!profile) {
-    // Profile should have been created by the handle_new_user signup trigger.
-    // If missing, create it via admin client (bypasses RLS).
+    // Profile missing — create via admin client (bypasses RLS)
     const { data: newProfile } = await (adminSupabase as any)
       .from("profiles")
       .insert({
-        user_id: user.id,
+        id: user.id,
         email: user.email,
         name: user.email?.split("@")[0] ?? "사용자",
         role: user.email === "gocypy@gmail.com" ? "super_admin" : "user",
@@ -46,8 +45,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       )
     }
   } else if (profile.role !== "super_admin" && user.email === "gocypy@gmail.com") {
-    // 관리자 계정 role 자동 설정 (service role key로 RLS 우회)
-    await (adminSupabase as any).from("profiles").update({ role: "super_admin" }).eq("user_id", user.id)
+    await (adminSupabase as any).from("profiles").update({ role: "super_admin" }).eq("id", user.id)
     profile.role = "super_admin"
   }
   if (profile?.status === "suspended" || profile?.status === "deleted") redirect("/login")

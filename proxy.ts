@@ -50,7 +50,7 @@ export async function proxy(request: NextRequest) {
     const { data: profile } = await adminClient
       .from('profiles')
       .select('role')
-      .eq('user_id', user.id)
+      .eq('id', user.id)
       .single()
 
     if (!profile || !['admin', 'super_admin'].includes(profile.role as string)) {
