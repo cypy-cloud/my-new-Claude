@@ -291,6 +291,23 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
           </div>
         </div>
 
+        {/* 특별 보장 내용 (후킹 포인트) */}
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium">
+            특별 보장 내용 <span className="text-orange-500 font-normal">(입력 시 후킹 문구에 활용돼요)</span>
+          </Label>
+          <Textarea
+            placeholder="예: 3대 질병(암·뇌·심장) 진단 시 즉시 3,000만원 일시금 지급, 100세까지 갱신 없이 보장 유지"
+            value={extraNotes}
+            onChange={e => setExtraNotes(e.target.value)}
+            className="min-h-[70px] resize-none text-sm"
+            disabled={isLoading}
+          />
+          <p className="text-[11px] text-gray-400">
+            특정 상품의 차별화된 보장 내용을 입력하면, 고객의 호기심을 자극하는 후킹 문구가 메시지에 반영됩니다.
+          </p>
+        </div>
+
         {/* 고급 설정 토글 */}
         <button
           type="button"
@@ -298,7 +315,7 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
           className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition-colors"
         >
           {showAdvanced ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-          고급 설정 {showAdvanced ? "닫기" : "열기"} (직업, 관계, 추가 참고)
+          고급 설정 {showAdvanced ? "닫기" : "열기"} (직업, 관계)
         </button>
 
         {showAdvanced && (
@@ -328,16 +345,6 @@ export function MessageGenerator({ initialUsage, limit, planName }: Props) {
                   {RELATIONSHIPS.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
               </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">추가 참고 내용</Label>
-              <Textarea
-                placeholder="예: 고객이 최근 직업을 바꿨습니다. 새로운 직업에 맞는 보험을 추천하고 싶습니다."
-                value={extraNotes}
-                onChange={e => setExtraNotes(e.target.value)}
-                className="min-h-[70px] resize-none text-sm"
-                disabled={isLoading}
-              />
             </div>
           </div>
         )}

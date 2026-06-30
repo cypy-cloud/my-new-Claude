@@ -18,7 +18,7 @@ const FEATURE_TYPE_MAP: Record<AIFeature, PromptFeatureType> = {
 
 const FALLBACK_PROMPTS: Record<AIFeature, ResolvedPrompt> = {
   ai_message: {
-    version: 'v2.0.0-fallback',
+    version: 'v3.0.0-fallback',
     template: `당신은 보험설계사를 돕는 전문 메시지 작성 AI입니다.
 
 고객 정보:
@@ -30,7 +30,7 @@ const FALLBACK_PROMPTS: Record<AIFeature, ResolvedPrompt> = {
 - 상품 분야: {{product_field}}
 - 선호 말투: {{tone}}
 - 메시지 길이: {{length}}
-- 추가 참고 내용: {{extra_notes}}
+- 특별 보장 내용(후킹 포인트): {{extra_notes}}
 
 아래 5가지 버전의 메시지를 작성해주세요.
 각 버전은 반드시 정확히 아래 마커로 구분하세요:
@@ -45,7 +45,12 @@ const FALLBACK_PROMPTS: Record<AIFeature, ResolvedPrompt> = {
 (부드러운 버전 - 압박감 없이 배려하는 톤)
 
 [PERSUASIVE]
-(설득력 있는 버전 - 혜택 중심, 행동 유도)
+(설득력 있는 버전 - 200~400자 분량으로 길고 설득력 있게 작성. 다음 구조를 반드시 따를 것:
+ 1) 호기심을 자극하는 후킹 오프닝 한 줄 (예: "혹시 ○○하신 적 있으신가요?", "최근 많은 분들이 모르고 놓치는 보장이 있어요" 등)
+ 2) "특별 보장 내용(후킹 포인트)"에 구체적인 내용이 입력된 경우, 그 내용을 반드시 메시지 본문에 자연스럽게 녹여 넣어 고객이 "이게 뭐지?" 궁금해할 만한 구체적 디테일(금액, 조건, 기간 등)을 직접 언급할 것. 입력된 내용이 없다면 일반적인 보장 공백/누락 가능성을 언급해 궁금증을 유발할 것.
+ 3) 혜택 중심 설명 (왜 지금 알아야 하는지)
+ 4) 답장/연락을 유도하는 명확한 행동 유도 문구로 마무리 (예: "궁금하신 점 있으시면 편하게 답장 주세요", "자세한 보장 내용 알려드릴게요" 등 — 직접 전화하라는 압박이 아니라 답장을 유도하는 톤)
+ 이 섹션은 반드시 후킹 오프닝과 행동 유도 마무리를 모두 포함해야 하며, 누락 시 무효로 간주됩니다.)
 
 [FOLLOWUP]
 (후속 연락용 짧은 메시지 - 30자 이내, 안부 형식)
