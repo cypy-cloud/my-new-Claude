@@ -407,7 +407,7 @@ export type Database = {
           file_type: string
           extracted_text: string | null
           summary_text: string | null
-          status: 'uploaded' | 'processing' | 'completed' | 'failed' | 'deleted'
+          status: 'uploaded' | 'processing' | 'completed' | 'failed' | 'deleted' | 'original_expired'
           delete_after: string | null
           created_at: string
           updated_at: string
@@ -421,7 +421,7 @@ export type Database = {
           file_type?: string
           extracted_text?: string | null
           summary_text?: string | null
-          status?: 'uploaded' | 'processing' | 'completed' | 'failed' | 'deleted'
+          status?: 'uploaded' | 'processing' | 'completed' | 'failed' | 'deleted' | 'original_expired'
           delete_after?: string | null
           created_at?: string
           updated_at?: string

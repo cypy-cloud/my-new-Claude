@@ -10,12 +10,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { clientTrackEvent } from "@/lib/analytics/client-track"
+import { ORIGINAL_DELETED_NOTICE } from "@/lib/files/constants"
 
 interface UploadedFile {
   id: string
   original_file_name: string
   file_size_mb: number
-  status: "uploaded" | "processing" | "completed" | "failed" | "deleted"
+  status: "uploaded" | "processing" | "completed" | "failed" | "deleted" | "original_expired"
   extracted_text: string | null
   summary_text: string | null
   delete_after: string | null
@@ -161,6 +162,7 @@ export function PdfUploader({ initialUploadCount, uploadLimit, maxFileSizeMb, st
       case "completed":  return <Badge className="text-xs bg-green-100 text-green-700 border-green-200">추출 완료</Badge>
       case "processing": return <Badge className="text-xs bg-blue-100 text-blue-700 border-blue-200">처리 중</Badge>
       case "failed":     return <Badge className="text-xs bg-red-100 text-red-700 border-red-200">추출 불가</Badge>
+      case "original_expired": return <Badge className="text-xs bg-gray-100 text-gray-500 border-gray-200">원본 삭제됨</Badge>
       default:           return <Badge variant="secondary" className="text-xs">업로드됨</Badge>
     }
   }
@@ -278,7 +280,13 @@ export function PdfUploader({ initialUploadCount, uploadLimit, maxFileSizeMb, st
             {previewFile ? (
               <div className="space-y-2">
                 <p className="text-xs text-gray-500 font-medium truncate">{previewFile.original_file_name}</p>
-                {previewFile.status === "completed" && previewFile.extracted_text ? (
+                {previewFile.status === "original_expired" && (
+                  <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg text-xs text-gray-500">
+                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span>{ORIGINAL_DELETED_NOTICE}</span>
+                  </div>
+                )}
+                {(previewFile.status === "completed" || previewFile.status === "original_expired") && previewFile.extracted_text ? (
                   <div className="whitespace-pre-wrap text-xs leading-relaxed text-gray-700 bg-gray-50 rounded-lg p-3 max-h-[220px] overflow-y-auto border">
                     {previewFile.extracted_text.slice(0, 2000)}
                     {previewFile.extracted_text.length > 2000 && (
@@ -350,6 +358,8 @@ export function PdfUploader({ initialUploadCount, uploadLimit, maxFileSizeMb, st
                       <CheckCircle className="h-5 w-5 text-green-600" />
                     ) : file.status === "failed" ? (
                       <AlertCircle className="h-5 w-5 text-red-500" />
+                    ) : file.status === "original_expired" ? (
+                      <Clock className="h-5 w-5 text-gray-400" />
                     ) : (
                       <FileText className="h-5 w-5 text-gray-400" />
                     )}
@@ -364,7 +374,7 @@ export function PdfUploader({ initialUploadCount, uploadLimit, maxFileSizeMb, st
                     <div className="flex items-center gap-3 text-xs text-gray-400 flex-wrap">
                       <span>{formatSize(file.file_size_mb)}</span>
                       <span>업로드: {formatDate(file.created_at)}</span>
-                      {file.delete_after && (
+                      {file.delete_after && file.status !== "original_expired" && (
                         <span className={`flex items-center gap-1 ${isExpiringSoon ? "text-red-500 font-medium" : "text-gray-400"}`}>
                           <Clock className="h-3 w-3" />
                           삭제 예정: {formatDate(file.delete_after)}
@@ -375,11 +385,14 @@ export function PdfUploader({ initialUploadCount, uploadLimit, maxFileSizeMb, st
                     {file.status === "failed" && (
                       <p className="text-xs text-red-500">{file.summary_text ?? "텍스트 추출 불가 (스캔 PDF)"}</p>
                     )}
+                    {file.status === "original_expired" && (
+                      <p className="text-xs text-gray-500">{ORIGINAL_DELETED_NOTICE}</p>
+                    )}
                   </div>
 
                   {/* Actions */}
                   <div className="flex items-center gap-1 shrink-0">
-                    {file.status === "completed" && (
+                    {(file.status === "completed" || file.status === "original_expired") && (
                       <>
                         <Button
                           variant="ghost" size="sm"

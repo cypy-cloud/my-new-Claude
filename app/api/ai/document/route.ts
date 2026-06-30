@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
 
   if (!fileRow) return NextResponse.json({ error: '파일을 찾을 수 없습니다' }, { status: 404 })
   if (fileRow.status === 'deleted') return NextResponse.json({ error: '삭제된 파일입니다' }, { status: 410 })
-  if (!fileRow.extracted_text || fileRow.status !== 'completed') {
+  if (!fileRow.extracted_text || !['completed', 'original_expired'].includes(fileRow.status)) {
     return NextResponse.json({ error: '텍스트가 추출되지 않은 파일입니다. 다른 파일을 선택해주세요.' }, { status: 422 })
   }
 
