@@ -38,6 +38,8 @@ function inferSeverity(err: unknown): ErrorSeverity {
   return 'low'
 }
 
+// 주의: options.metadata에는 이름/연락처/주민번호 등 개인정보(PII)를 절대 담지 마세요.
+// fileName, feature, errorCode 등 식별 불가능한 최소 정보만 허용합니다.
 export async function logError(
   err: unknown,
   options: LogErrorOptions = {}

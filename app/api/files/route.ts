@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { logError } from '@/lib/errors/logger'
 
 // GET /api/files — list user's uploaded files
 export async function GET() {
@@ -17,8 +18,9 @@ export async function GET() {
     .limit(50)
 
   if (error) {
-    console.error('[files] list error:', JSON.stringify(error))
-    return NextResponse.json({ error: '조회에 실패했습니다', detail: error.message }, { status: 500 })
+    await logError(error, { userId: user.id, area: 'database', severity: 'medium' })
+    const detail = process.env.NODE_ENV === 'development' ? error.message : undefined
+    return NextResponse.json({ error: '조회에 실패했습니다', detail }, { status: 500 })
   }
 
   return NextResponse.json({ files: data ?? [] })

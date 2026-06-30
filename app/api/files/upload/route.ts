@@ -94,9 +94,9 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (insertError || !fileRecord) {
-    console.error('[upload] insert error:', JSON.stringify(insertError))
     await logError(insertError, { userId: user.id, area: 'upload', severity: 'high', metadata: { fileName: file.name } })
-    return NextResponse.json({ error: '파일 등록에 실패했습니다', detail: insertError?.message }, { status: 500 })
+    const detail = process.env.NODE_ENV === 'development' ? insertError?.message : undefined
+    return NextResponse.json({ error: '파일 등록에 실패했습니다', detail }, { status: 500 })
   }
 
   const fileId = fileRecord.id
