@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
       file_size_mb: parseFloat(fileSizeMb.toFixed(3)),
       file_type: 'pdf',
       status: 'processing',
+      delete_after: calcDeleteAfter(limits.storageDays),
     })
     .select('id')
     .single()
