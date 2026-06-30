@@ -22,6 +22,14 @@ export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'trialing'
 export type FeatureType = 'ai_message' | 'ai_script' | 'ai_document'
 export type TeamMemberRole = 'owner' | 'manager' | 'member'
 
+export type PromptFeatureType = 'sms' | 'script' | 'pdf_explanation'
+
+export const PROMPT_FEATURE_LABELS: Record<PromptFeatureType, string> = {
+  sms: 'AI 문자/카톡 생성',
+  script: 'AI 상담 스크립트 생성',
+  pdf_explanation: 'AI PDF 설명자료 생성',
+}
+
 export type FeedbackCategory = 'bug' | 'feature_request' | 'improvement' | 'billing' | 'other'
 export type FeedbackStatus = 'open' | 'reviewing' | 'planned' | 'resolved' | 'closed'
 export type FeedbackPriority = 'low' | 'medium' | 'high'

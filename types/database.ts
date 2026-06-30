@@ -487,23 +487,27 @@ export type Database = {
       prompt_versions: {
         Row: {
           id: string
-          feature: 'ai_message' | 'ai_script' | 'ai_document'
+          feature_type: 'sms' | 'script' | 'pdf_explanation'
           version: string
-          prompt_template: string
+          title: string | null
+          system_prompt: string | null
+          user_prompt_template: string
           is_active: boolean
-          description: string | null
           created_by: string | null
           created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
-          feature: 'ai_message' | 'ai_script' | 'ai_document'
+          feature_type: 'sms' | 'script' | 'pdf_explanation'
           version: string
-          prompt_template: string
+          title?: string | null
+          system_prompt?: string | null
+          user_prompt_template: string
           is_active?: boolean
-          description?: string | null
           created_by?: string | null
           created_at?: string
+          updated_at?: string
         }
         Update: Partial<Database['public']['Tables']['prompt_versions']['Insert']>
       }

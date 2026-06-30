@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Zap, LayoutDashboard, Users, ArrowLeft, Shield, ShieldCheck, Crown, AlertTriangle, Megaphone, MessageSquareWarning } from 'lucide-react'
+import { Zap, LayoutDashboard, Users, ArrowLeft, Shield, ShieldCheck, Crown, AlertTriangle, Megaphone, MessageSquareWarning, Sparkles } from 'lucide-react'
 import { requireAdmin } from '@/lib/auth/permissions'
 import type { UserRole } from '@/lib/auth/permissions'
 
@@ -46,6 +46,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </Link>
           <Link href="/admin/feedback" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 hover:bg-white/10 hover:text-white transition-colors">
             <MessageSquareWarning className="h-4 w-4" /> 피드백 관리
+          </Link>
+          <Link href="/admin/prompts" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 hover:bg-white/10 hover:text-white transition-colors">
+            <Sparkles className="h-4 w-4" /> 프롬프트 관리
           </Link>
           {isSuperAdmin && (
             <>

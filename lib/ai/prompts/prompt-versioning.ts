@@ -1,9 +1,19 @@
 import { createClient } from '@/lib/supabase/server'
 import type { AIFeature } from '../types'
+import type { PromptFeatureType } from '@/types'
 
 export interface ResolvedPrompt {
   template: string
   version: string
+}
+
+// prompt_versions.feature_type uses its own vocabulary (sms/script/pdf_explanation) so the
+// admin-facing table stays readable independently of the internal AIFeature naming used
+// throughout provider.ts, usage limits, and ai_requests logging.
+const FEATURE_TYPE_MAP: Record<AIFeature, PromptFeatureType> = {
+  ai_message: 'sms',
+  ai_script: 'script',
+  ai_document: 'pdf_explanation',
 }
 
 const FALLBACK_PROMPTS: Record<AIFeature, ResolvedPrompt> = {
@@ -166,13 +176,16 @@ export async function getActivePrompt(feature: AIFeature): Promise<ResolvedPromp
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await (supabase as any)
       .from('prompt_versions')
-      .select('prompt_template, version')
-      .eq('feature', feature)
+      .select('system_prompt, user_prompt_template, version')
+      .eq('feature_type', FEATURE_TYPE_MAP[feature])
       .eq('is_active', true)
       .maybeSingle()
 
-    if (data?.prompt_template) {
-      return { template: data.prompt_template, version: data.version }
+    if (data?.user_prompt_template) {
+      const template = data.system_prompt
+        ? `${data.system_prompt}\n\n${data.user_prompt_template}`
+        : data.user_prompt_template
+      return { template, version: data.version }
     }
   } catch { /* fallback below */ }
 
