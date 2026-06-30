@@ -10,6 +10,7 @@ import { checkCache, saveCache, createInputHash, acquireLock, releaseLock } from
 import { logRequest } from './request-logger'
 import { generate, generateMock, selectProvider } from './ai-provider'
 import { resolveModel } from './model-policy'
+import { resolveCompanyContext, buildCompanyPromptAddendum, resolveDisclaimer } from './company-profile'
 
 export class DuplicateRequestError extends Error {
   constructor(message: string) {
@@ -22,6 +23,15 @@ const MAX_RETRIES_DEFAULT = 2
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+// Appends the resolved (company-specific or default) disclaimer to every output section.
+function applyDisclaimer(sections: Record<string, string>, disclaimer: string): Record<string, string> {
+  const result: Record<string, string> = {}
+  for (const [key, text] of Object.entries(sections)) {
+    result[key] = `${text}\n\n[고지사항]\n${disclaimer}`
+  }
+  return result
 }
 
 // Main orchestration entry point. Every AI-generation feature (existing and
@@ -43,9 +53,14 @@ export async function runAiRequest(req: AiCoreRequest): Promise<AiCoreResponse> 
 
   // 3. Prompt template loading + rendering
   const { template, version } = await loadPrompt(feature)
-  const prompt = renderPrompt(template, vars)
+  let prompt = renderPrompt(template, vars)
 
-  const inputHash = createInputHash({ feature, vars })
+  // Per-insurance-company tone/compliance/forbidden-expression/anti-hallucination addendum
+  const companyContext = await resolveCompanyContext(userId, feature)
+  prompt = `${prompt}\n\n${buildCompanyPromptAddendum(companyContext)}`
+  const disclaimer = resolveDisclaimer(companyContext)
+
+  const inputHash = createInputHash({ feature, vars, company: companyContext.companyName })
   let lockAcquired = false
 
   // 10. Cache check
@@ -67,7 +82,8 @@ export async function runAiRequest(req: AiCoreRequest): Promise<AiCoreResponse> 
         })
       }
       const rawSections = parseSections(feature, cached.text)
-      const { sections, warnings } = applySafetyFilter(rawSections)
+      const { sections: filteredSections, warnings } = applySafetyFilter(rawSections, companyContext.forbiddenExpressions)
+      const sections = applyDisclaimer(filteredSections, disclaimer)
       return {
         feature,
         rawText: cached.text,
@@ -83,6 +99,7 @@ export async function runAiRequest(req: AiCoreRequest): Promise<AiCoreResponse> 
           totalTokens: cached.inputTokens + cached.outputTokens,
         },
         warnings,
+        companyName: companyContext.companyName,
       }
     }
   }
@@ -146,7 +163,8 @@ export async function runAiRequest(req: AiCoreRequest): Promise<AiCoreResponse> 
   const rawSections = parseSections(feature, response.text)
 
   // 6/7/8. Safety filtering (risk-expression removal, exaggeration/guarantee detection)
-  const { sections, warnings } = applySafetyFilter(rawSections)
+  const { sections: filteredSections, warnings } = applySafetyFilter(rawSections, companyContext.forbiddenExpressions)
+  const sections = applyDisclaimer(filteredSections, disclaimer)
 
   // 9. Cost estimation
   const estimatedCostUsd =
@@ -183,5 +201,6 @@ export async function runAiRequest(req: AiCoreRequest): Promise<AiCoreResponse> 
     estimatedCostUsd,
     usage: response.usage,
     warnings,
+    companyName: companyContext.companyName,
   }
 }

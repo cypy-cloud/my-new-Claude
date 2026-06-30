@@ -95,4 +95,5 @@ export interface AiCoreResponse {
   estimatedCostUsd: number
   usage: { inputTokens: number; outputTokens: number; totalTokens: number }
   warnings: SafetyWarning[]
+  companyName: string | null
 }

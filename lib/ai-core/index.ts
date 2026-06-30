@@ -16,3 +16,6 @@ export { estimateRequestCost, estimateActualCost, getModelCostTable } from './co
 
 export { resolveProviderName, resolveModel, getGenerationParams } from './model-policy'
 export type { CoreProviderName } from './model-policy'
+
+export { resolveCompanyContext, buildCompanyPromptAddendum, resolveDisclaimer } from './company-profile'
+export type { CompanyPromptContext } from './company-profile'

@@ -34,8 +34,11 @@ function findMatches(text: string, patterns: string[]): string[] {
   return patterns.filter((p) => text.includes(p))
 }
 
-export function filterRiskExpressions(text: string): { text: string; removed: string[] } {
-  const removed = findMatches(text, RISK_EXPRESSIONS)
+export function filterRiskExpressions(
+  text: string,
+  extraForbidden: string[] = []
+): { text: string; removed: string[] } {
+  const removed = findMatches(text, [...RISK_EXPRESSIONS, ...extraForbidden])
   let result = text
   for (const phrase of removed) result = result.replaceAll(phrase, '')
   return { text: result, removed }
@@ -57,7 +60,10 @@ export function detectDefinitiveGuarantee(text: string, sectionKey?: string): Sa
   }))
 }
 
-export function applySafetyFilter(sections: Record<string, string>): {
+export function applySafetyFilter(
+  sections: Record<string, string>,
+  extraForbidden: string[] = []
+): {
   sections: Record<string, string>
   warnings: SafetyWarning[]
 } {
@@ -65,7 +71,7 @@ export function applySafetyFilter(sections: Record<string, string>): {
   const filtered: Record<string, string> = {}
 
   for (const [key, text] of Object.entries(sections)) {
-    const { text: cleaned, removed } = filterRiskExpressions(text)
+    const { text: cleaned, removed } = filterRiskExpressions(text, extraForbidden)
     filtered[key] = cleaned
     removed.forEach((phrase) => warnings.push({ type: 'risk_expression', phrase, sectionKey: key }))
     warnings.push(...detectExaggeration(text, key))
