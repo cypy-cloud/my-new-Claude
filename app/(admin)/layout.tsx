@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Zap, LayoutDashboard, Users, ArrowLeft, Shield, ShieldCheck, Crown, AlertTriangle, Megaphone, MessageSquareWarning, Sparkles, FileX2, Database, Rocket, Building2, Tag, CreditCard, HardDrive, Settings, Star, ShieldX } from 'lucide-react'
+import { Zap, LayoutDashboard, Users, ArrowLeft, Shield, ShieldCheck, Crown, AlertTriangle, Megaphone, MessageSquareWarning, Sparkles, FileX2, Database, Rocket, Building2, Tag, CreditCard, HardDrive, Settings, Star, ShieldX, Activity } from 'lucide-react'
 import { requireAdmin } from '@/lib/auth/permissions'
 import type { UserRole } from '@/lib/auth/permissions'
 
@@ -34,6 +34,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <p className="text-xs text-white/40 font-semibold uppercase tracking-wider px-3 mb-3">관리 메뉴</p>
           <Link href="/admin/dashboard" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 hover:bg-white/10 hover:text-white transition-colors">
             <LayoutDashboard className="h-4 w-4" /> 관리자 대시보드
+          </Link>
+          <Link href="/admin/monitoring" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 hover:bg-white/10 hover:text-white transition-colors">
+            <Activity className="h-4 w-4" /> 운영 모니터링
           </Link>
           <Link href="/admin/users" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 hover:bg-white/10 hover:text-white transition-colors">
             <Users className="h-4 w-4" /> 사용자 관리
