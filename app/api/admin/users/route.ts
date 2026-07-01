@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
   }
 
   const { data, error, count } = await query
-  if (error) return NextResponse.json({ error: '조회 실패' }, { status: 500 })
+  if (error) return NextResponse.json({ error: '조회 실패', detail: error.message, code: error.code }, { status: 500 })
 
   return NextResponse.json({ users: data ?? [], total: count ?? 0 })
 }
