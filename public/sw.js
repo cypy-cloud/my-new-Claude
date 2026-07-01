@@ -8,7 +8,7 @@ const OFFLINE_URL = '/offline'
 const STATIC_ASSETS = [
   '/',
   '/offline',
-  '/manifest.webmanifest',
+  '/manifest.json',
   '/icons/icon.svg',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
@@ -81,7 +81,7 @@ self.addEventListener('fetch', event => {
   // 정적 리소스 (이미지, 폰트, manifest 등): Cache first → network
   const isStaticAsset =
     url.pathname.startsWith('/icons/') ||
-    url.pathname === '/manifest.webmanifest' ||
+    url.pathname === '/manifest.json' ||
     /\.(png|jpg|jpeg|svg|ico|woff2?|ttf)$/.test(url.pathname)
 
   if (isStaticAsset) {
