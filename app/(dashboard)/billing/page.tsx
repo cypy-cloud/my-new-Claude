@@ -4,8 +4,9 @@ import { PageTracker } from "@/components/analytics/page-tracker"
 import { UpgradeButton } from "@/components/billing/upgrade-button"
 import { SubscriptionHistory } from "@/components/billing/subscription-history"
 import { AdminPlanSwitcher } from "@/components/billing/admin-plan-switcher"
-import { Badge } from "@/components/ui/badge"
+import { BillingDashboard } from "@/components/billing/billing-dashboard"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { CheckCircle, XCircle, Zap, Shield, Star, Crown } from "lucide-react"
 import { PLANS, type PlanId } from "@/lib/subscription/plans"
 
@@ -79,73 +80,86 @@ export default async function BillingPage() {
   return (
     <div className="space-y-8 max-w-5xl">
       <PageTracker event="billing_visit" />
+
+      {/* 헤더 */}
       <div className="text-center">
         <h1 className="text-2xl font-bold text-[#1e3a5f]">요금제 선택</h1>
         <p className="text-gray-500 mt-2">업무 규모에 맞는 플랜을 선택하세요. 언제든지 변경 가능합니다.</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {PLAN_ORDER.map((planId) => {
-          const plan = PLANS[planId]
-          const ui = PLAN_UI[planId]
-          const features = PLAN_FEATURES[planId]
-          const Icon = ui.icon
-          const isCurrent = planId === currentPlanId
-
-          return (
-            <div
-              key={planId}
-              className={`relative bg-white rounded-2xl border-2 ${ui.border} p-5 flex flex-col ${
-                ui.scale ? "shadow-xl lg:scale-[1.03]" : "shadow-sm"
-              }`}
-            >
-              {ui.badge && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                  <Badge className={`${planId === "pro" ? "bg-[#1e3a5f]" : planId === "basic" ? "bg-blue-600" : "bg-orange-500"} text-white px-3 py-1 text-xs`}>
-                    {ui.badge}
-                  </Badge>
-                </div>
-              )}
-              {isCurrent && (
-                <div className="absolute -top-3 right-3">
-                  <Badge className="bg-green-500 text-white px-2 py-1 text-xs">현재 플랜</Badge>
-                </div>
-              )}
-
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${ui.iconBg}`}>
-                <Icon className="h-5 w-5" />
-              </div>
-              <h3 className="text-lg font-bold text-[#1e3a5f]">{plan.name}</h3>
-              <div className="flex items-end gap-1 my-2">
-                <span className="text-2xl font-bold text-[#1e3a5f]">
-                  {plan.price === 0 ? "무료" : `₩${plan.price.toLocaleString()}`}
-                </span>
-                {plan.price > 0 && <span className="text-gray-400 text-xs mb-0.5">/월</span>}
-              </div>
-
-              <ul className="space-y-2 mb-5 flex-1">
-                {features.map((f) => (
-                  <li key={f.label} className="flex items-start gap-1.5 text-xs text-gray-600">
-                    {f.included ? (
-                      <CheckCircle className="h-3.5 w-3.5 text-green-500 shrink-0 mt-0.5" />
-                    ) : (
-                      <XCircle className="h-3.5 w-3.5 text-gray-300 shrink-0 mt-0.5" />
-                    )}
-                    <span className={f.included ? "" : "text-gray-400"}>{f.label}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <UpgradeButton
-                planId={planId}
-                isCurrent={isCurrent}
-                isDowngrade={planId === "free" || PLAN_ORDER.indexOf(planId) < PLAN_ORDER.indexOf(currentPlanId)}
-              />
-            </div>
-          )
-        })}
+      {/* 현재 플랜 + 사용량 대시보드 */}
+      <div>
+        <h2 className="text-sm font-semibold text-gray-600 mb-3">현재 구독 현황</h2>
+        <BillingDashboard initialPlanId={currentPlanId} />
       </div>
 
+      {/* 요금제 비교 카드 */}
+      <div>
+        <h2 className="text-sm font-semibold text-gray-600 mb-3">요금제 비교</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {PLAN_ORDER.map((planId) => {
+            const plan = PLANS[planId]
+            const ui = PLAN_UI[planId]
+            const features = PLAN_FEATURES[planId]
+            const Icon = ui.icon
+            const isCurrent = planId === currentPlanId
+            const isDowngrade = PLAN_ORDER.indexOf(planId) < PLAN_ORDER.indexOf(currentPlanId)
+
+            return (
+              <div
+                key={planId}
+                className={`relative bg-white rounded-2xl border-2 ${ui.border} p-5 flex flex-col ${
+                  ui.scale ? "shadow-xl lg:scale-[1.03]" : "shadow-sm"
+                }`}
+              >
+                {ui.badge && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                    <Badge className={`${planId === "pro" ? "bg-[#1e3a5f]" : planId === "basic" ? "bg-blue-600" : "bg-orange-500"} text-white px-3 py-1 text-xs`}>
+                      {ui.badge}
+                    </Badge>
+                  </div>
+                )}
+                {isCurrent && (
+                  <div className="absolute -top-3 right-3">
+                    <Badge className="bg-green-500 text-white px-2 py-1 text-xs">현재 플랜</Badge>
+                  </div>
+                )}
+
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${ui.iconBg}`}>
+                  <Icon className="h-5 w-5" />
+                </div>
+                <h3 className="text-lg font-bold text-[#1e3a5f]">{plan.name}</h3>
+                <div className="flex items-end gap-1 my-2">
+                  <span className="text-2xl font-bold text-[#1e3a5f]">
+                    {plan.price === 0 ? "무료" : `₩${plan.price.toLocaleString()}`}
+                  </span>
+                  {plan.price > 0 && <span className="text-gray-400 text-xs mb-0.5">/월</span>}
+                </div>
+
+                <ul className="space-y-2 mb-5 flex-1">
+                  {features.map((f) => (
+                    <li key={f.label} className="flex items-start gap-1.5 text-xs text-gray-600">
+                      {f.included
+                        ? <CheckCircle className="h-3.5 w-3.5 text-green-500 shrink-0 mt-0.5" />
+                        : <XCircle className="h-3.5 w-3.5 text-gray-300 shrink-0 mt-0.5" />
+                      }
+                      <span className={f.included ? "" : "text-gray-400"}>{f.label}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <UpgradeButton
+                  planId={planId}
+                  isCurrent={isCurrent}
+                  isDowngrade={isDowngrade}
+                />
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* 자주 묻는 질문 */}
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base text-[#1e3a5f]">자주 묻는 질문</CardTitle>
@@ -156,6 +170,7 @@ export default async function BillingPage() {
             { q: "사용량은 언제 초기화되나요?", a: "매달 1일 자정에 이번 달 사용량이 초기화됩니다." },
             { q: "결제는 어떻게 이루어지나요?", a: "현재 테스트 중입니다. 곧 토스페이먼츠 결제가 연동될 예정입니다." },
             { q: "환불 정책은 어떻게 되나요?", a: "결제 후 7일 이내 미사용 시 전액 환불이 가능합니다." },
+            { q: "구독 해지 시 데이터는 어떻게 되나요?", a: "구독 해지 후에도 기존에 생성한 데이터는 유지됩니다. 단, 무료 플랜의 저장 용량과 보관 기간 제한이 적용됩니다." },
           ].map((faq) => (
             <div key={faq.q} className="border-b last:border-0 pb-4 last:pb-0">
               <p className="font-medium text-[#1e3a5f] text-sm mb-1">{faq.q}</p>
@@ -165,6 +180,7 @@ export default async function BillingPage() {
         </CardContent>
       </Card>
 
+      {/* 구독 변경 이력 */}
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base text-[#1e3a5f]">구독 변경 이력</CardTitle>
