@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useAIGenerate } from "@/hooks/useAIGenerate"
 import { OutputRater } from "@/components/ai/output-rater"
+import { SafetyCheckDisplay } from "@/components/ai/safety-check-display"
 import { clientTrackFeatureStart, clientTrackDownload } from "@/lib/analytics/client-track"
 import { CategorySelect } from "@/components/ai/category-select"
 
@@ -536,6 +537,14 @@ export function DocumentGenerator({ initialAnalysisCount, analysisLimit, planNam
           <p className="text-xs text-gray-400 text-center">
             {state.cached ? "캐시에서 불러옴" : `${state.provider} 모델로 생성됨`}
           </p>
+        )}
+
+        {hasResult && (
+          <SafetyCheckDisplay
+            text={Object.values(sections).join('\n')}
+            outputId={savedId}
+            featureType="ai_document"
+          />
         )}
 
         {hasResult && (
