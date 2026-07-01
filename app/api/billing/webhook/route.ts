@@ -1,44 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { handleWebhook } from '@/lib/billing/webhook-handler'
-
-// 웹훅 시크릿 검증 (provider별 구현)
-function verifyTossSignature(_body: string, _signature: string): boolean {
-  // TODO: Toss 웹훅 서명 검증
-  // HMAC-SHA256(body, TOSS_WEBHOOK_SECRET)
-  return true // placeholder
-}
-
-function verifyStripeSignature(_body: string, _signature: string): boolean {
-  // TODO: stripe.webhooks.constructEvent() 사용
-  return true // placeholder
-}
+import { getBillingAdapter } from '@/lib/billing/billing-provider'
+import { handleWebhookEvent } from '@/lib/billing/payment-webhook'
 
 export async function POST(request: NextRequest) {
   const rawBody = await request.text()
   const provider = request.nextUrl.searchParams.get('provider') as 'toss' | 'stripe' | null
 
-  if (!provider) return NextResponse.json({ error: 'provider required' }, { status: 400 })
-
-  // 서명 검증
-  const signature = request.headers.get('toss-signature') ?? request.headers.get('stripe-signature') ?? ''
-  const valid = provider === 'toss'
-    ? verifyTossSignature(rawBody, signature)
-    : verifyStripeSignature(rawBody, signature)
-
-  if (!valid) return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
-
-  let payload: Record<string, unknown>
-  try {
-    payload = JSON.parse(rawBody)
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  if (!provider || (provider !== 'toss' && provider !== 'stripe')) {
+    return NextResponse.json({ error: 'provider=toss|stripe 필수' }, { status: 400 })
   }
 
-  await handleWebhook({
+  // provider별 어댑터로 서명 검증
+  const adapter = await getBillingAdapter()
+  const signature = request.headers.get('toss-signature') ?? request.headers.get('stripe-signature') ?? ''
+
+  if (signature && !adapter.verifyWebhookSignature(rawBody, signature)) {
+    return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 400 })
+  }
+
+  let data: Record<string, unknown>
+  try {
+    data = JSON.parse(rawBody)
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
+
+  const result = await handleWebhookEvent({
     provider,
-    eventType: (payload.eventType ?? payload.type) as string,
-    data: payload as Record<string, unknown>,
+    eventType: ((data.eventType ?? data.type) as string) ?? '',
+    rawBody,
+    signature,
+    data,
   })
 
-  return NextResponse.json({ ok: true })
+  if (!result.handled) {
+    // 처리하지 않은 이벤트도 200 반환 (provider 재전송 방지)
+    return NextResponse.json({ ok: true, skipped: true, reason: result.action ?? result.error })
+  }
+
+  return NextResponse.json({ ok: true, action: result.action })
 }

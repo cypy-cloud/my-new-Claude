@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getBillingAdapter } from '@/lib/billing/provider'
-import { updateSubscription } from '@/lib/billing/update-subscription'
+import { getBillingAdapter } from '@/lib/billing/billing-provider'
+import { activateSubscription, recordPayment } from '@/lib/billing/subscription-service'
 import type { PlanId } from '@/lib/subscription/plans'
 
 export async function POST(request: NextRequest) {
@@ -11,43 +11,53 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json()
   const { sessionId, planId, paymentKey, orderId, amount } = body as {
-    sessionId: string; planId: PlanId; paymentKey?: string; orderId?: string; amount?: number
+    sessionId: string
+    planId: PlanId
+    paymentKey?: string
+    orderId?: string
+    amount?: number
   }
 
   if (!sessionId || !planId) {
-    return NextResponse.json({ error: '필수 파라미터가 누락되었습니다' }, { status: 400 })
+    return NextResponse.json({ error: 'sessionId, planId 필수' }, { status: 400 })
   }
-
-  // 현재 플랜 확인
-  const { data: profile } = await (supabase as any)
-    .from('profiles').select('plan_type').eq('id', user.id).single()
-  const fromPlan = (profile?.plan_type as PlanId) ?? 'free'
 
   const adapter = await getBillingAdapter()
   const result = await adapter.verifyPayment({ sessionId, paymentKey, orderId, amount })
 
   if (!result.success) {
-    await (supabase as any).from('subscription_events').insert({
-      user_id: user.id,
-      event_type: 'payment_fail',
-      from_plan: fromPlan,
-      to_plan: planId,
+    // 실패 결제 기록
+    await recordPayment({
+      userId: user.id,
+      amount: amount ?? 0,
       provider: result.provider,
-      provider_tx_id: sessionId,
+      providerTxId: sessionId,
       status: 'failed',
       metadata: { error: result.error },
-    })
+    }).catch(() => null) // 기록 실패해도 응답은 반환
+
     return NextResponse.json({ error: result.error ?? '결제 확인에 실패했습니다' }, { status: 400 })
   }
 
-  await updateSubscription({
+  // 구독 활성화
+  const subscription = await activateSubscription({
     userId: user.id,
-    fromPlan,
-    toPlan: planId,
+    planType: planId,
     provider: result.provider,
-    transactionId: result.transactionId,
-    amount,
+    providerCustomerId: result.customerId,
+    providerSubscriptionId: result.subscriptionId ?? result.transactionId,
   })
 
-  return NextResponse.json({ ok: true, planId, provider: result.provider })
+  // 성공 결제 기록
+  await recordPayment({
+    userId: user.id,
+    subscriptionId: subscription.id,
+    amount: amount ?? 0,
+    provider: result.provider,
+    providerTxId: result.transactionId,
+    status: 'succeeded',
+    paidAt: new Date(),
+  }).catch(() => null)
+
+  return NextResponse.json({ ok: true, planId, provider: result.provider, subscriptionId: subscription.id })
 }

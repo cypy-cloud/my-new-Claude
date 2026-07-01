@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Zap, LayoutDashboard, Users, ArrowLeft, Shield, ShieldCheck, Crown, AlertTriangle, Megaphone, MessageSquareWarning, Sparkles, FileX2, Database, Rocket, Building2, Tag } from 'lucide-react'
+import { Zap, LayoutDashboard, Users, ArrowLeft, Shield, ShieldCheck, Crown, AlertTriangle, Megaphone, MessageSquareWarning, Sparkles, FileX2, Database, Rocket, Building2, Tag, CreditCard } from 'lucide-react'
 import { requireAdmin } from '@/lib/auth/permissions'
 import type { UserRole } from '@/lib/auth/permissions'
 
@@ -58,6 +58,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </Link>
           <Link href="/admin/file-cleanup" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 hover:bg-white/10 hover:text-white transition-colors">
             <FileX2 className="h-4 w-4" /> 원본 PDF 정리
+          </Link>
+          <Link href="/admin/billing" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 hover:bg-white/10 hover:text-white transition-colors">
+            <CreditCard className="h-4 w-4" /> 결제 관리
           </Link>
           <Link href="/admin/backup" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 hover:bg-white/10 hover:text-white transition-colors">
             <Database className="h-4 w-4" /> 데이터 백업
