@@ -10,7 +10,6 @@ export const metadata: Metadata = {
   title: 'FP AI Assistant - 보험설계사를 위한 AI 업무 자동화',
   description: '보험설계사를 위한 AI 기반 문자/카톡 생성, 상담 스크립트, PDF 설명자료 자동화 서비스',
   keywords: ['보험설계사', 'AI', '보험', '문자생성', '스크립트', 'FP'],
-  manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
