@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Loader2, Building2, UserPlus, Crown, Shield, User, Mail, Clock, BarChart3 } from "lucide-react"
 import { TEAM_ROLE_LABELS, type Team, type TeamMember, type TeamInvite, type TeamRole } from "@/lib/team/types"
+import { TeamFileManager } from "@/components/team/team-file-manager"
 
 const ROLE_ICON: Record<TeamRole, React.ElementType> = { owner: Crown, manager: Shield, member: User }
 
@@ -48,6 +49,7 @@ export function TeamManager() {
     <div className="space-y-6">
       <TeamSummaryCard team={team} myRole={myRole!} memberCount={memberCount} />
       <TeamMembersCard isTeamAdmin={isTeamAdmin} onChanged={load} />
+      <TeamFileManager />
       {isTeamAdmin && <TeamUsageCard />}
     </div>
   )

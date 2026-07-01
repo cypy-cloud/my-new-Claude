@@ -28,6 +28,22 @@ export interface TeamInvite {
   connected_at: string | null
 }
 
+export type TeamFileStatus = 'processing' | 'completed' | 'failed' | 'deleted' | 'original_expired'
+export type TeamFileVisibility = 'team' | 'managers_only'
+
+export interface TeamFile {
+  id: string
+  team_id: string
+  uploaded_by: string
+  uploader_name: string | null
+  original_file_name: string
+  status: TeamFileStatus
+  visibility: TeamFileVisibility
+  summary_text: string | null
+  delete_after: string | null
+  created_at: string
+}
+
 export const TEAM_ROLE_LABELS: Record<TeamRole, string> = {
   owner: '팀 소유자',
   manager: '팀 관리자',
