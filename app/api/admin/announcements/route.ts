@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { adminGuard, isGuardError } from '@/lib/auth/middleware-guard'
+import { createNotificationForAllUsers } from '@/lib/notifications/create-notification'
 
 // GET: 관리자용 전체 목록 (비활성 포함)
 export async function GET(request: NextRequest) {
@@ -54,6 +55,17 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (error) return NextResponse.json({ error: '작성 실패' }, { status: 500 })
+
+  // 활성 공지사항이면 전체 사용자에게 앱 내 알림 발송
+  if (isActive !== false) {
+    createNotificationForAllUsers({
+      type: 'announcement',
+      title: `[공지] ${title.trim()}`,
+      message: content.trim().slice(0, 100) + (content.trim().length > 100 ? '...' : ''),
+      actionUrl: '/notices',
+    }).catch(() => {})
+  }
+
   return NextResponse.json({ id: data.id })
 }
 

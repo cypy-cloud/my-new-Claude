@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { generateWithAI, DuplicateRequestError } from '@/lib/ai/provider'
 import { getActivePrompt, renderPrompt } from '@/lib/ai/prompts/prompt-versioning'
 import { blockIfLimitExceeded, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
+import { notifyUsageLimitWarning } from '@/lib/notifications/create-notification'
 import { trackFeatureComplete } from '@/lib/analytics/track'
 import { handleApiError } from '@/lib/errors/api-error-handler'
 import { resolveProductCategory, buildProductCategoryAddendum } from '@/lib/ai-core/product-category'
@@ -139,6 +140,11 @@ export async function POST(request: NextRequest) {
   }
 
   const afterCheck = await checkUsageLimit(user.id, 'sms')
+
+  // 사용량 80% 이상이면 알림 발송 (비동기, 오류 무시)
+  if (afterCheck.limit > 0 && afterCheck.used / afterCheck.limit >= 0.8) {
+    notifyUsageLimitWarning(user.id, 'AI 문자', afterCheck.used, afterCheck.limit).catch(() => {})
+  }
 
   return NextResponse.json({
     sections: withDisclaimer,

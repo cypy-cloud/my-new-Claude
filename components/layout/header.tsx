@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Menu, LogOut, Settings, ChevronDown } from "lucide-react"
 import { PLAN_LABELS } from "@/types"
 import type { Profile } from "@/types"
+import { NotificationBell } from "@/components/notifications/notification-bell"
 
 interface HeaderProps {
   profile: Profile | null
@@ -42,7 +43,10 @@ export function Header({ profile, planName, onMenuToggle, title }: HeaderProps) 
         {title && <h1 className="text-lg font-semibold text-gray-900">{title}</h1>}
       </div>
 
-      <div className="relative">
+      <div className="flex items-center gap-2">
+        <NotificationBell />
+
+        <div className="relative">
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
           className="flex items-center space-x-2 rounded-lg px-2 py-1.5 hover:bg-gray-50 transition-colors"
@@ -83,6 +87,7 @@ export function Header({ profile, planName, onMenuToggle, title }: HeaderProps) 
             </div>
           </>
         )}
+        </div>
       </div>
     </header>
   )
