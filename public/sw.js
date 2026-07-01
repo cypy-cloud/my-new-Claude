@@ -1,7 +1,7 @@
 // FP AI Assistant Service Worker
 // 보안 정책: 정적 리소스만 캐시 / 고객정보·PDF·API 응답 캐시 금지
 
-const CACHE_NAME = 'fp-ai-static-v1'
+const CACHE_NAME = 'fp-ai-static-v2'
 const OFFLINE_URL = '/offline'
 
 // 캐시할 정적 리소스 목록
