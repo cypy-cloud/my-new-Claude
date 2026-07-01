@@ -5,7 +5,8 @@ import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Loader2, Building2, UserPlus, Crown, Shield, User, Mail, Clock, BarChart3 } from "lucide-react"
+import { Loader2, Building2, UserPlus, Crown, Shield, User, Mail, Clock, BarChart3, LayoutDashboard } from "lucide-react"
+import Link from "next/link"
 import { TEAM_ROLE_LABELS, type Team, type TeamMember, type TeamInvite, type TeamRole } from "@/lib/team/types"
 import { TeamFileManager } from "@/components/team/team-file-manager"
 
@@ -122,6 +123,7 @@ function CreateTeamCard({ onCreated }: { onCreated: () => void }) {
 }
 
 function TeamSummaryCard({ team, myRole, memberCount }: { team: Team; myRole: TeamRole; memberCount: number }) {
+  const isAdmin = myRole === 'owner' || myRole === 'manager'
   return (
     <Card className="border-0 shadow-sm">
       <CardContent className="pt-6 flex items-center justify-between flex-wrap gap-3">
@@ -132,6 +134,14 @@ function TeamSummaryCard({ team, myRole, memberCount }: { team: Team; myRole: Te
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-xs">팀원 {memberCount}명</Badge>
           <Badge className="text-xs bg-[#1e3a5f] text-white">내 역할: {TEAM_ROLE_LABELS[myRole]}</Badge>
+          {isAdmin && (
+            <Link href="/team/admin">
+              <Button size="sm" variant="outline" className="text-xs gap-1 border-[#1e3a5f] text-[#1e3a5f] hover:bg-[#1e3a5f] hover:text-white">
+                <LayoutDashboard className="h-3.5 w-3.5" />
+                관리자 대시보드
+              </Button>
+            </Link>
+          )}
         </div>
       </CardContent>
     </Card>
