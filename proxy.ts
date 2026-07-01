@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PUBLIC_PATHS = ['/', '/login', '/signup', '/forgot-password', '/reset-password', '/auth/callback']
+const PUBLIC_PATHS = ['/', '/login', '/signup', '/forgot-password', '/reset-password', '/auth/callback', '/manifest.webmanifest', '/manifest.json', '/sw.js', '/offline']
 const ADMIN_PATHS = ['/admin']
 
 export async function proxy(request: NextRequest) {
@@ -65,6 +65,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|icons/|sw\\.js|manifest\\.webmanifest|manifest\\.json|offline|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
