@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge"
 import { useAIGenerate } from "@/hooks/useAIGenerate"
 import { clientTrackFeatureStart, clientTrackDownload } from "@/lib/analytics/client-track"
 import { CategorySelect } from "@/components/ai/category-select"
+import { OutputRater } from "@/components/ai/output-rater"
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -492,6 +493,14 @@ export function ScriptGenerator({ initialUsage, limit, planName, initialData }: 
           <p className="text-xs text-gray-400 text-center">
             {state.cached ? "캐시에서 불러옴" : `${state.provider} 모델로 생성됨`}
           </p>
+        )}
+
+        {hasResult && (
+          <OutputRater
+            featureType="ai_script"
+            outputId={savedId}
+            promptVersion={(state as any).promptVersion ?? null}
+          />
         )}
       </div>
     </div>

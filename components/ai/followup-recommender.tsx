@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useAIGenerate } from "@/hooks/useAIGenerate"
+import { OutputRater } from "@/components/ai/output-rater"
 import { clientTrackFeatureStart, clientTrackDownload } from "@/lib/analytics/client-track"
 import { INTERACTION_TYPE_LABELS, INTERACTION_SENTIMENT_LABELS, type CustomerInteraction } from "@/types"
 
@@ -283,6 +284,14 @@ export function FollowupRecommender({ initialUsage, limit, planName, customer, i
           <p className="text-xs text-gray-400 text-center">
             {state.cached ? "캐시에서 불러옴" : `${state.provider} 모델로 생성됨`}
           </p>
+        )}
+
+        {hasResult && (
+          <OutputRater
+            featureType="ai_followup"
+            outputId={null}
+            promptVersion={(state as any).promptVersion ?? null}
+          />
         )}
       </div>
     </div>

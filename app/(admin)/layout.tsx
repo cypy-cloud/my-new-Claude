@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Zap, LayoutDashboard, Users, ArrowLeft, Shield, ShieldCheck, Crown, AlertTriangle, Megaphone, MessageSquareWarning, Sparkles, FileX2, Database, Rocket, Building2, Tag, CreditCard, HardDrive, Settings } from 'lucide-react'
+import { Zap, LayoutDashboard, Users, ArrowLeft, Shield, ShieldCheck, Crown, AlertTriangle, Megaphone, MessageSquareWarning, Sparkles, FileX2, Database, Rocket, Building2, Tag, CreditCard, HardDrive, Settings, Star } from 'lucide-react'
 import { requireAdmin } from '@/lib/auth/permissions'
 import type { UserRole } from '@/lib/auth/permissions'
 
@@ -64,6 +64,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </Link>
           <Link href="/admin/ai-logs" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 hover:bg-white/10 hover:text-white transition-colors">
             <Sparkles className="h-4 w-4" /> AI 요청 로그
+          </Link>
+          <Link href="/admin/ai-quality" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 hover:bg-white/10 hover:text-white transition-colors">
+            <Star className="h-4 w-4" /> AI 품질 통계
           </Link>
           <Link href="/admin/storage" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/70 hover:bg-white/10 hover:text-white transition-colors">
             <HardDrive className="h-4 w-4" /> 저장공간 관리
