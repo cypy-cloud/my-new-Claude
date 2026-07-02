@@ -7,12 +7,13 @@ import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, MessageSquare, FileText, BookOpen, Settings, LogOut, Zap, X } from "lucide-react"
+import { LayoutDashboard, MessageSquare, FileText, BookOpen, Settings, LogOut, Zap, X, ShieldCheck } from "lucide-react"
 
 const navItems = [
   { href: "/dashboard", label: "대시보드", icon: LayoutDashboard },
   { href: "/ai-message", label: "AI 문자/카톡", icon: MessageSquare },
   { href: "/ai-script", label: "AI 상담 스크립트", icon: BookOpen },
+  { href: "/objection-handler", label: "거절 극복 스크립트", icon: ShieldCheck },
   { href: "/ai-document", label: "AI 설명자료", icon: FileText },
   { href: "/settings", label: "설정", icon: Settings },
 ]
