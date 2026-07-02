@@ -13,7 +13,7 @@
 | AI PDF 분석 | 보험 증권·약관 PDF 업로드 → 쉬운 설명자료 생성 |
 | 블로그·SNS 콘텐츠 | 블로그 본문 + 인스타·페이스북·카카오채널·해시태그 일괄 생성 |
 | 뉴스레터 생성 | 8섹션 월간 뉴스레터 초안 생성 + TXT 다운로드 |
-| 업무 캘린더 | 고객 후속연락·미팅·갱신·생일 일정 관리 (오늘/주간/월간) |
+| 업무 캘린더 | 고객 후속연락·미팅·갱신·생일 일정 관리 (오늘/주간/월간) + 푸시 알림 |
 | 고객 관리 | 고객 정보 등록·조회·상호작용 이력 관리 |
 | 팀 관리 | 팀 계정 생성·멤버 초대·역할 관리 |
 | 결과물 보관함 | 모든 AI 생성물 저장·검색·다운로드 |
@@ -33,6 +33,7 @@
 | AI | Anthropic Claude Haiku 4.5 (문자·후속) + Sonnet 4.6 (스크립트·PDF·콘텐츠), OpenAI / Gemini 지원 |
 | 배포 | Vercel |
 | 결제 | Toss Payments (연동 예정) |
+| 푸시 알림 | Web Push API (VAPID) + PWA Service Worker |
 | 기타 | pdf-parse, JSZip, sonner, lucide-react |
 
 ---
@@ -66,6 +67,9 @@ cp .env.local.example .env.local
 | `NEXT_PUBLIC_APP_URL` | 서비스 기본 URL |
 | `NEXT_PUBLIC_APP_NAME` | 서비스 표시 이름 |
 | `CRON_SECRET` | 원본 PDF 자동 삭제 크론 인증값 |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Web Push VAPID 공개 키 |
+| `VAPID_PRIVATE_KEY` | Web Push VAPID 비밀 키 (서버 전용) |
+| `VAPID_EMAIL` | VAPID 등록 이메일 |
 
 > 전체 환경변수 목록은 [DEPLOYMENT.md](./DEPLOYMENT.md)를 참고하세요.
 
@@ -77,7 +81,7 @@ cp .env.local.example .env.local
 2. Project Settings → API에서 URL · anon key · service_role key 확인
 3. Authentication → Email 로그인 활성화 (기본 활성화)
 4. Storage → `pdf-uploads` 버킷 생성 (Private 권장)
-5. SQL Editor에서 `supabase/migrations/001_initial_schema.sql` ~ `041_content_newsletter_usage.sql` 순서대로 실행
+5. SQL Editor에서 `supabase/migrations/001_initial_schema.sql` ~ `042_push_notifications.sql` 순서대로 실행
 
 ```bash
 # Supabase CLI 사용 시
