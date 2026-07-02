@@ -1,3 +1,5 @@
+"use client"
+
 export default function OfflinePage() {
   return (
     <html lang="ko">
@@ -53,9 +55,6 @@ export default function OfflinePage() {
             FP AI Assistant · 보험설계사를 위한 AI 업무 자동화
           </p>
         </div>
-        <script dangerouslySetInnerHTML={{ __html: `
-          document.querySelector('button').onclick = function() { window.location.reload(); };
-        `}} />
       </body>
     </html>
   )
