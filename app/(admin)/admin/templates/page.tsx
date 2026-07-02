@@ -27,7 +27,7 @@ interface Template {
   sort_order: number
   created_at: string
   insurance_companies: { name: string } | null
-  profiles: { name: string; email: string } | null
+  created_by: string | null
 }
 
 const FEATURE_OPTIONS = [

@@ -18,8 +18,7 @@ export async function GET(request: NextRequest) {
       insurance_company_id, template_content, variables,
       tags, is_public, is_premium, is_active, sort_order,
       created_at, updated_at,
-      insurance_companies(name),
-      profiles:created_by(name, email)
+      insurance_companies(name)
     `)
 
   if (feature_type) query = query.eq('feature_type', feature_type)
