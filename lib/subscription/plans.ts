@@ -83,7 +83,7 @@ export const PLANS: Record<PlanId, Plan> = {
     price: 14900,
     currency: 'KRW',
     interval: 'month',
-    smsLimit: 120,
+    smsLimit: 100,
     scriptLimit: 45,
     followupLimit: 50,
     pdfUploadLimit: 20,
