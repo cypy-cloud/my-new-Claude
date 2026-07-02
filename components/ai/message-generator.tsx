@@ -31,7 +31,6 @@ const TONES = [
   { value: "친근체", desc: "따뜻하고 편안한 문체" },
   { value: "카톡 스타일", desc: "짧고 경쾌, 이모지 포함" },
 ]
-const LENGTHS = ["짧게 (50자 이내)", "보통 (100자 이내)", "길게 (150자 이내)"]
 
 const OUTPUT_TABS = [
   { key: "SMS",        icon: MessageSquare,  label: "문자용",         color: "blue" },
@@ -290,28 +289,6 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
               </button>
             ))}
           </div>
-        </div>
-
-        {/* 길이 */}
-        <div className="space-y-1.5">
-          <Label className="text-xs font-medium">메시지 길이</Label>
-          <div className="flex gap-2">
-            {LENGTHS.map(l => (
-              <button
-                key={l}
-                onClick={() => setLength(l)}
-                disabled={isLoading}
-                className={`flex-1 py-1.5 rounded-lg text-xs border transition-all disabled:opacity-50 ${
-                  length === l ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-700 border-gray-200 hover:border-blue-300"
-                }`}
-              >
-                {l}
-              </button>
-            ))}
-          </div>
-          <p className="text-[11px] text-gray-400">
-            이 설정은 문자용(SMS)/카톡용 버전의 분위기 기준입니다. 설득력 있는 버전은 후킹 효과를 위해 별도로 길게(400~700자) 작성됩니다.
-          </p>
         </div>
 
         {/* 특별 보장 내용 (후킹 포인트) */}
