@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import {
   LayoutDashboard, MessageSquare, FileText, BookOpen,
   Settings, LogOut, Zap, Archive, CreditCard,
-  Bell, BookMarked, MessageCircle, Shield, Rocket, Users, Building2, BarChart2, LibraryBig, PenSquare,
+  Bell, BookMarked, MessageCircle, Shield, Rocket, Users, Building2, BarChart2, LibraryBig, PenSquare, Mail,
 } from "lucide-react"
 import { PLAN_LABELS } from "@/types"
 import type { Profile } from "@/types"
@@ -25,6 +25,7 @@ const mainNav = [
   { href: "/my-results", label: "내 결과물 보관함", icon: Archive },
   { href: "/templates", label: "템플릿 라이브러리", icon: LibraryBig },
   { href: "/content-creator", label: "블로그·SNS 콘텐츠", icon: PenSquare },
+  { href: "/newsletter", label: "뉴스레터 생성", icon: Mail },
   { href: "/team", label: "팀 관리", icon: Building2 },
   { href: "/report", label: "사용 리포트", icon: BarChart2 },
   { href: "/billing", label: "요금제", icon: CreditCard },

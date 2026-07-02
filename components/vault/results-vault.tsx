@@ -5,7 +5,7 @@ import { toast } from "sonner"
 import {
   MessageSquare, BookOpen, FileText, Copy, Download, Search, Archive,
   Star, StarOff, Trash2, Pencil, Check, X, ChevronDown, Eye,
-  Loader2, RefreshCw, ShieldAlert, BookmarkCheck,
+  Loader2, RefreshCw, ShieldAlert, BookmarkCheck, Mail, PenSquare,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,7 +17,7 @@ import { clientTrackDownload } from "@/lib/analytics/client-track"
 
 interface Output {
   id: string
-  type: "sms" | "script" | "pdf_explanation"
+  type: "sms" | "script" | "pdf_explanation" | "newsletter" | "content"
   title: string
   output_text: string
   ai_provider: string | null
@@ -29,9 +29,11 @@ interface Output {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const TYPE_CONFIG = {
-  sms:             { label: "AI 문자/카톡",  icon: MessageSquare, iconBg: "bg-blue-100 text-blue-600",   badge: "bg-blue-100 text-blue-700 border-blue-200"   },
+  sms:             { label: "AI 문자/카톡",  icon: MessageSquare, iconBg: "bg-blue-100 text-blue-600",    badge: "bg-blue-100 text-blue-700 border-blue-200"    },
   script:          { label: "AI 스크립트",   icon: BookOpen,      iconBg: "bg-purple-100 text-purple-600", badge: "bg-purple-100 text-purple-700 border-purple-200" },
   pdf_explanation: { label: "AI 설명자료",   icon: FileText,      iconBg: "bg-orange-100 text-orange-500", badge: "bg-orange-100 text-orange-700 border-orange-200" },
+  newsletter:      { label: "뉴스레터",      icon: Mail,          iconBg: "bg-green-100 text-green-600",   badge: "bg-green-100 text-green-700 border-green-200"   },
+  content:         { label: "블로그·SNS",    icon: PenSquare,     iconBg: "bg-pink-100 text-pink-600",     badge: "bg-pink-100 text-pink-700 border-pink-200"      },
 }
 
 const SORT_OPTIONS = [
@@ -45,6 +47,8 @@ const FILTER_OPTIONS = [
   { value: "sms", label: "AI 문자/카톡" },
   { value: "script", label: "AI 스크립트" },
   { value: "pdf_explanation", label: "AI 설명자료" },
+  { value: "newsletter", label: "뉴스레터" },
+  { value: "content", label: "블로그·SNS" },
   { value: "favorite", label: "⭐ 즐겨찾기" },
 ]
 
