@@ -48,7 +48,7 @@ function NavLink({ href, label, icon: Icon, pathname }: {
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all",
+        "flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
         isActive
           ? "bg-orange-500 text-white shadow-sm"
           : "text-blue-100 hover:bg-white/10 hover:text-white"
@@ -89,19 +89,19 @@ export function Sidebar({ profile, planName }: SidebarProps) {
         </Link>
       </div>
 
-      <nav className="sidebar-nav flex-1 px-3 py-3 space-y-0.5 overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}>
-        <p className="text-xs font-semibold text-blue-400 px-3 mb-1.5 uppercase tracking-wider">AI 기능</p>
+      <nav className="flex-1 px-3 py-2 space-y-0 overflow-y-hidden">
+        <p className="text-xs font-semibold text-blue-400 px-3 mb-1 uppercase tracking-wider">AI 기능</p>
         {mainNav.map((item) => <NavLink key={item.href} {...item} pathname={pathname} />)}
 
-        <div className="my-2 border-t border-white/10" />
+        <div className="my-1.5 border-t border-white/10" />
 
-        <p className="text-xs font-semibold text-blue-400 px-3 mb-1.5 uppercase tracking-wider">고객지원</p>
+        <p className="text-xs font-semibold text-blue-400 px-3 mb-1 uppercase tracking-wider">고객지원</p>
         {supportNav.map((item) => <NavLink key={item.href} {...item} pathname={pathname} />)}
 
         {isAdmin && (
           <>
-            <div className="my-4 border-t border-white/10" />
-            <p className="text-xs font-semibold text-blue-400 px-3 mb-2 uppercase tracking-wider">관리자</p>
+            <div className="my-1.5 border-t border-white/10" />
+            <p className="text-xs font-semibold text-blue-400 px-3 mb-1 uppercase tracking-wider">관리자</p>
             <NavLink href="/admin/dashboard" label="관리자 페이지" icon={Shield} pathname={pathname} />
           </>
         )}
