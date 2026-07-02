@@ -76,6 +76,8 @@ export function Sidebar({ profile, planName }: SidebarProps) {
   }
 
   return (
+    <>
+    <style>{`.sidebar-nav::-webkit-scrollbar{display:none!important;width:0!important}`}</style>
     <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 bg-[#1e3a5f] overflow-hidden">
       <div className="flex items-center h-16 px-5 border-b border-white/10">
         <Link href="/dashboard" className="flex items-center gap-2.5">
@@ -141,5 +143,6 @@ export function Sidebar({ profile, planName }: SidebarProps) {
         </Button>
       </div>
     </aside>
+    </>
   )
 }
