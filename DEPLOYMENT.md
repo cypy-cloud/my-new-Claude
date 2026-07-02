@@ -6,7 +6,7 @@
 
 ```
 □ npm run build 로컬 빌드 에러 없음 확인
-□ Supabase 마이그레이션 001~041 모두 실행 완료
+□ Supabase 마이그레이션 001~042 모두 실행 완료
 □ Vercel 환경변수 전체 등록 완료
 □ CRON_SECRET 값 설정 완료
 □ Supabase Storage pdf-uploads 버킷 생성 완료
@@ -36,6 +36,7 @@ supabase/migrations/001_initial_schema.sql
 supabase/migrations/002_usage_records.sql
 ...
 supabase/migrations/041_content_newsletter_usage.sql
+supabase/migrations/042_push_notifications.sql
 ```
 
 > **주의**: 파일이 저장소에 있다고 DB에 자동 반영되지 않습니다. 반드시 SQL Editor에서 직접 실행해야 합니다.
@@ -76,6 +77,9 @@ Authentication → Providers → Email: Enable 확인 (기본 활성화)
 | `AI_PROVIDER_DOCUMENT` | `anthropic` | 선택 |
 | `OPENAI_API_KEY` | `sk-...` | OpenAI 사용 시 |
 | `GEMINI_API_KEY` | `AIza...` | Gemini 사용 시 |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | `BLEGNctx...` | ✅ 필수 (푸시 알림) |
+| `VAPID_PRIVATE_KEY` | `127NSF_x...` | ✅ 필수 (푸시 알림, 서버 전용) |
+| `VAPID_EMAIL` | `your@email.com` | ✅ 필수 (푸시 알림) |
 | `TOSS_PAYMENTS_CLIENT_KEY` | `test_ck_...` | 결제 연동 시 |
 | `TOSS_PAYMENTS_SECRET_KEY` | `test_sk_...` | 결제 연동 시 |
 
@@ -102,7 +106,8 @@ Authentication → Providers → Email: Enable 확인 (기본 활성화)
 }
 ```
 
-- 매일 새벽 1시에 만료된 원본 PDF를 자동 삭제합니다
+- `/api/cron/cleanup-files`: 매일 새벽 1시(UTC) 만료된 원본 PDF 자동 삭제
+- `/api/cron/push-notify`: 15분마다 실행, 캘린더 일정 30분/1시간/2시간 전 푸시 알림 발송
 - `CRON_SECRET`이 설정되어 있어야 동작합니다 (미설정 시 503 반환)
 
 ---
