@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { MessageSquare, BookOpen, Pencil, Trash2, Phone, ShieldAlert, Sparkles } from "lucide-react"
+import { MessageSquare, BookOpen, Pencil, Trash2, Phone, ShieldAlert, Sparkles, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -127,6 +127,12 @@ export function CustomerDetail({ customer }: { customer: Customer }) {
           <Trash2 className="mr-2 h-4 w-4" />삭제
         </Button>
       </div>
+
+      <Link href={`/calendar?customer_id=${customer.id}`}>
+        <Button variant="outline" className="text-orange-600 border-orange-200 hover:bg-orange-50">
+          <Calendar className="mr-2 h-4 w-4" />일정 관리
+        </Button>
+      </Link>
 
       <InteractionTimeline customerId={customer.id} />
     </div>

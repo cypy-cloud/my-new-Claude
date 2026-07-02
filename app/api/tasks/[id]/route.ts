@@ -1,0 +1,59 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+
+const TASK_SELECT = `
+  id, user_id, customer_id, title, description,
+  task_type, due_date, due_time, status, priority,
+  gcal_event_id, created_at, updated_at,
+  customers(id, name, phone)
+`
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
+
+  const body = await request.json()
+  const allowed = ['title', 'description', 'task_type', 'due_date', 'due_time', 'status', 'priority', 'customer_id']
+  const updates: Record<string, unknown> = {}
+  for (const key of allowed) {
+    if (key in body) updates[key] = body[key]
+  }
+  if (Object.keys(updates).length === 0) {
+    return NextResponse.json({ error: '변경할 항목이 없습니다' }, { status: 400 })
+  }
+
+  const { data, error } = await (supabase as any)
+    .from('tasks')
+    .update(updates)
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .select(TASK_SELECT)
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ task: data })
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
+
+  const { error } = await (supabase as any)
+    .from('tasks')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ ok: true })
+}
