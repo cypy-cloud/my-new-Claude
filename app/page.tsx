@@ -2,6 +2,7 @@ import Link from "next/link"
 import { PageTracker } from "@/components/analytics/page-tracker"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { PLANS as SUBSCRIPTION_PLANS } from "@/lib/subscription/plans"
 import {
   MessageSquare, BookOpen, FileText, Zap, CheckCircle, ArrowRight,
   Shield, Clock, TrendingUp, Star, ChevronRight
@@ -29,10 +30,10 @@ const FEATURES = [
 ]
 
 const PLANS = [
-  { id: "free", name: "무료", price: "₩0", period: "/월", color: "border-gray-200", badge: "", features: ["AI 문자 5회/월", "AI 스크립트 3회/월", "AI 설명자료 1회/월", "파일 5MB", "보관 7일"] },
-  { id: "basic", name: "기본", price: "₩2,900", period: "/월", color: "border-blue-400", badge: "입문 추천", features: ["AI 문자 20회/월", "AI 스크립트 10회/월", "AI 설명자료 2회/월", "블로그·SNS 5회/월", "뉴스레터 2회/월", "파일 10MB", "보관 30일"] },
-  { id: "pro", name: "프로", price: "₩6,900", period: "/월", color: "border-[#1e3a5f]", badge: "가장 인기", features: ["AI 문자 80회/월", "AI 스크립트 30회/월", "AI 설명자료 8회/월", "블로그·SNS 20회/월", "뉴스레터 10회/월", "파일 30MB", "보관 180일"] },
-  { id: "premium", name: "프리미엄", price: "₩14,900", period: "/월", color: "border-orange-400", badge: "최고 혜택", features: ["AI 문자 200회/월", "AI 스크립트 80회/월", "AI 설명자료 20회/월", "블로그·SNS 30회/월", "뉴스레터 15회/월", "파일 50MB", "보관 365일", "우선 처리", "팀 공유 (향후)"] },
+  { id: "free", name: "무료", price: "₩0", period: "/월", color: "border-gray-200", badge: "", features: [`AI 문자 ${SUBSCRIPTION_PLANS.free.smsLimit}회/월`, `AI 스크립트 ${SUBSCRIPTION_PLANS.free.scriptLimit}회/월`, `AI 설명자료 ${SUBSCRIPTION_PLANS.free.pdfAnalysisLimit}회/월`, `파일 ${SUBSCRIPTION_PLANS.free.maxFileSizeMb}MB`, `보관 ${SUBSCRIPTION_PLANS.free.storageDays}일`] },
+  { id: "basic", name: "기본", price: "₩2,900", period: "/월", color: "border-blue-400", badge: "입문 추천", features: [`AI 문자 ${SUBSCRIPTION_PLANS.basic.smsLimit}회/월`, `AI 스크립트 ${SUBSCRIPTION_PLANS.basic.scriptLimit}회/월`, `AI 설명자료 ${SUBSCRIPTION_PLANS.basic.pdfAnalysisLimit}회/월`, `블로그·SNS ${SUBSCRIPTION_PLANS.basic.contentLimit}회/월`, `뉴스레터 ${SUBSCRIPTION_PLANS.basic.newsletterLimit}회/월`, `파일 ${SUBSCRIPTION_PLANS.basic.maxFileSizeMb}MB`, `보관 ${SUBSCRIPTION_PLANS.basic.storageDays}일`] },
+  { id: "pro", name: "프로", price: "₩6,900", period: "/월", color: "border-[#1e3a5f]", badge: "가장 인기", features: [`AI 문자 ${SUBSCRIPTION_PLANS.pro.smsLimit}회/월`, `AI 스크립트 ${SUBSCRIPTION_PLANS.pro.scriptLimit}회/월`, `AI 설명자료 ${SUBSCRIPTION_PLANS.pro.pdfAnalysisLimit}회/월`, `블로그·SNS ${SUBSCRIPTION_PLANS.pro.contentLimit}회/월`, `뉴스레터 ${SUBSCRIPTION_PLANS.pro.newsletterLimit}회/월`, `파일 ${SUBSCRIPTION_PLANS.pro.maxFileSizeMb}MB`, `보관 ${SUBSCRIPTION_PLANS.pro.storageDays}일`] },
+  { id: "premium", name: "프리미엄", price: "₩14,900", period: "/월", color: "border-orange-400", badge: "최고 혜택", features: [`AI 문자 ${SUBSCRIPTION_PLANS.premium.smsLimit}회/월`, `AI 스크립트 ${SUBSCRIPTION_PLANS.premium.scriptLimit}회/월`, `AI 설명자료 ${SUBSCRIPTION_PLANS.premium.pdfAnalysisLimit}회/월`, `블로그·SNS ${SUBSCRIPTION_PLANS.premium.contentLimit}회/월`, `뉴스레터 ${SUBSCRIPTION_PLANS.premium.newsletterLimit}회/월`, `파일 ${SUBSCRIPTION_PLANS.premium.maxFileSizeMb}MB`, `보관 ${SUBSCRIPTION_PLANS.premium.storageDays}일`, "우선 처리", "팀 공유 (향후)"] },
 ]
 
 const STATS = [
