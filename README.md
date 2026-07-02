@@ -30,7 +30,7 @@
 | 언어 | TypeScript |
 | 스타일 | Tailwind CSS, Radix UI |
 | 백엔드/DB | Supabase (PostgreSQL + Auth + Storage + RLS) |
-| AI | Anthropic Claude Sonnet 4.6 (기본), OpenAI / Gemini 지원 |
+| AI | Anthropic Claude Haiku 4.5 (문자·후속) + Sonnet 4.6 (스크립트·PDF·콘텐츠), OpenAI / Gemini 지원 |
 | 배포 | Vercel |
 | 결제 | Toss Payments (연동 예정) |
 | 기타 | pdf-parse, JSZip, sonner, lucide-react |
