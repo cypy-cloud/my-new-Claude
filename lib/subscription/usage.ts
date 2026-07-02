@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getPlanLimits, type PlanId, type PlanLimits } from './plans'
 
-export type UsageFeature = 'sms' | 'script' | 'followup' | 'pdf_upload' | 'pdf_analysis'
+export type UsageFeature = 'sms' | 'script' | 'followup' | 'pdf_upload' | 'pdf_analysis' | 'content' | 'newsletter'
 
 export interface MonthlyUsageData {
   smsCount: number
@@ -9,6 +9,8 @@ export interface MonthlyUsageData {
   followupCount: number
   pdfUploadCount: number
   pdfAnalysisCount: number
+  contentCount: number
+  newsletterCount: number
   storageMb: number
   tokenInput: number
   tokenOutput: number
@@ -49,7 +51,7 @@ export async function getMonthlyUsage(userId: string): Promise<MonthlyUsageData>
 
   const { data } = await (supabase as any)
     .from('usage_records')
-    .select('sms_count, script_count, followup_count, pdf_upload_count, pdf_analysis_count, storage_used_mb, ai_token_input, ai_token_output, ai_cost_estimate')
+    .select('sms_count, script_count, followup_count, pdf_upload_count, pdf_analysis_count, content_count, newsletter_count, storage_used_mb, ai_token_input, ai_token_output, ai_cost_estimate')
     .eq('user_id', userId)
     .eq('usage_month', month)
     .maybeSingle()
@@ -60,6 +62,8 @@ export async function getMonthlyUsage(userId: string): Promise<MonthlyUsageData>
     followupCount: data?.followup_count ?? 0,
     pdfUploadCount: data?.pdf_upload_count ?? 0,
     pdfAnalysisCount: data?.pdf_analysis_count ?? 0,
+    contentCount: data?.content_count ?? 0,
+    newsletterCount: data?.newsletter_count ?? 0,
     storageMb: data?.storage_used_mb ?? 0,
     tokenInput: data?.ai_token_input ?? 0,
     tokenOutput: data?.ai_token_output ?? 0,
@@ -95,8 +99,8 @@ export async function incrementUsage(
     p_storage_mb: opts.storageMb ?? 0,
   })
 
-  // Keep legacy monthly_usage in sync (no legacy column exists for 'followup', so skip it)
-  if (feature !== 'followup') {
+  // Keep legacy monthly_usage in sync
+  if (feature === 'sms' || feature === 'script' || feature === 'pdf_analysis') {
     const legacyFeature = feature === 'sms' ? 'ai_message' : feature === 'script' ? 'ai_script' : 'ai_document'
     await (supabase as any).rpc('increment_usage', { p_user_id: userId, p_feature: legacyFeature })
   }
@@ -134,5 +138,7 @@ function getFeatureCounts(
     case 'followup':     return { used: usage.followupCount,    limit: limits.followupLimit }
     case 'pdf_upload':   return { used: usage.pdfUploadCount,   limit: limits.pdfUploadLimit }
     case 'pdf_analysis': return { used: usage.pdfAnalysisCount, limit: limits.pdfAnalysisLimit }
+    case 'content':      return { used: usage.contentCount,     limit: limits.contentLimit }
+    case 'newsletter':   return { used: usage.newsletterCount,  limit: limits.newsletterLimit }
   }
 }

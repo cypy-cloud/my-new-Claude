@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await blockIfLimitExceeded(user.id, 'script')
+    await blockIfLimitExceeded(user.id, 'content')
   } catch (err) {
     if (err instanceof UsageLimitError) {
       return NextResponse.json(
@@ -162,14 +162,14 @@ export async function POST(request: NextRequest) {
   }
 
   if (!wasCached) {
-    await incrementUsage(user.id, 'script', {
+    await incrementUsage(user.id, 'content', {
       tokenInput: result.usage.inputTokens,
       tokenOutput: result.usage.outputTokens,
     })
     await trackFeatureComplete('ai_content' as any, user.id, { productField, topic, cached: false })
   }
 
-  const afterCheck = await checkUsageLimit(user.id, 'script')
+  const afterCheck = await checkUsageLimit(user.id, 'content')
 
   return NextResponse.json({
     sections: withDisclaimer,

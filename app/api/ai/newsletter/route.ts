@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await blockIfLimitExceeded(user.id, 'script')
+    await blockIfLimitExceeded(user.id, 'newsletter')
   } catch (err) {
     if (err instanceof UsageLimitError) {
       return NextResponse.json(
@@ -171,14 +171,14 @@ export async function POST(request: NextRequest) {
   if (withDisclaimer.CTA) withDisclaimer.CTA = withDisclaimer.CTA + NEWSLETTER_DISCLAIMER
 
   if (!wasCached) {
-    await incrementUsage(user.id, 'script', {
+    await incrementUsage(user.id, 'newsletter', {
       tokenInput: result.usage.inputTokens,
       tokenOutput: result.usage.outputTokens,
     })
     await trackFeatureComplete('ai_newsletter' as any, user.id, { insuranceField, topic, cached: false })
   }
 
-  const afterCheck = await checkUsageLimit(user.id, 'script')
+  const afterCheck = await checkUsageLimit(user.id, 'newsletter')
 
   return NextResponse.json({
     sections: withDisclaimer,

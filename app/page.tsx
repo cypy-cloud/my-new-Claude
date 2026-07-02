@@ -30,9 +30,9 @@ const FEATURES = [
 
 const PLANS = [
   { id: "free", name: "무료", price: "₩0", period: "/월", color: "border-gray-200", badge: "", features: ["AI 문자 5회/월", "AI 스크립트 3회/월", "AI 설명자료 1회/월", "파일 5MB", "보관 7일"] },
-  { id: "basic", name: "기본", price: "₩1,900", period: "/월", color: "border-blue-400", badge: "입문 추천", features: ["AI 문자 50회/월", "AI 스크립트 20회/월", "AI 설명자료 3회/월", "파일 10MB", "보관 30일"] },
-  { id: "pro", name: "프로", price: "₩5,900", period: "/월", color: "border-[#1e3a5f]", badge: "가장 인기", features: ["AI 문자 300회/월", "AI 스크립트 100회/월", "AI 설명자료 20회/월", "파일 30MB", "보관 180일"] },
-  { id: "premium", name: "프리미엄", price: "₩9,900", period: "/월", color: "border-orange-400", badge: "최고 혜택", features: ["AI 문자 1,000회/월", "AI 스크립트 300회/월", "AI 설명자료 50회/월", "파일 50MB", "보관 365일", "우선 처리", "팀 공유 (향후)"] },
+  { id: "basic", name: "기본", price: "₩2,900", period: "/월", color: "border-blue-400", badge: "입문 추천", features: ["AI 문자 20회/월", "AI 스크립트 10회/월", "AI 설명자료 2회/월", "블로그·SNS 5회/월", "뉴스레터 2회/월", "파일 10MB", "보관 30일"] },
+  { id: "pro", name: "프로", price: "₩6,900", period: "/월", color: "border-[#1e3a5f]", badge: "가장 인기", features: ["AI 문자 80회/월", "AI 스크립트 30회/월", "AI 설명자료 8회/월", "블로그·SNS 20회/월", "뉴스레터 10회/월", "파일 30MB", "보관 180일"] },
+  { id: "premium", name: "프리미엄", price: "₩14,900", period: "/월", color: "border-orange-400", badge: "최고 혜택", features: ["AI 문자 200회/월", "AI 스크립트 80회/월", "AI 설명자료 20회/월", "블로그·SNS 30회/월", "뉴스레터 15회/월", "파일 50MB", "보관 365일", "우선 처리", "팀 공유 (향후)"] },
 ]
 
 const STATS = [
