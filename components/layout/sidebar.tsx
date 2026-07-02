@@ -76,7 +76,7 @@ export function Sidebar({ profile, planName }: SidebarProps) {
   }
 
   return (
-    <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 bg-[#1e3a5f]">
+    <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 bg-[#1e3a5f] overflow-hidden">
       <div className="flex items-center h-16 px-5 border-b border-white/10">
         <Link href="/dashboard" className="flex items-center gap-2.5">
           <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -89,7 +89,7 @@ export function Sidebar({ profile, planName }: SidebarProps) {
         </Link>
       </div>
 
-      <nav className="flex-1 px-3 py-2 space-y-0 overflow-y-hidden">
+      <nav className="sidebar-nav flex-1 min-h-0 px-3 py-2 space-y-0 overflow-y-auto" style={{ scrollbarWidth: 'none' } as React.CSSProperties}>
         <p className="text-xs font-semibold text-blue-400 px-3 mb-1 uppercase tracking-wider">AI 기능</p>
         {mainNav.map((item) => <NavLink key={item.href} {...item} pathname={pathname} />)}
 
