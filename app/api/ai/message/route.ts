@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     result = await generateWithAI(prompt, {
       feature: 'ai_message',
       userId: user.id,
-      maxTokens: 1200,
+      maxTokens: 2000,
       temperature: 0.75,
       cacheInput,
       promptVersion: version,
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
       result = await generateWithAI(prompt, {
         feature: 'ai_message',
         userId: user.id,
-        maxTokens: 1200,
+        maxTokens: 2000,
         temperature: 0.75,
         cacheInput,
         promptVersion: version,
