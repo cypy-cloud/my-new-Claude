@@ -15,7 +15,7 @@ export default async function DashboardPage() {
 
   const { data: profile } = await (supabase as any)
     .from("profiles")
-    .select("name, email, plan_type")
+    .select("full_name, email, plan_type")
     .eq("id", user!.id)
     .single()
 
@@ -81,7 +81,7 @@ export default async function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[#1e3a5f]">
-            안녕하세요, {profile?.name ?? "설계사"}님! 👋
+            안녕하세요, {profile?.full_name ?? "설계사"}님! 👋
           </h1>
           <p className="text-gray-500 mt-1">오늘도 FP AI Assistant와 함께 효율적인 업무를 시작해보세요.</p>
         </div>
