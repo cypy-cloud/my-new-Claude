@@ -75,9 +75,6 @@ export default async function DashboardPage() {
     { href: "/ai-document", label: "AI PDF 분석", desc: "PDF 설명자료 자동화", icon: FileText, color: "orange" },
   ]
 
-  const totalTokens = usage.tokenInput + usage.tokenOutput
-  const costKrw = Math.round(usage.costEstimate * 1350)
-
   return (
     <div className="space-y-8 max-w-5xl">
       {/* Welcome */}
@@ -152,33 +149,6 @@ export default async function DashboardPage() {
           })}
         </div>
       </div>
-
-      {/* Token Usage Summary */}
-      {totalTokens > 0 && (
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-5">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">이번 달 AI 토큰 사용 현황</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-[#1e3a5f]">{(usage.tokenInput / 1000).toFixed(1)}K</p>
-                <p className="text-xs text-gray-400 mt-0.5">입력 토큰</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-[#1e3a5f]">{(usage.tokenOutput / 1000).toFixed(1)}K</p>
-                <p className="text-xs text-gray-400 mt-0.5">출력 토큰</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-[#1e3a5f]">{(totalTokens / 1000).toFixed(1)}K</p>
-                <p className="text-xs text-gray-400 mt-0.5">총 토큰</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-orange-500">₩{costKrw.toLocaleString()}</p>
-                <p className="text-xs text-gray-400 mt-0.5">추정 비용</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Plan Details */}
       <Card className="border-0 shadow-sm">
