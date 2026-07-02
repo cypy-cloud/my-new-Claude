@@ -29,6 +29,7 @@ interface Task {
   due_time: string | null
   status: Status
   priority: Priority
+  notify_before_minutes: number | null
   customers?: CustomerRef | null
 }
 
@@ -109,11 +110,13 @@ function isOverdue(task: Task): boolean {
 interface FormData {
   title: string; description: string; task_type: TaskType
   due_date: string; due_time: string; priority: Priority; customer_id: string
+  notify_before_minutes: string
 }
 
 const DEFAULT_FORM: FormData = {
   title: '', description: '', task_type: 'followup',
   due_date: today(), due_time: '', priority: 'medium', customer_id: '',
+  notify_before_minutes: '',
 }
 
 function TaskFormModal({
@@ -188,6 +191,22 @@ function TaskFormModal({
               <option value="">고객 미연결</option>
               {customers.map(c => <option key={c.id} value={c.id}>{c.name} {c.phone ? `(${c.phone})` : ''}</option>)}
             </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>알림 시간</Label>
+            <select value={form.notify_before_minutes} onChange={e => set('notify_before_minutes', e.target.value)}
+              className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+              <option value="">알림 없음</option>
+              <option value="10">10분 전</option>
+              <option value="30">30분 전</option>
+              <option value="60">1시간 전</option>
+              <option value="120">2시간 전</option>
+              <option value="1440">하루 전 (오전 9시)</option>
+            </select>
+            {form.notify_before_minutes && !form.due_time && (
+              <p className="text-xs text-amber-600">⚠️ 알림을 받으려면 시간도 입력해주세요</p>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -435,7 +454,11 @@ export default function CalendarPage() {
   }
 
   const handleSave = async (formData: FormData & { id?: string }) => {
-    const { id, ...body } = formData
+    const { id, notify_before_minutes, ...rest } = formData
+    const body = {
+      ...rest,
+      notify_before_minutes: notify_before_minutes ? parseInt(notify_before_minutes) : null,
+    }
     const method = id ? 'PATCH' : 'POST'
     const url = id ? `/api/tasks/${id}` : '/api/tasks'
     const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
@@ -669,6 +692,7 @@ export default function CalendarPage() {
             due_time: editingTask.due_time ?? '',
             priority: editingTask.priority,
             customer_id: editingTask.customer_id ?? '',
+            notify_before_minutes: editingTask.notify_before_minutes != null ? String(editingTask.notify_before_minutes) : '',
           } : selectedDate ? { due_date: selectedDate } : undefined}
           onSave={handleSave}
           onClose={() => { setShowForm(false); setEditingTask(null); setSelectedDate(null) }}

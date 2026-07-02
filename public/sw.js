@@ -103,5 +103,31 @@ self.addEventListener('fetch', event => {
   // 그 외 — 네트워크 통과 (캐시 안 함)
 })
 
-// Push 알림 수신 (향후 확장용 — 현재는 무동작)
-self.addEventListener('push', () => {})
+// Push 알림 수신
+self.addEventListener('push', event => {
+  if (!event.data) return
+  const data = event.data.json()
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: data.icon ?? '/icons/icon-192.png',
+      badge: data.badge ?? '/icons/icon-192.png',
+      data: { url: data.url ?? '/calendar' },
+      vibrate: [200, 100, 200],
+    })
+  )
+})
+
+// 알림 클릭 시 캘린더 페이지로 이동
+self.addEventListener('notificationclick', event => {
+  event.notification.close()
+  const url = event.notification.data?.url ?? '/calendar'
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      for (const client of clientList) {
+        if (client.url.includes(url) && 'focus' in client) return client.focus()
+      }
+      return clients.openWindow(url)
+    })
+  )
+})

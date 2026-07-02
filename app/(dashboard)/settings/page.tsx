@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { User, Lock, CreditCard, AlertTriangle } from "lucide-react"
+import { User, Lock, CreditCard, AlertTriangle, Bell } from "lucide-react"
+import { PushNotificationToggle } from "@/components/notifications/push-notification-toggle"
 
 export default function SettingsPage() {
   return (
@@ -96,6 +97,23 @@ export default function SettingsPage() {
             <Badge variant="secondary">현재 플랜</Badge>
           </div>
           <Button>프로 플랜으로 업그레이드</Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Bell className="h-5 w-5" />
+            <span>일정 알림</span>
+          </CardTitle>
+          <CardDescription>업무 캘린더 일정 시작 전 푸시 알림을 받습니다</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PushNotificationToggle />
+          <p className="text-xs text-gray-400 mt-3">
+            💡 일정 등록 시 &apos;알림 시간&apos; 항목에서 30분 전 · 1시간 전 · 2시간 전 등 원하는 시점을 선택하세요.
+            앱이 꺼져 있어도 알림이 옵니다. (iOS는 홈화면 추가 필요)
+          </p>
         </CardContent>
       </Card>
 
