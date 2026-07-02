@@ -5,6 +5,7 @@ import { BottomNav } from '@/components/layout/bottom-nav'
 import { AnnouncementBanner } from '@/components/notices/announcement-banner'
 import { VersionBanner } from '@/components/changelog/version-banner'
 import { OnboardingModal } from '@/components/onboarding/onboarding-modal'
+import { UpsellBanner } from '@/components/billing/upsell-banner'
 import type { Profile } from '@/types'
 
 interface DashboardShellProps {
@@ -21,6 +22,7 @@ export function DashboardShell({ profile, planName, children }: DashboardShellPr
       <main className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 space-y-4">
         <AnnouncementBanner />
         <VersionBanner />
+        <UpsellBanner />
         {children}
       </main>
       <BottomNav />

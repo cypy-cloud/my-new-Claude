@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import { PLANS, PLAN_LABELS, type PlanId } from "@/lib/subscription/plans"
 import { UpgradeModal } from "./upgrade-modal"
+import { UpsellBanner } from "./upsell-banner"
 import { clientTrackUpgradeClick } from "@/lib/analytics/client-track"
 import { toast } from "sonner"
 
@@ -346,6 +347,11 @@ export function BillingDashboard({ initialPlanId }: { initialPlanId: PlanId }) {
     <div className="space-y-5">
       {/* 결제 실패 배너 */}
       {data.subscription && <PaymentFailedBanner status={data.subscription.status} />}
+
+      {/* 80% 이상 사용 시 업셀링 배너 (인라인 상세 버전) */}
+      {(data.planId === 'basic' || data.planId === 'pro') && (
+        <UpsellBanner inline />
+      )}
 
       {/* 현재 플랜 + 사용량 */}
       <CurrentPlanCard data={data} onUpgradeClick={() => handleUpgradeClick('plan_card')} />
