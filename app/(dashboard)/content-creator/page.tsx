@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
-import { Sparkles, Copy, RefreshCw, ChevronDown, ChevronUp, AlertTriangle, FileText, Instagram, Facebook, MessageCircle, Hash, BookOpen } from "lucide-react"
+import { Sparkles, Copy, RefreshCw, ChevronDown, ChevronUp, AlertTriangle, FileText, Image, Share2, MessageCircle, Hash, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -295,7 +295,7 @@ export default function ContentCreatorPage() {
               )}
               {sections.INSTAGRAM && (
                 <CollapsibleSection
-                  icon={Instagram}
+                  icon={Image}
                   title="인스타그램"
                   content={sections.INSTAGRAM}
                   defaultOpen={false}
@@ -303,7 +303,7 @@ export default function ContentCreatorPage() {
               )}
               {sections.FACEBOOK && (
                 <CollapsibleSection
-                  icon={Facebook}
+                  icon={Share2}
                   title="페이스북"
                   content={sections.FACEBOOK}
                   defaultOpen={false}
