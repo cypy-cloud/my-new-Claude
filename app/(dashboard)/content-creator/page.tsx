@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 
 const PRODUCT_FIELDS = [
@@ -193,40 +192,36 @@ export default function ContentCreatorPage() {
 
           <div className="space-y-2">
             <Label>상품 분야 <span className="text-red-500">*</span></Label>
-            <Select value={form.productField} onValueChange={v => set("productField", v)}>
-              <SelectTrigger>
-                <SelectValue placeholder="상품 분야 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                {PRODUCT_FIELDS.map(f => (
-                  <SelectItem key={f} value={f}>{f}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <select
+              value={form.productField}
+              onChange={e => set("productField", e.target.value)}
+              className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            >
+              <option value="">상품 분야 선택</option>
+              {PRODUCT_FIELDS.map(f => <option key={f} value={f}>{f}</option>)}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label>글 길이</Label>
-              <Select value={form.contentLength} onValueChange={v => set("contentLength", v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {LENGTHS.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <select
+                value={form.contentLength}
+                onChange={e => set("contentLength", e.target.value)}
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                {LENGTHS.map(l => <option key={l} value={l}>{l}</option>)}
+              </select>
             </div>
             <div className="space-y-2">
               <Label>톤앤매너</Label>
-              <Select value={form.tone} onValueChange={v => set("tone", v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TONES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <select
+                value={form.tone}
+                onChange={e => set("tone", e.target.value)}
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                {TONES.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
             </div>
           </div>
 
