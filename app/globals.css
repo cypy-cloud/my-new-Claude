@@ -36,3 +36,11 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+.sidebar-nav::-webkit-scrollbar {
+  display: none;
+}
+.sidebar-nav {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
