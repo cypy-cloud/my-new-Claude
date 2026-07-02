@@ -89,7 +89,7 @@ export function Sidebar({ profile, planName }: SidebarProps) {
         </Link>
       </div>
 
-      <nav className="sidebar-nav flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
+      <nav className="sidebar-nav flex-1 px-3 py-3 space-y-0.5 overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}>
         <p className="text-xs font-semibold text-blue-400 px-3 mb-1.5 uppercase tracking-wider">AI 기능</p>
         {mainNav.map((item) => <NavLink key={item.href} {...item} pathname={pathname} />)}
 
