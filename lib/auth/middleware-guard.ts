@@ -17,7 +17,9 @@ export async function adminGuard(
   const { data: profile } = await (adminClient as any)
     .from('profiles').select('role').eq('id', user.id).single()
 
-  const role = (profile?.role as UserRole) ?? 'user'
+  // 알려진 관리자 이메일은 super_admin으로 처리
+  const isKnownAdmin = user.email === 'gocypy@gmail.com'
+  const role: UserRole = isKnownAdmin ? 'super_admin' : ((profile?.role as UserRole) ?? 'user')
   if (!isAtLeast(role, minRole)) {
     return NextResponse.json({ error: '권한이 없습니다' }, { status: 403 })
   }
