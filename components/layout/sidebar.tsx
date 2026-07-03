@@ -25,6 +25,7 @@ const mainNav = [
   { href: "/objection-handler", label: "거절 극복 스크립트", icon: ShieldCheck },
   { href: "/customer-analysis", label: "고객 성향 분석", icon: UserSearch },
   { href: "/financial-report", label: "재무설계 리포트", icon: ClipboardList },
+  { href: "/lifecycle-alert", label: "생애주기 알림", icon: Bell },
   { href: "/ai-document", label: "AI PDF 분석", icon: FileText },
   { href: "/my-results", label: "내 결과물 보관함", icon: Archive },
   { href: "/templates", label: "템플릿 라이브러리", icon: LibraryBig },
