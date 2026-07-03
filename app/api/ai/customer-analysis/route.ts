@@ -42,7 +42,9 @@ export async function POST(request: NextRequest) {
   const prompt = `당신은 20년 경력의 보험 영업 전문가이자 심리 분석 전문가입니다.
 아래 고객 정보를 분석하여 맞춤형 영업 전략을 제시해주세요.
 
-## 고객 정보
+중요: 마크다운 문법(#, ##, **, *, -, 등)을 절대 사용하지 마세요. 순수 텍스트로만 작성하세요.
+
+고객 정보:
 - 나이대: ${ageGroup}
 - 성별: ${gender || '정보 없음'}
 - 직업: ${occupation}
@@ -54,10 +56,10 @@ export async function POST(request: NextRequest) {
 - 성격 유형: ${personality || '정보 없음'}
 - 추가 메모: ${extraNotes || '없음'}
 
-아래 형식으로 정확하게 작성해주세요:
+아래 형식으로 정확하게 작성해주세요. 추가 메모가 많을수록 더 구체적이고 상세하게 분석해주세요:
 
 [성향분석]
-(이 고객의 심리적 특성, 의사결정 방식, 보험에 대한 태도를 3~4문장으로 분석)
+(이 고객의 심리적 특성, 의사결정 방식, 보험에 대한 태도를 4~5문장으로 상세히 분석)
 
 [니즈예측]
 니즈1: (예상되는 주요 니즈)
@@ -73,7 +75,9 @@ export async function POST(request: NextRequest) {
 (이 고객에게 가장 효과적인 첫 번째 접근 멘트. 자연스러운 대화체로 2~3문장)
 
 [주의사항]
-(이 고객을 상담할 때 특히 조심해야 할 점 2~3가지)
+1. (첫 번째 주의사항)
+2. (두 번째 주의사항)
+3. (세 번째 주의사항)
 
 [핵심키워드]
 (이 고객의 마음을 움직일 핵심 키워드 5개를 쉼표로 구분)`
@@ -82,7 +86,7 @@ export async function POST(request: NextRequest) {
     const result = await generateWithAI(prompt, {
       feature: 'ai_script',
       userId: user.id,
-      maxTokens: 1200,
+      maxTokens: 1600,
       temperature: 0.7,
       cacheInput: { ageGroup, gender, occupation, income, familyStatus, hasChildren, existingInsurance, mainConcern, personality, extraNotes },
     })
@@ -109,13 +113,22 @@ export async function POST(request: NextRequest) {
   }
 }
 
+function cleanMarkdown(text: string): string {
+  return text
+    .replace(/#{1,6}\s*/g, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/^[-•]\s*/gm, '')
+    .trim()
+}
+
 function parseAnalysis(raw: string) {
   const extract = (tag: string, nextTag?: string) => {
     const start = raw.indexOf(`[${tag}]`)
     if (start === -1) return ''
     const contentStart = start + tag.length + 2
     const end = nextTag ? raw.indexOf(`[${nextTag}]`) : raw.length
-    return raw.slice(contentStart, end !== -1 ? end : raw.length).trim()
+    return cleanMarkdown(raw.slice(contentStart, end !== -1 ? end : raw.length).trim())
   }
 
   const tags = ['성향분석', '니즈예측', '추천상품', '첫마디', '주의사항', '핵심키워드']
