@@ -1,0 +1,308 @@
+"use client"
+
+import { useState } from "react"
+import { toast } from "sonner"
+import { Brain, Copy, RefreshCw, Star, AlertTriangle, MessageSquare, Tag, TrendingUp } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
+import type { MonthlyUsageData } from "@/lib/subscription/usage"
+import type { PlanLimits } from "@/lib/subscription/plans"
+
+const AGE_GROUPS = ["20대", "30대 초반", "30대 후반", "40대 초반", "40대 후반", "50대", "60대 이상"]
+const INCOME_LEVELS = ["월 200만원 미만", "월 200~300만원", "월 300~500만원", "월 500만원 이상"]
+const FAMILY_STATUS = ["미혼", "기혼 (자녀 없음)", "기혼 (자녀 있음)", "이혼/사별"]
+const PERSONALITY_TYPES = ["꼼꼼하고 분석적", "빠른 결정 선호", "관계 중심적", "보수적/안전 추구", "트렌드에 민감", "가격 민감형"]
+const CONCERNS = ["노후 준비", "질병/암 대비", "가족 보장", "저축/재테크", "사고/상해 대비", "세금 절약"]
+
+interface AnalysisResult {
+  personality: string
+  needs: string[]
+  products: Array<{ name: string; reason: string }>
+  firstLine: string
+  cautions: string
+  keywords: string[]
+}
+
+interface CustomerAnalysisProps {
+  planName: string
+  limits: PlanLimits
+  usage: MonthlyUsageData
+}
+
+export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisProps) {
+  const [ageGroup, setAgeGroup] = useState("")
+  const [gender, setGender] = useState("")
+  const [occupation, setOccupation] = useState("")
+  const [income, setIncome] = useState("")
+  const [familyStatus, setFamilyStatus] = useState("")
+  const [hasChildren, setHasChildren] = useState("")
+  const [existingInsurance, setExistingInsurance] = useState("")
+  const [mainConcern, setMainConcern] = useState("")
+  const [personality, setPersonality] = useState("")
+  const [extraNotes, setExtraNotes] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<AnalysisResult | null>(null)
+  const [remaining, setRemaining] = useState(limits.scriptLimit - usage.scriptCount)
+
+  async function handleAnalyze() {
+    if (!ageGroup) { toast.error("나이대를 선택해주세요"); return }
+    if (!occupation.trim()) { toast.error("직업을 입력해주세요"); return }
+    if (!mainConcern) { toast.error("주요 관심사를 선택해주세요"); return }
+
+    setLoading(true)
+    setResult(null)
+
+    try {
+      const res = await fetch("/api/ai/customer-analysis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ageGroup, gender, occupation, income, familyStatus, hasChildren, existingInsurance, mainConcern, personality, extraNotes }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        if (data.limitExceeded) {
+          toast.error("이번 달 사용 한도를 초과했습니다. 플랜을 업그레이드해주세요.")
+        } else {
+          toast.error(data.error ?? "분석에 실패했습니다")
+        }
+        return
+      }
+
+      setResult(data)
+      setRemaining(data.remaining ?? 0)
+      toast.success(data.cached ? "이전 분석 결과를 불러왔습니다" : "고객 성향 분석 완료!")
+    } catch {
+      toast.error("네트워크 오류가 발생했습니다")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function copy(text: string, label: string) {
+    navigator.clipboard.writeText(text)
+    toast.success(`${label} 복사 완료!`)
+  }
+
+  const scriptUsed = usage.scriptCount
+  const scriptLimit = limits.scriptLimit
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-500">
+          스크립트 사용량: <span className="font-semibold text-gray-900">{scriptUsed} / {scriptLimit}회</span>
+        </p>
+        {scriptUsed >= scriptLimit && (
+          <span className="text-xs text-red-600 font-medium">한도 초과 — 업그레이드 필요</span>
+        )}
+      </div>
+
+      {/* 입력 폼 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Brain className="h-4 w-4 text-orange-500" />
+            고객 정보 입력
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label>나이대 <span className="text-red-500">*</span></Label>
+              <select value={ageGroup} onChange={e => setAgeGroup(e.target.value)}
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                <option value="">선택</option>
+                {AGE_GROUPS.map(a => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>성별</Label>
+              <select value={gender} onChange={e => setGender(e.target.value)}
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                <option value="">선택</option>
+                <option value="남성">남성</option>
+                <option value="여성">여성</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>직업 <span className="text-red-500">*</span></Label>
+              <Input placeholder="예: 직장인, 자영업자..." value={occupation} onChange={e => setOccupation(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label>소득 수준</Label>
+              <select value={income} onChange={e => setIncome(e.target.value)}
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                <option value="">선택</option>
+                {INCOME_LEVELS.map(i => <option key={i} value={i}>{i}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>가족 상황</Label>
+              <select value={familyStatus} onChange={e => setFamilyStatus(e.target.value)}
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                <option value="">선택</option>
+                {FAMILY_STATUS.map(f => <option key={f} value={f}>{f}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>성격 유형</Label>
+              <select value={personality} onChange={e => setPersonality(e.target.value)}
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                <option value="">선택</option>
+                {PERSONALITY_TYPES.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>주요 관심사/걱정 <span className="text-red-500">*</span></Label>
+              <select value={mainConcern} onChange={e => setMainConcern(e.target.value)}
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                <option value="">선택</option>
+                {CONCERNS.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>기존 보험 현황</Label>
+              <Input placeholder="예: 실손보험 있음, 생명보험 없음..." value={existingInsurance} onChange={e => setExistingInsurance(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>추가 메모 <span className="text-gray-400 text-xs">(선택)</span></Label>
+            <Textarea placeholder="상담 시 파악한 특이사항, 고객의 말투, 반응 등..." value={extraNotes} onChange={e => setExtraNotes(e.target.value)} rows={2} />
+          </div>
+
+          <Button onClick={handleAnalyze} disabled={loading} className="w-full bg-orange-500 hover:bg-orange-600 text-white" size="lg">
+            {loading
+              ? <><RefreshCw className="h-4 w-4 mr-2 animate-spin" />분석 중...</>
+              : <><Brain className="h-4 w-4 mr-2" />고객 성향 분석하기</>
+            }
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* 결과 */}
+      {result && (
+        <div className="space-y-4">
+          {/* 키워드 */}
+          {result.keywords.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <Tag className="h-4 w-4 text-orange-500 shrink-0" />
+              <span className="text-sm font-medium text-gray-700">핵심 키워드:</span>
+              {result.keywords.map((k, i) => (
+                <Badge key={i} className="bg-orange-100 text-orange-800 hover:bg-orange-100 border-orange-200">{k}</Badge>
+              ))}
+            </div>
+          )}
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* 성향 분석 */}
+            <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Brain className="h-4 w-4 text-blue-600" />
+                  <span className="font-semibold text-sm">성향 분석</span>
+                </div>
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{result.personality}</p>
+              </CardContent>
+            </Card>
+
+            {/* 예측 니즈 */}
+            <Card className="border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20">
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <TrendingUp className="h-4 w-4 text-emerald-600" />
+                  <span className="font-semibold text-sm">예측 니즈</span>
+                </div>
+                <ul className="space-y-1.5">
+                  {result.needs.map((need, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+                      <span className="w-5 h-5 rounded-full bg-emerald-200 dark:bg-emerald-800 flex items-center justify-center text-xs font-bold text-emerald-800 dark:text-emerald-200 shrink-0 mt-0.5">{i + 1}</span>
+                      {need}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* 추천 상품 */}
+          {result.products.length > 0 && (
+            <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950/20">
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Star className="h-4 w-4 text-orange-500" />
+                  <span className="font-semibold text-sm">맞춤 상품 추천</span>
+                </div>
+                <div className="space-y-2">
+                  {result.products.map((p, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <span className={`text-xs font-bold px-1.5 py-0.5 rounded shrink-0 mt-0.5 ${i === 0 ? "bg-orange-500 text-white" : i === 1 ? "bg-orange-300 text-orange-900" : "bg-orange-200 text-orange-800"}`}>
+                        {i + 1}순위
+                      </span>
+                      <div>
+                        <span className="font-medium text-sm text-gray-900">{p.name}</span>
+                        <span className="text-xs text-gray-500 ml-2">— {p.reason}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* 첫마디 */}
+          {result.firstLine && (
+            <Card className="border-purple-200 bg-purple-50 dark:bg-purple-950/20">
+              <CardContent className="pt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4 text-purple-600" />
+                    <span className="font-semibold text-sm">추천 첫마디</span>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => copy(result.firstLine, "첫마디")} className="h-7 px-2 text-xs">
+                    <Copy className="h-3 w-3 mr-1" />복사
+                  </Button>
+                </div>
+                <div className="bg-white dark:bg-gray-900 rounded-lg p-3 border border-purple-100">
+                  <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">
+                    &ldquo;{result.firstLine}&rdquo;
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* 주의사항 */}
+          {result.cautions && (
+            <Card className="border-red-200 bg-red-50 dark:bg-red-950/20">
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle className="h-4 w-4 text-red-500" />
+                  <span className="font-semibold text-sm text-red-700 dark:text-red-400">주의사항</span>
+                </div>
+                <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">{result.cautions}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={handleAnalyze} disabled={loading}>
+              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />다시 분석
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

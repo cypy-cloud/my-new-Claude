@@ -1,10 +1,10 @@
 import { createClient } from "@/lib/supabase/server"
-import { ObjectionHandler } from "@/components/ai/objection-handler"
+import { CustomerAnalysis } from "@/components/ai/customer-analysis"
 import { PlanGate } from "@/components/ui/plan-gate"
 import { getPlanLimits, PLAN_LABELS, type PlanId } from "@/lib/subscription/plans"
 import { getMonthlyUsage } from "@/lib/subscription/usage"
 
-export default async function ObjectionHandlerPage() {
+export default async function CustomerAnalysisPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -22,13 +22,13 @@ export default async function ObjectionHandlerPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">거절 극복 스크립트</h1>
+        <h1 className="text-2xl font-bold text-gray-900">고객 성향 분석</h1>
         <p className="text-sm text-gray-500 mt-1">
-          고객의 거절 멘트에 맞는 효과적인 대응 스크립트를 AI가 3가지 전략으로 제안합니다
+          고객 정보를 입력하면 AI가 성향을 분석하고 맞춤 상품과 첫마디를 추천해드립니다
         </p>
       </div>
-      <PlanGate currentPlan={planId} requiredPlan="basic" featureName="거절 극복 스크립트">
-        <ObjectionHandler planName={planName} limits={limits} usage={usage} />
+      <PlanGate currentPlan={planId} requiredPlan="pro" featureName="고객 성향 분석">
+        <CustomerAnalysis planName={planName} limits={limits} usage={usage} />
       </PlanGate>
     </div>
   )
