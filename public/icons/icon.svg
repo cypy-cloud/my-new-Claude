@@ -1,8 +1,45 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="80" fill="#1e3a5f"/>
-  <rect x="200" y="140" width="112" height="112" rx="16" fill="#f97316"/>
-  <path d="M256 180 L256 220 M236 200 L276 200" stroke="white" stroke-width="14" stroke-linecap="round"/>
-  <rect x="140" y="290" width="232" height="28" rx="14" fill="white" opacity="0.9"/>
-  <rect x="160" y="336" width="192" height="20" rx="10" fill="white" opacity="0.5"/>
-  <rect x="176" y="370" width="160" height="20" rx="10" fill="white" opacity="0.3"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="60%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f"/>
+      <stop offset="100%" style="stop-color:#1a7a6e"/>
+    </linearGradient>
+    <linearGradient id="shield-grad" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#d8e8f0"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="18" flood-color="#0a1f3a" flood-opacity="0.35"/>
+    </filter>
+    <!-- top glow blob -->
+    <radialGradient id="blob" cx="50%" cy="0%" r="60%">
+      <stop offset="0%" style="stop-color:#2d5a8e;stop-opacity:0.7"/>
+      <stop offset="100%" style="stop-color:#1e3a5f;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="url(#bg)" rx="220"/>
+
+  <!-- Top glow blob -->
+  <ellipse cx="512" cy="0" rx="480" ry="300" fill="url(#blob)"/>
+
+  <!-- Shield -->
+  <path filter="url(#shadow)"
+    d="M512 140 L760 250 L760 520 Q760 700 512 880 Q264 700 264 520 L264 250 Z"
+    fill="url(#shield-grad)"/>
+
+  <!-- Shield inner highlight border -->
+  <path
+    d="M512 175 L730 273 L730 518 Q730 678 512 842 Q294 678 294 518 L294 273 Z"
+    fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="6"/>
+
+  <!-- 4-pointed star sparkle -->
+  <path
+    d="M512 310 L532 460 L682 480 L532 500 L512 650 L492 500 L342 480 L492 460 Z"
+    fill="#1e5a6e"/>
+
+  <!-- Subtle highlight dots on shield -->
+  <circle cx="370" cy="600" r="10" fill="rgba(255,255,255,0.35)"/>
+  <circle cx="450" cy="640" r="7" fill="rgba(255,255,255,0.25)"/>
 </svg>
