@@ -22,21 +22,10 @@ export class TossProvider implements BillingProviderAdapter {
     returnUrl: string
     cancelUrl?: string
   }): Promise<CheckoutSession> {
-    // TODO: 빌링키 발급 방식 (정기결제)
-    // POST /v1/billing/authorizations/issue → billingKey 발급
-    // POST /v1/billing/{billingKey} → 실제 결제
-    //
-    // 현재: 일반결제 위젯 방식 URL 생성 (placeholder)
     const orderId = `FP${params.userId.replace(/-/g, '').slice(0, 10)}${Date.now()}`
-    const checkoutUrl = [
-      `https://pay.toss.im/paymentWidget/v1`,
-      `?clientKey=${process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY ?? ''}`,
-      `&orderId=${orderId}`,
-      `&orderName=FP+AI+Assistant+${params.planId}`,
-      `&amount=${params.amount}`,
-      `&successUrl=${encodeURIComponent(params.returnUrl)}`,
-      `&failUrl=${encodeURIComponent(params.cancelUrl ?? params.returnUrl)}`,
-    ].join('')
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    // 위젯 결제 페이지로 이동 — 실제 Toss SDK는 클라이언트에서 로드
+    const checkoutUrl = `${appUrl}/billing/checkout/toss?planId=${params.planId}&orderId=${orderId}`
 
     return { sessionId: orderId, checkoutUrl, provider: 'toss', planId: params.planId, amount: params.amount }
   }

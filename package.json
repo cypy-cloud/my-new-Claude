@@ -21,6 +21,7 @@
     "@supabase/realtime-js": "^2.108.2",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.2",
+    "@tosspayments/payment-widget-sdk": "^0.12.2",
     "@types/pdf-parse": "^1.1.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
