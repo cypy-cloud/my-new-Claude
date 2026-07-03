@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { ObjectionHandler } from "@/components/ai/objection-handler"
 import { PlanGate } from "@/components/ui/plan-gate"
 import { getPlanLimits, PLAN_LABELS, type PlanId } from "@/lib/subscription/plans"
@@ -8,7 +9,8 @@ export default async function ObjectionHandlerPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: profile } = await (supabase as any)
+  const adminSupabase = createAdminClient()
+  const { data: profile } = await (adminSupabase as any)
     .from("profiles")
     .select("plan_type")
     .eq("id", user!.id)
