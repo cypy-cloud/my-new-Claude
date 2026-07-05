@@ -75,7 +75,7 @@ export const PLANS: Record<PlanId, Plan> = {
     pdfUploadLimit: 8,
     pdfAnalysisLimit: 6,
     contentLimit: 10,
-    newsletterLimit: 5,
+    newsletterLimit: 0,
     maxFileSizeMb: 30,
     storageDays: 180,
     priorityProcessing: false,
