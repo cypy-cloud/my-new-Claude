@@ -89,34 +89,30 @@ export function BillingPlans({ currentPlanId }: BillingPlansProps) {
     <div className="space-y-4">
       {/* 월간/연간 토글 */}
       <div className="flex flex-col items-center gap-2">
-        <div className="flex items-center gap-4">
-          <span className={`text-sm font-medium whitespace-nowrap ${!annual ? "text-[#1e3a5f]" : "text-gray-400"}`}>
-            월간 결제
-          </span>
+        <div className="inline-flex items-center bg-gray-100 rounded-xl p-1 gap-1">
           <button
-            onClick={() => setAnnual(!annual)}
-            style={{ width: 48, height: 24, flexShrink: 0 }}
-            className={`relative rounded-full transition-colors duration-200 ${annual ? "bg-[#1e3a5f]" : "bg-gray-300"}`}
-            aria-label="연간 결제 토글"
+            onClick={() => setAnnual(false)}
+            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-150 ${
+              !annual
+                ? "bg-white text-[#1e3a5f] shadow"
+                : "text-gray-400 hover:text-gray-600"
+            }`}
           >
-            <span
-              style={{
-                position: "absolute",
-                top: 4,
-                left: annual ? 28 : 4,
-                width: 16,
-                height: 16,
-                transition: "left 0.2s",
-              }}
-              className="bg-white rounded-full shadow"
-            />
+            월간 결제
           </button>
-          <span className={`text-sm font-medium whitespace-nowrap ${annual ? "text-[#1e3a5f]" : "text-gray-400"}`}>
+          <button
+            onClick={() => setAnnual(true)}
+            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-150 flex items-center gap-2 ${
+              annual
+                ? "bg-white text-[#1e3a5f] shadow"
+                : "text-gray-400 hover:text-gray-600"
+            }`}
+          >
             연간 결제
-          </span>
-          <span className="bg-green-100 text-green-700 text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-            2개월 무료
-          </span>
+            <span className="bg-green-100 text-green-700 text-xs font-semibold px-2 py-0.5 rounded-full">
+              2개월 무료
+            </span>
+          </button>
         </div>
       </div>
 
