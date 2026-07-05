@@ -1,77 +1,12 @@
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { PageTracker } from "@/components/analytics/page-tracker"
-import { UpgradeButton } from "@/components/billing/upgrade-button"
 import { SubscriptionHistory } from "@/components/billing/subscription-history"
 import { AdminPlanSwitcher } from "@/components/billing/admin-plan-switcher"
 import { BillingDashboard } from "@/components/billing/billing-dashboard"
+import { BillingPlans } from "@/components/billing/billing-plans"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { CheckCircle, XCircle, Zap, Shield, Star, Crown } from "lucide-react"
-import { PLANS, type PlanId } from "@/lib/subscription/plans"
-
-const PLAN_UI: Record<PlanId, {
-  icon: React.ComponentType<{ className?: string }>
-  badge?: string
-  border: string
-  iconBg: string
-  btnClass: string
-  scale?: boolean
-}> = {
-  free:    { icon: Zap,    border: "border-gray-200",    iconBg: "bg-gray-100 text-gray-600",       btnClass: "border-[#1e3a5f] text-[#1e3a5f] hover:bg-[#1e3a5f] hover:text-white" },
-  basic:   { icon: Shield, border: "border-blue-200",    iconBg: "bg-blue-100 text-blue-600",        btnClass: "bg-blue-600 text-white hover:bg-blue-700", badge: "입문 추천" },
-  pro:     { icon: Star,   border: "border-[#1e3a5f]",   iconBg: "bg-[#1e3a5f] text-white",         btnClass: "bg-[#1e3a5f] text-white hover:bg-[#162d4a]", badge: "가장 인기", scale: true },
-  premium: { icon: Crown,  border: "border-orange-400",  iconBg: "bg-orange-100 text-orange-500",   btnClass: "bg-orange-500 text-white hover:bg-orange-600", badge: "최고 혜택" },
-}
-
-const PLAN_FEATURES: Record<PlanId, { label: string; included: boolean }[]> = {
-  free: [
-    { label: `AI 문자/카톡 월 ${PLANS.free.smsLimit}회`, included: true },
-    { label: `AI 스크립트 월 ${PLANS.free.scriptLimit}회`, included: true },
-    { label: `PDF 업로드 월 ${PLANS.free.pdfUploadLimit}개`, included: true },
-    { label: `파일당 ${PLANS.free.maxFileSizeMb}MB`, included: true },
-    { label: `원본 보관 ${PLANS.free.storageDays}일`, included: true },
-    { label: "블로그·SNS 콘텐츠", included: false },
-    { label: "뉴스레터 생성", included: false },
-    { label: "우선 처리", included: false },
-    { label: "팀 공유", included: false },
-  ],
-  basic: [
-    { label: `AI 문자/카톡 월 ${PLANS.basic.smsLimit}회`, included: true },
-    { label: `AI 스크립트 월 ${PLANS.basic.scriptLimit}회`, included: true },
-    { label: `PDF 업로드 월 ${PLANS.basic.pdfUploadLimit}개`, included: true },
-    { label: `파일당 ${PLANS.basic.maxFileSizeMb}MB`, included: true },
-    { label: `원본 보관 ${PLANS.basic.storageDays}일`, included: true },
-    { label: `블로그·SNS 콘텐츠 월 ${PLANS.basic.contentLimit}회`, included: true },
-    { label: `뉴스레터 생성 월 ${PLANS.basic.newsletterLimit}회`, included: true },
-    { label: "우선 처리", included: false },
-    { label: "팀 공유", included: false },
-  ],
-  pro: [
-    { label: `AI 문자/카톡 월 ${PLANS.pro.smsLimit}회`, included: true },
-    { label: `AI 스크립트 월 ${PLANS.pro.scriptLimit}회`, included: true },
-    { label: `PDF 업로드 월 ${PLANS.pro.pdfUploadLimit}개`, included: true },
-    { label: `파일당 ${PLANS.pro.maxFileSizeMb}MB`, included: true },
-    { label: `원본 보관 ${PLANS.pro.storageDays}일`, included: true },
-    { label: `블로그·SNS 콘텐츠 월 ${PLANS.pro.contentLimit}회`, included: true },
-    { label: `뉴스레터 생성 월 ${PLANS.pro.newsletterLimit}회`, included: true },
-    { label: "우선 처리", included: false },
-    { label: "팀 공유", included: false },
-  ],
-  premium: [
-    { label: `AI 문자/카톡 월 ${PLANS.premium.smsLimit}회`, included: true },
-    { label: `AI 스크립트 월 ${PLANS.premium.scriptLimit}회`, included: true },
-    { label: `PDF 업로드 월 ${PLANS.premium.pdfUploadLimit}개`, included: true },
-    { label: `파일당 ${PLANS.premium.maxFileSizeMb}MB`, included: true },
-    { label: `원본 보관 ${PLANS.premium.storageDays}일`, included: true },
-    { label: `블로그·SNS 콘텐츠 월 ${PLANS.premium.contentLimit}회`, included: true },
-    { label: `뉴스레터 생성 월 ${PLANS.premium.newsletterLimit}회`, included: true },
-    { label: "우선 처리", included: true },
-    { label: "팀 공유 (향후 제공)", included: true },
-  ],
-}
-
-const PLAN_ORDER: PlanId[] = ["free", "basic", "pro", "premium"]
+import { type PlanId } from "@/lib/subscription/plans"
 
 export default async function BillingPage() {
   const supabase = await createClient()
@@ -104,67 +39,7 @@ export default async function BillingPage() {
       {/* 요금제 비교 카드 */}
       <div>
         <h2 className="text-sm font-semibold text-gray-600 mb-3">요금제 비교</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {PLAN_ORDER.map((planId) => {
-            const plan = PLANS[planId]
-            const ui = PLAN_UI[planId]
-            const features = PLAN_FEATURES[planId]
-            const Icon = ui.icon
-            const isCurrent = planId === currentPlanId
-            const isDowngrade = PLAN_ORDER.indexOf(planId) < PLAN_ORDER.indexOf(currentPlanId)
-
-            return (
-              <div
-                key={planId}
-                className={`relative bg-white rounded-2xl border-2 ${ui.border} p-5 flex flex-col ${
-                  ui.scale ? "shadow-xl lg:scale-[1.03]" : "shadow-sm"
-                }`}
-              >
-                {ui.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                    <Badge className={`${planId === "pro" ? "bg-[#1e3a5f]" : planId === "basic" ? "bg-blue-600" : "bg-orange-500"} text-white px-3 py-1 text-xs`}>
-                      {ui.badge}
-                    </Badge>
-                  </div>
-                )}
-                {isCurrent && (
-                  <div className="absolute -top-3 right-3">
-                    <Badge className="bg-green-500 text-white px-2 py-1 text-xs">현재 플랜</Badge>
-                  </div>
-                )}
-
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${ui.iconBg}`}>
-                  <Icon className="h-5 w-5" />
-                </div>
-                <h3 className="text-lg font-bold text-[#1e3a5f]">{plan.name}</h3>
-                <div className="flex items-end gap-1 my-2">
-                  <span className="text-2xl font-bold text-[#1e3a5f]">
-                    {plan.price === 0 ? "무료" : `₩${plan.price.toLocaleString()}`}
-                  </span>
-                  {plan.price > 0 && <span className="text-gray-400 text-xs mb-0.5">/월</span>}
-                </div>
-
-                <ul className="space-y-2 mb-5 flex-1">
-                  {features.map((f) => (
-                    <li key={f.label} className="flex items-start gap-1.5 text-xs text-gray-600">
-                      {f.included
-                        ? <CheckCircle className="h-3.5 w-3.5 text-green-500 shrink-0 mt-0.5" />
-                        : <XCircle className="h-3.5 w-3.5 text-gray-300 shrink-0 mt-0.5" />
-                      }
-                      <span className={f.included ? "" : "text-gray-400"}>{f.label}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <UpgradeButton
-                  planId={planId}
-                  isCurrent={isCurrent}
-                  isDowngrade={isDowngrade}
-                />
-              </div>
-            )
-          })}
-        </div>
+        <BillingPlans currentPlanId={currentPlanId} />
       </div>
 
       {/* 자주 묻는 질문 */}
