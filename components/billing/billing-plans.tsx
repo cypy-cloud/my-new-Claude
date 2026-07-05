@@ -88,21 +88,36 @@ export function BillingPlans({ currentPlanId }: BillingPlansProps) {
   return (
     <div className="space-y-4">
       {/* 월간/연간 토글 */}
-      <div className="flex items-center justify-center gap-3 flex-wrap">
-        <span className={`text-sm font-medium min-w-fit ${!annual ? "text-[#1e3a5f]" : "text-gray-400"}`}>월간 결제</span>
-        <button
-          onClick={() => setAnnual(!annual)}
-          className={`relative flex-shrink-0 w-12 h-6 rounded-full transition-colors duration-200 ${annual ? "bg-[#1e3a5f]" : "bg-gray-300"}`}
-          aria-label="연간 결제 토글"
-        >
-          <span
-            className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${annual ? "translate-x-7" : "translate-x-1"}`}
-          />
-        </button>
-        <span className={`text-sm font-medium min-w-fit ${annual ? "text-[#1e3a5f]" : "text-gray-400"}`}>연간 결제</span>
-        <span className="bg-green-100 text-green-700 text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
-          2개월 무료
-        </span>
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex items-center gap-4">
+          <span className={`text-sm font-medium whitespace-nowrap ${!annual ? "text-[#1e3a5f]" : "text-gray-400"}`}>
+            월간 결제
+          </span>
+          <button
+            onClick={() => setAnnual(!annual)}
+            style={{ width: 48, height: 24, flexShrink: 0 }}
+            className={`relative rounded-full transition-colors duration-200 ${annual ? "bg-[#1e3a5f]" : "bg-gray-300"}`}
+            aria-label="연간 결제 토글"
+          >
+            <span
+              style={{
+                position: "absolute",
+                top: 4,
+                left: annual ? 28 : 4,
+                width: 16,
+                height: 16,
+                transition: "left 0.2s",
+              }}
+              className="bg-white rounded-full shadow"
+            />
+          </button>
+          <span className={`text-sm font-medium whitespace-nowrap ${annual ? "text-[#1e3a5f]" : "text-gray-400"}`}>
+            연간 결제
+          </span>
+          <span className="bg-green-100 text-green-700 text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+            2개월 무료
+          </span>
+        </div>
       </div>
 
       {/* 플랜 카드 */}
