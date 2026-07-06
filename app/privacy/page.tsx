@@ -25,7 +25,7 @@ export default function PrivacyPage() {
         <p className="text-sm text-gray-400 mb-8">시행일: 2026년 7월 6일 · 버전 v1.0</p>
 
         <p className="mb-8">
-          [회사명/사업자명]（이하 &ldquo;회사&rdquo;）은 「개인정보보호법」 등 관계 법령을 준수하며,
+          열린교육컨설팅（사업자등록번호 259-98-01495, 이하 &ldquo;회사&rdquo;）은 「개인정보보호법」 등 관계 법령을 준수하며,
           이용자의 개인정보를 안전하게 처리하기 위해 다음과 같이 개인정보처리방침을 수립·공개합니다.
         </p>
 
@@ -120,9 +120,8 @@ export default function PrivacyPage() {
         <section className="space-y-3 mb-8">
           <h2 className="text-lg font-semibold text-[#1e3a5f]">7. 개인정보보호책임자</h2>
           <ul className="list-disc pl-5 space-y-1">
-            <li>성명: [담당자명]</li>
-            <li>이메일: [고객센터 이메일]</li>
-            <li>연락처: [연락처]</li>
+            <li>성명: 임현수</li>
+            <li>이메일: gocypy@gmail.com</li>
           </ul>
         </section>
 

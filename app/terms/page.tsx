@@ -27,7 +27,7 @@ export default function TermsPage() {
         <section className="space-y-3 mb-8">
           <h2 className="text-lg font-semibold text-[#1e3a5f]">제1조 (목적)</h2>
           <p>
-            이 약관은 [회사명/사업자명]（이하 &ldquo;회사&rdquo;）이 제공하는 보험설계사 전용 AI 업무 지원 서비스
+            이 약관은 열린교육컨설팅（사업자등록번호 259-98-01495, 이하 &ldquo;회사&rdquo;）이 제공하는 보험설계사 전용 AI 업무 지원 서비스
             &ldquo;FP AI Assistant&rdquo;（이하 &ldquo;서비스&rdquo;）의 이용과 관련하여 회사와 이용자 간의 권리, 의무 및
             책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.
           </p>
@@ -121,7 +121,7 @@ export default function TermsPage() {
 
         <section className="space-y-3">
           <h2 className="text-lg font-semibold text-[#1e3a5f]">문의</h2>
-          <p>이 약관에 대한 문의사항은 [고객센터 이메일]로 연락해주시기 바랍니다.</p>
+          <p>이 약관에 대한 문의사항은 gocypy@gmail.com으로 연락해주시기 바랍니다.</p>
         </section>
       </main>
     </div>

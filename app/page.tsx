@@ -227,11 +227,14 @@ export default function HomePage() {
               </div>
               <span className="font-bold text-[#1e3a5f]">FP AI Assistant</span>
             </div>
-            <p className="text-sm text-gray-500">© 2025 FP AI Assistant. 보험설계사를 위한 AI 업무 자동화.</p>
             <div className="flex gap-5 text-sm text-gray-500">
               <Link href="/terms" className="hover:text-[#1e3a5f]">이용약관</Link>
               <Link href="/privacy" className="hover:text-[#1e3a5f]">개인정보처리방침</Link>
             </div>
+          </div>
+          <div className="mt-4 pt-4 border-t text-xs text-gray-400 text-center md:text-left space-y-0.5">
+            <p>열린교육컨설팅 (FP AI Assistant) · 대표: 임현수 · 사업자등록번호: 259-98-01495</p>
+            <p>문의: gocypy@gmail.com · © 2026 FP AI Assistant. 보험설계사를 위한 AI 업무 자동화.</p>
           </div>
         </div>
       </footer>
