@@ -25,7 +25,6 @@ const mainNav = [
   { href: "/objection-handler", label: "거절 극복 스크립트", icon: ShieldCheck },
   { href: "/customer-analysis", label: "고객 성향 분석", icon: UserSearch },
   { href: "/pension-calculator", label: "연금 계산기", icon: Calculator },
-  { href: "/lifecycle-alert", label: "생애주기 알림", icon: Bell },
   { href: "/review-writer", label: "AI 상담 후기 작성", icon: BookMarked },
   { href: "/ai-document", label: "AI PDF 분석", icon: FileText },
   { href: "/my-results", label: "내 결과물 보관함", icon: Archive },
