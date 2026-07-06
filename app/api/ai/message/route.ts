@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
         feature: 'ai_message',
         userId: user.id,
         model: SONNET_MODEL,
-        maxTokens: 1500,
+        maxTokens: 3000, // Sonnet 5의 extended thinking 소모분을 감안한 여유 마진 (1500은 드물게 거의 빈 응답으로 잘림)
         temperature: 0.75,
         cacheInput: { ...baseCacheInput, split: 'sonnet' },
         forceRegenerate,
