@@ -19,6 +19,8 @@ function SuccessContent() {
 
   const [status, setStatus] = useState<"verifying" | "success" | "error">("verifying")
   const [errorMsg, setErrorMsg] = useState("")
+  const [isImmediate, setIsImmediate] = useState(true)
+  const [effectiveDate, setEffectiveDate] = useState<string | null>(null)
 
   useEffect(() => {
     if (called.current || !paymentKey || !orderId || !planId) return
@@ -37,8 +39,14 @@ function SuccessContent() {
           setStatus("error")
           return
         }
+        setIsImmediate(data.immediate !== false)
+        setEffectiveDate(data.effectiveDate ?? null)
         setStatus("success")
-        toast.success(`${PLAN_LABELS[planId!]} 플랜으로 변경되었습니다!`)
+        if (data.immediate !== false) {
+          toast.success(`${PLAN_LABELS[planId!]} 플랜으로 변경되었습니다!`)
+        } else {
+          toast.success(`${data.effectiveDate}부터 ${PLAN_LABELS[planId!]} 플랜으로 변경됩니다.`)
+        }
       } catch {
         setErrorMsg("네트워크 오류가 발생했습니다")
         setStatus("error")
@@ -65,8 +73,14 @@ function SuccessContent() {
         </div>
         <div className="text-center">
           <h2 className="text-2xl font-bold text-[#1e3a5f]">결제 완료!</h2>
-          {planId && (
+          {planId && isImmediate && (
             <p className="text-gray-600 mt-2">{PLAN_LABELS[planId]} 플랜이 즉시 적용되었습니다.</p>
+          )}
+          {planId && !isImmediate && effectiveDate && (
+            <div className="mt-3 space-y-1">
+              <p className="text-gray-600">{effectiveDate}부터 <strong>{PLAN_LABELS[planId]}</strong> 플랜이 적용됩니다.</p>
+              <p className="text-sm text-gray-400">그 전까지는 현재 플랜을 계속 사용하실 수 있습니다.</p>
+            </div>
           )}
         </div>
         <div className="flex gap-3">

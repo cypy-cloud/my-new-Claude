@@ -14,11 +14,13 @@ export default async function BillingPage() {
 
   const { data: profile } = await (supabase as any)
     .from("profiles")
-    .select("plan_type")
+    .select("plan_type, scheduled_plan_type, scheduled_plan_date")
     .eq("id", user!.id)
     .single()
 
   const currentPlanId = (profile?.plan_type as PlanId) ?? "free"
+  const scheduledPlanId = (profile?.scheduled_plan_type as PlanId) ?? null
+  const scheduledPlanDate = profile?.scheduled_plan_date ?? null
 
   return (
     <div className="space-y-8 max-w-5xl">
@@ -29,6 +31,20 @@ export default async function BillingPage() {
         <h1 className="text-2xl font-bold text-[#1e3a5f]">요금제 선택</h1>
         <p className="text-gray-500 mt-2">업무 규모에 맞는 플랜을 선택하세요. 언제든지 변경 가능합니다.</p>
       </div>
+
+      {/* 예약된 다운그레이드 안내 */}
+      {scheduledPlanId && scheduledPlanDate && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 flex items-start gap-3">
+          <span className="text-amber-500 mt-0.5">⏳</span>
+          <div>
+            <p className="text-sm font-medium text-amber-800">플랜 변경 예약됨</p>
+            <p className="text-sm text-amber-700 mt-0.5">
+              <strong>{scheduledPlanDate}</strong>부터 <strong>{scheduledPlanId}</strong> 플랜으로 변경됩니다.
+              그 전까지는 현재 플랜을 계속 이용하실 수 있습니다.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* 현재 플랜 + 사용량 대시보드 */}
       <div>
@@ -49,7 +65,7 @@ export default async function BillingPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {[
-            { q: "언제든지 플랜을 변경할 수 있나요?", a: "네, 언제든지 업그레이드 또는 다운그레이드 가능합니다. 변경 즉시 적용됩니다." },
+            { q: "언제든지 플랜을 변경할 수 있나요?", a: "네, 언제든지 변경 가능합니다. 업그레이드는 즉시 적용됩니다. 다운그레이드는 현재 달 말일까지 기존 플랜을 유지하고, 다음 달 1일부터 새 플랜이 적용됩니다." },
             { q: "사용량은 언제 초기화되나요?", a: "매달 1일 자정에 이번 달 사용량이 초기화됩니다." },
             { q: "결제는 어떻게 이루어지나요?", a: "토스페이먼츠를 통해 신용카드, 체크카드, 간편결제(카카오페이, 네이버페이 등)로 결제할 수 있습니다." },
             { q: "환불 정책은 어떻게 되나요?", a: "결제 후 7일 이내 미사용 시 전액 환불이 가능합니다." },

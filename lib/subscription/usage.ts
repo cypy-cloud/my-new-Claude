@@ -38,11 +38,35 @@ export async function getCurrentUserPlan(): Promise<PlanId> {
 
   const { data: profile } = await (supabase as any)
     .from('profiles')
-    .select('plan_type')
+    .select('plan_type, scheduled_plan_type, scheduled_plan_date')
     .eq('id', user.id)
     .single()
 
   return (profile?.plan_type as PlanId) ?? 'free'
+}
+
+export interface PlanStatus {
+  currentPlan: PlanId
+  scheduledPlan: PlanId | null
+  scheduledDate: string | null
+}
+
+export async function getCurrentUserPlanStatus(): Promise<PlanStatus> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { currentPlan: 'free', scheduledPlan: null, scheduledDate: null }
+
+  const { data: profile } = await (supabase as any)
+    .from('profiles')
+    .select('plan_type, scheduled_plan_type, scheduled_plan_date')
+    .eq('id', user.id)
+    .single()
+
+  return {
+    currentPlan: (profile?.plan_type as PlanId) ?? 'free',
+    scheduledPlan: (profile?.scheduled_plan_type as PlanId) ?? null,
+    scheduledDate: profile?.scheduled_plan_date ?? null,
+  }
 }
 
 export async function getMonthlyUsage(userId: string): Promise<MonthlyUsageData> {

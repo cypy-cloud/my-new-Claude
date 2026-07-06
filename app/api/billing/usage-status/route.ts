@@ -13,11 +13,13 @@ export async function GET() {
 
   const { data: profile } = await (supabase as any)
     .from('profiles')
-    .select('plan_type')
+    .select('plan_type, scheduled_plan_type, scheduled_plan_date')
     .eq('id', user.id)
     .single()
 
   const planId = (profile?.plan_type as PlanId) ?? 'free'
+  const scheduledPlanId = (profile?.scheduled_plan_type as PlanId) ?? null
+  const scheduledPlanDate = profile?.scheduled_plan_date ?? null
   const limits = getPlanLimits(planId)
   const usage = await getMonthlyUsage(user.id)
   const subscription = await getSubscription(user.id)
@@ -89,6 +91,9 @@ export async function GET() {
     recommendedPlanId,
     recommendedPlanLabel: recommendedPlanId ? PLAN_LABELS[recommendedPlanId] : null,
     recommendedPlanPrice: recommendedPlanId ? PLANS[recommendedPlanId].price : null,
+    scheduledPlanId,
+    scheduledPlanLabel: scheduledPlanId ? PLAN_LABELS[scheduledPlanId] : null,
+    scheduledPlanDate,
     subscription: subscription
       ? {
           status: subscription.status,
