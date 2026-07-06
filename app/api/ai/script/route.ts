@@ -7,6 +7,9 @@ import { trackFeatureComplete } from '@/lib/analytics/track'
 import { handleApiError } from '@/lib/errors/api-error-handler'
 import { resolveProductCategory, buildProductCategoryAddendum } from '@/lib/ai-core/product-category'
 
+// 10개 섹션 상세 스크립트는 출력 토큰이 많아 응답에 시간이 걸림 — 기본 함수 실행 제한보다 넉넉하게 확보
+export const maxDuration = 60
+
 const DISCLAIMER = '\n\n[보험 관련 유의사항] 이 스크립트는 AI가 생성한 참고용 자료입니다. 실제 상담 시 고객 상황에 맞게 조정하시기 바랍니다. 보험 상품의 보장 내용 및 보험료는 계약 조건에 따라 달라질 수 있으며, 가입 전 반드시 약관을 확인하시기 바랍니다.'
 
 const SECTION_MARKERS = ['PREP', 'GREETING', 'ICEBREAK', 'NEEDS', 'AWARENESS', 'PRODUCT', 'PERSONA', 'OBJECTION', 'CLOSING', 'FOLLOWUP']
