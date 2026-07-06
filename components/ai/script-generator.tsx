@@ -457,10 +457,8 @@ export function ScriptGenerator({ initialUsage, limit, planName, initialData, pe
 
         {/* 상담 전략 */}
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">상담 전략</p>
-        <ChipSelect label="고객 성향" value={customerPersonality} onChange={setCustomerPersonality} options={PERSONALITIES} columns={1} />
-        <ChipSelect label="설계사 스타일" value={agentStyle} onChange={setAgentStyle} options={AGENT_STYLES} columns={2} />
 
-        {/* 고객성향분석 결과 불러오기 */}
+        {/* 고객성향분석 결과 불러오기 — 고객 성향 위에 배치 */}
         <div className="space-y-1.5">
           <button
             type="button"
@@ -513,6 +511,20 @@ export function ScriptGenerator({ initialUsage, limit, planName, initialData, pe
             </div>
           )}
         </div>
+
+        {/* 고객 성향 — 성향분석 결과가 선택되면 비활성화 */}
+        <div className={selectedAnalysis ? 'opacity-40 pointer-events-none select-none' : ''}>
+          {selectedAnalysis && (
+            <p className="text-xs text-purple-500 mb-1">성향분석 결과 적용 중 — 아래 선택 비활성화</p>
+          )}
+          <ChipSelect label="고객 성향" value={customerPersonality} onChange={(v) => {
+            setCustomerPersonality(v)
+            // 수동 성향 선택 시 성향분석 결과 해제
+            if (v) { setSelectedAnalysis(null); setSelectedAnalysisText('') }
+          }} options={PERSONALITIES} columns={1} />
+        </div>
+
+        <ChipSelect label="설계사 스타일" value={agentStyle} onChange={setAgentStyle} options={AGENT_STYLES} columns={2} />
 
         {/* 연금계산기 분석 결과 고정 표시 */}
         {pensionNote && (
