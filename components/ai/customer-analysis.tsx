@@ -322,37 +322,27 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
           {/* MBTI — 프로 이상만 */}
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
-              {planName === "프로" || planName === "프리미엄" ? (
-                <>
-                  <div className="flex items-center justify-between">
-                    <Label>MBTI 유형 <span className="text-gray-400 text-xs">(선택)</span></Label>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("qr")}
-                      className="flex items-center gap-1 text-xs text-orange-500 hover:text-orange-600 font-medium"
-                    >
-                      <QrCode className="h-3 w-3" />
-                      QR 검사
-                    </button>
-                  </div>
-                  <select
-                    value={mbtiType}
-                    onChange={e => setMbtiType(e.target.value)}
-                    className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              <div className="flex items-center justify-between">
+                <Label>MBTI 유형 <span className="text-gray-400 text-xs">(선택)</span></Label>
+                {planName !== "무료" && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("qr")}
+                    className="flex items-center gap-1 text-xs text-orange-500 hover:text-orange-600 font-medium"
                   >
-                    <option value="">모름 / 미검사</option>
-                    {MBTI_TYPES.map(m => <option key={m} value={m}>{m}</option>)}
-                  </select>
-                </>
-              ) : (
-                <>
-                  <Label className="text-gray-400">MBTI 유형</Label>
-                  <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-dashed border-gray-200 bg-gray-50 text-xs text-gray-400">
-                    <QrCode className="h-3.5 w-3.5 shrink-0" />
-                    프로 플랜 이상에서 사용 가능 — MBTI 기반 심층 분석 제공
-                  </div>
-                </>
-              )}
+                    <QrCode className="h-3 w-3" />
+                    QR 검사
+                  </button>
+                )}
+              </div>
+              <select
+                value={mbtiType}
+                onChange={e => setMbtiType(e.target.value)}
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">모름 / 미검사</option>
+                {MBTI_TYPES.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
             </div>
             <div className="space-y-1.5">
               <Label>기존 보험 현황</Label>
