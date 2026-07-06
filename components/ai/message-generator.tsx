@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { toast } from "sonner"
 import {
   Sparkles, Copy, Download, RefreshCw, CheckCircle, AlertCircle,
   Zap, Bookmark, BookmarkCheck, MessageSquare, MessageCircle,
-  Heart, TrendingUp, Send, ChevronDown, ChevronUp,
+  Heart, TrendingUp, Send, ChevronDown, ChevronUp, Mic, MicOff, Loader2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -81,6 +81,66 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
   const [savedId, setSavedId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isFavorite, setIsFavorite] = useState(false)
+
+  // Voice input state
+  const [isRecording, setIsRecording] = useState(false)
+  const [isCorrectingVoice, setIsCorrectingVoice] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null)
+
+  async function correctVoiceInput(rawText: string) {
+    setIsCorrectingVoice(true)
+    try {
+      const res = await fetch("/api/ai/voice-correct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rawText, context: { purpose, productField, tone } }),
+      })
+      if (!res.ok) throw new Error("보정 실패")
+      const data = await res.json()
+      setExtraNotes(prev => prev ? prev + " " + data.corrected : data.corrected)
+    } catch {
+      setExtraNotes(prev => prev ? prev + " " + rawText : rawText)
+    } finally {
+      setIsCorrectingVoice(false)
+    }
+  }
+
+  function toggleRecording() {
+    if (isRecording) {
+      recognitionRef.current?.stop()
+      setIsRecording(false)
+      return
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      toast.error("이 브라우저는 음성 입력을 지원하지 않습니다. Chrome 또는 Safari를 사용해주세요.")
+      return
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const recognition: any = new SpeechRecognition()
+    recognition.lang = "ko-KR"
+    recognition.continuous = false
+    recognition.interimResults = false
+
+    recognition.onresult = (e: any) => {
+      const transcript = e.results[0][0].transcript
+      correctVoiceInput(transcript)
+    }
+    recognition.onerror = () => {
+      toast.error("음성 인식에 실패했습니다. 다시 시도해주세요.")
+      setIsRecording(false)
+    }
+    recognition.onend = () => setIsRecording(false)
+
+    recognitionRef.current = recognition
+    recognition.start()
+    setIsRecording(true)
+    toast.info("녹음 중... 말씀하세요")
+  }
 
   const { state, generate } = useAIGenerate(
     Math.max(0, limit - initialUsage),
@@ -291,11 +351,30 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
           </div>
         </div>
 
-        {/* 특별 보장 내용 (후킹 포인트) */}
+        {/* 특별 추가 내용 (후킹 포인트) */}
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium">
-            특별 보장 내용 <span className="text-orange-500 font-normal">(입력 시 후킹 문구에 활용돼요)</span>
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-medium">
+              특별 추가 내용 <span className="text-orange-500 font-normal">(입력 시 후킹 문구에 활용돼요)</span>
+            </Label>
+            <button
+              type="button"
+              onClick={toggleRecording}
+              disabled={isLoading || isCorrectingVoice}
+              title={isRecording ? "녹음 중지" : "음성으로 입력"}
+              className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all disabled:opacity-50 ${
+                isRecording
+                  ? "bg-red-500 text-white animate-pulse"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {isCorrectingVoice
+                ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />보정 중</>
+                : isRecording
+                ? <><MicOff className="h-3.5 w-3.5" />녹음 중지</>
+                : <><Mic className="h-3.5 w-3.5" />음성 입력</>}
+            </button>
+          </div>
           <Textarea
             placeholder="예: 3대 질병(암·뇌·심장) 진단 시 즉시 3,000만원 일시금 지급, 100세까지 갱신 없이 보장 유지"
             value={extraNotes}
@@ -304,7 +383,7 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
             disabled={isLoading}
           />
           <p className="text-[11px] text-gray-400">
-            특정 상품의 차별화된 보장 내용을 입력하면, 고객의 호기심을 자극하는 후킹 문구가 메시지에 반영됩니다.
+            특정 상품의 차별화된 보장 내용을 입력하면, 고객의 호기심을 자극하는 후킹 문구가 메시지에 반영됩니다. 마이크 버튼으로 음성 입력도 가능합니다.
           </p>
         </div>
 
