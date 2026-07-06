@@ -46,8 +46,8 @@ export const PLANS: Record<PlanId, Plan> = {
   basic: {
     id: 'basic',
     name: '기본',
-    price: 3900,
-    annualPrice: 39000,
+    price: 6900,
+    annualPrice: 69000,
     currency: 'KRW',
     interval: 'month',
     smsLimit: 15,
@@ -65,8 +65,8 @@ export const PLANS: Record<PlanId, Plan> = {
   pro: {
     id: 'pro',
     name: '프로',
-    price: 7900,
-    annualPrice: 79000,
+    price: 11900,
+    annualPrice: 119000,
     currency: 'KRW',
     interval: 'month',
     smsLimit: 50,
@@ -84,8 +84,8 @@ export const PLANS: Record<PlanId, Plan> = {
   premium: {
     id: 'premium',
     name: '프리미엄',
-    price: 15900,
-    annualPrice: 159000,
+    price: 19900,
+    annualPrice: 199000,
     currency: 'KRW',
     interval: 'month',
     smsLimit: 100,
