@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { TossCreditsCheckout } from "@/components/billing/toss-credits-checkout"
+import { VALID_PACK_MAP } from "@/lib/billing/credit-packs"
+import type { PlanId } from "@/lib/subscription/plans"
 
-const PACK_SIZE = 10
-const PACK_PRICE = 2000
+const PAID_PLANS: PlanId[] = ['basic', 'pro', 'premium']
 
 export default async function CreditsCheckoutPage({
   searchParams,
@@ -12,10 +14,11 @@ export default async function CreditsCheckoutPage({
 }) {
   const { orderId, amount: amountStr, packSize: packSizeStr } = await searchParams
 
-  const amount = Number(amountStr ?? PACK_PRICE)
-  const packSize = Number(packSizeStr ?? PACK_SIZE)
+  const amount = Number(amountStr ?? 0)
+  const packSize = Number(packSizeStr ?? 0)
 
-  if (!orderId || amount !== PACK_PRICE || packSize !== PACK_SIZE) {
+  // 유효한 팩인지 검증
+  if (!orderId || !packSize || VALID_PACK_MAP[packSize] !== amount) {
     redirect("/billing")
   }
 
@@ -25,6 +28,19 @@ export default async function CreditsCheckoutPage({
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/login")
+
+  // 유료 플랜 여부 확인
+  const adminSupabase = createAdminClient()
+  const { data: profile } = await (adminSupabase as any)
+    .from("profiles")
+    .select("plan_type")
+    .eq("id", user.id)
+    .single()
+
+  const planId = (profile?.plan_type as PlanId) ?? 'free'
+  if (!PAID_PLANS.includes(planId)) {
+    redirect("/billing")
+  }
 
   const customerKey = `fp_${user.id.replace(/-/g, "").slice(0, 20)}`
 

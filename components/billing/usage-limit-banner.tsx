@@ -99,7 +99,7 @@ export function UsageLimitBanner({ featureLabel, currentPlanId, recommendedPlanI
                 className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg transition-colors"
               >
                 <Zap className="h-3 w-3" />
-                10건 추가 ₩2,000
+                추가 크레딧 구매
               </button>
               {recommendedPlanId && (
                 <button
@@ -119,6 +119,7 @@ export function UsageLimitBanner({ featureLabel, currentPlanId, recommendedPlanI
           open={creditsModalOpen}
           onClose={() => setCreditsModalOpen(false)}
           featureLabel={featureLabel}
+          planId={currentPlanId}
         />
       </>
     )
@@ -136,7 +137,7 @@ export function UsageLimitBanner({ featureLabel, currentPlanId, recommendedPlanI
             className="inline-flex items-center gap-1 ml-1 px-2 py-0.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-md transition-colors"
           >
             <Zap className="h-3 w-3" />
-            10건 추가 ₩2,000
+            추가 크레딧 구매
           </button>
           {recommendedPlanId && (
             <button
@@ -155,6 +156,7 @@ export function UsageLimitBanner({ featureLabel, currentPlanId, recommendedPlanI
         open={creditsModalOpen}
         onClose={() => setCreditsModalOpen(false)}
         featureLabel={featureLabel}
+        planId={currentPlanId}
       />
     </>
   )
