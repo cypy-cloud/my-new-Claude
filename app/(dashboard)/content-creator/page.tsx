@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { toast } from "sonner"
-import { Sparkles, Copy, RefreshCw, ChevronDown, ChevronUp, AlertTriangle, FileText, Image, Share2, MessageCircle, Hash, BookOpen } from "lucide-react"
+import { Sparkles, Copy, RefreshCw, ChevronDown, ChevronUp, AlertTriangle, FileText, Image, Share2, MessageCircle, Hash, BookOpen, Mic, MicOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -105,7 +105,47 @@ export default function ContentCreatorPage() {
   const [sections, setSections] = useState<ContentSections | null>(null)
   const [remaining, setRemaining] = useState<number | null>(null)
 
+  // 음성 입력
+  const [isRecording, setIsRecording] = useState(false)
+  const recognitionRef = useRef<any>(null)
+  const transcriptRef = useRef("")
+
   const set = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }))
+
+  function toggleVoice() {
+    if (isRecording) {
+      recognitionRef.current?.stop()
+      return
+    }
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SR) { toast.error("이 브라우저는 음성 입력을 지원하지 않습니다."); return }
+
+    transcriptRef.current = ""
+    const rec: any = new SR()
+    rec.lang = "ko-KR"; rec.continuous = true; rec.interimResults = true
+    rec.onresult = (e: any) => {
+      let final = ""
+      for (let i = 0; i < e.results.length; i++) { if (e.results[i].isFinal) final += e.results[i][0].transcript }
+      if (final) transcriptRef.current = final
+    }
+    rec.onerror = (e: any) => {
+      if (e.error !== "aborted") toast.error("음성 인식 오류가 발생했습니다.")
+      recognitionRef.current = null; setIsRecording(false)
+    }
+    rec.onend = () => {
+      recognitionRef.current = null; setIsRecording(false)
+      if (transcriptRef.current) {
+        set("keyMessage", (form.keyMessage ? form.keyMessage + " " : "") + transcriptRef.current)
+        transcriptRef.current = ""
+        toast.success("음성 입력이 완료되었습니다.")
+      }
+    }
+    recognitionRef.current = rec
+    try {
+      rec.start(); setIsRecording(true)
+      toast.info("🎤 녹음 중... 말씀 후 [녹음 중지] 버튼을 눌러주세요")
+    } catch { toast.error("마이크 권한을 확인해주세요."); recognitionRef.current = null }
+  }
 
   const handleGenerate = async (forceRegenerate = false) => {
     if (!form.topic.trim()) { toast.error("주제를 입력해주세요"); return }
@@ -226,13 +266,36 @@ export default function ContentCreatorPage() {
           </div>
 
           <div className="space-y-2">
-            <Label>핵심 메시지 <span className="text-red-500">*</span></Label>
+            <div className="flex items-center justify-between">
+              <Label>핵심 메시지 <span className="text-red-500">*</span></Label>
+              <button
+                type="button"
+                onClick={toggleVoice}
+                className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg font-medium transition-colors ${
+                  isRecording
+                    ? "bg-red-100 text-red-600 hover:bg-red-200 animate-pulse"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {isRecording
+                  ? <><MicOff className="h-3.5 w-3.5" />녹음 중지</>
+                  : <><Mic className="h-3.5 w-3.5" />음성 입력</>
+                }
+              </button>
+            </div>
             <Textarea
               placeholder="예: 실손보험은 예상치 못한 의료비 부담을 줄여주는 든든한 대비책입니다"
               value={form.keyMessage}
               onChange={e => set("keyMessage", e.target.value)}
-              rows={2}
+              rows={3}
+              className={isRecording ? "border-red-300 ring-1 ring-red-300" : ""}
             />
+            {isRecording && (
+              <p className="text-xs text-red-500 flex items-center gap-1">
+                <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                음성을 인식하고 있습니다...
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
