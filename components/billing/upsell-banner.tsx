@@ -4,12 +4,19 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { X, TrendingUp, Zap, ArrowRight, Star, Crown } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { PlanId } from "@/lib/subscription/plans"
+import { PLANS, type PlanId } from "@/lib/subscription/plans"
 
 interface UpsellConfig {
   targetPlan: "pro" | "premium"
   topUsedFeature: string
   usagePct: number
+}
+
+// N배 표기 — 정수면 "3배", 아니면 소수 첫째 자리까지 "3.3배"
+function timesLabel(from: number, to: number): string {
+  const ratio = to / from
+  const rounded = Math.round(ratio * 10) / 10
+  return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)}배`
 }
 
 const UPSELL_COPY: Record<"pro" | "premium", {
@@ -25,16 +32,15 @@ const UPSELL_COPY: Record<"pro" | "premium", {
 }> = {
   pro: {
     emoji: "⚡",
-    headline: "프로 플랜으로 업그레이드하면 3배 더 많이 쓸 수 있어요!",
+    headline: "프로 플랜으로 업그레이드하면 더 많이 쓸 수 있어요!",
     hook: "지금 기본 플랜 한도의 80%를 사용하셨어요. 이대로 가면 이번 달 중 기능이 막힐 수 있습니다.",
     benefits: [
-      "AI 문자/카톡 15회 → 50회 (3.3배)",
-      "AI 스크립트 10회 → 25회 (2.5배)",
-      "PDF 분석 2회 → 8회 (4배)",
-      "블로그·SNS 콘텐츠 월 15회 제공",
-      "뉴스레터 생성 월 8회 제공",
+      `AI 문자/카톡 ${PLANS.basic.smsLimit}회 → ${PLANS.pro.smsLimit}회 (${timesLabel(PLANS.basic.smsLimit, PLANS.pro.smsLimit)})`,
+      `AI 스크립트 ${PLANS.basic.scriptLimit}회 → ${PLANS.pro.scriptLimit}회 (${timesLabel(PLANS.basic.scriptLimit, PLANS.pro.scriptLimit)})`,
+      `PDF 분석 ${PLANS.basic.pdfAnalysisLimit}회 → ${PLANS.pro.pdfAnalysisLimit}회 (${timesLabel(PLANS.basic.pdfAnalysisLimit, PLANS.pro.pdfAnalysisLimit)})`,
+      `블로그·SNS 콘텐츠 월 ${PLANS.pro.contentLimit}회 제공`,
     ],
-    cta: "프로로 업그레이드 — ₩6,900/월",
+    cta: `프로로 업그레이드 — ₩${PLANS.pro.price.toLocaleString()}/월`,
     bg: "from-[#1e3a5f] to-[#2d5a9e]",
     border: "border-[#1e3a5f]",
     accent: "text-blue-200",
@@ -42,16 +48,16 @@ const UPSELL_COPY: Record<"pro" | "premium", {
   },
   premium: {
     emoji: "👑",
-    headline: "프리미엄 전환 시 AI 문자 2배 + 우선 처리까지!",
+    headline: `프리미엄 전환 시 AI 문자 ${timesLabel(PLANS.pro.smsLimit, PLANS.premium.smsLimit)} + 우선 처리까지!`,
     hook: "프로 플랜 한도의 80%를 소진하셨어요. 매달 한도에 걸리고 계신다면 프리미엄이 확실한 해법입니다.",
     benefits: [
-      "AI 문자/카톡 50회 → 100회 (2배)",
-      "AI 스크립트 25회 → 45회 (1.8배)",
-      "PDF 분석 6회 → 10회 (1.7배)",
-      "콘텐츠 생성 15회 → 20회 + 뉴스레터 10회",
+      `AI 문자/카톡 ${PLANS.pro.smsLimit}회 → ${PLANS.premium.smsLimit}회 (${timesLabel(PLANS.pro.smsLimit, PLANS.premium.smsLimit)})`,
+      `AI 스크립트 ${PLANS.pro.scriptLimit}회 → ${PLANS.premium.scriptLimit}회 (${timesLabel(PLANS.pro.scriptLimit, PLANS.premium.scriptLimit)})`,
+      `PDF 분석 ${PLANS.pro.pdfAnalysisLimit}회 → ${PLANS.premium.pdfAnalysisLimit}회 (${timesLabel(PLANS.pro.pdfAnalysisLimit, PLANS.premium.pdfAnalysisLimit)})`,
+      `콘텐츠 생성 ${PLANS.pro.contentLimit}회 → ${PLANS.premium.contentLimit}회 + 뉴스레터 ${PLANS.premium.newsletterLimit}회`,
       "우선 처리 — 생성 속도 최우선 배정",
     ],
-    cta: "프리미엄으로 업그레이드 — ₩14,900/월",
+    cta: `프리미엄으로 업그레이드 — ₩${PLANS.premium.price.toLocaleString()}/월`,
     bg: "from-orange-500 to-orange-600",
     border: "border-orange-400",
     accent: "text-orange-100",
