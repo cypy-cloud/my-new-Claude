@@ -183,8 +183,9 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
   }
 
   async function handleCopy(key: string) {
-    const text = sections[key] ?? ""
-    if (!text) return
+    const raw = sections[key] ?? ""
+    if (!raw) return
+    const text = raw.replace(/\n*\[보험 관련 유의사항\][\s\S]*/i, "").trimEnd()
     await navigator.clipboard.writeText(text)
     setCopiedKey(key)
     toast.success("클립보드에 복사되었습니다")
