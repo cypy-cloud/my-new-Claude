@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { toast } from "sonner"
 import {
   Sparkles, Copy, Download, RefreshCw, CheckCircle, AlertCircle,
   Zap, Bookmark, BookmarkCheck, BookOpen,
   ClipboardList, Handshake, Coffee, HelpCircle, Lightbulb,
   Package, Users, ShieldAlert, CheckSquare, MessageSquare,
+  Mic, MicOff, Loader2, Calculator,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -109,12 +110,81 @@ export function ScriptGenerator({ initialUsage, limit, planName, initialData, pe
   const [customerPersonality, setCustomerPersonality] = useState("")
   const [expectedObjections, setExpectedObjections] = useState(initialData?.expectedObjections ?? "")
   const [agentStyle, setAgentStyle] = useState("친근하고 따뜻하게")
-  const [extraNotes, setExtraNotes] = useState(() => {
-    const base = initialData?.extraNotes ?? ""
-    const pension = pensionData ? buildPensionNote(pensionData) : ""
-    return [base, pension].filter(Boolean).join("\n\n")
-  })
+  const [extraNotes, setExtraNotes] = useState(initialData?.extraNotes ?? "")
   const [categoryId, setCategoryId] = useState("")
+
+  // pensionData는 별도 고정 표시 (extraNotes와 합쳐서 API로만 전달)
+  const pensionNote = pensionData ? buildPensionNote(pensionData) : ""
+
+  // Voice input state
+  const [voiceTarget, setVoiceTarget] = useState<"objection" | "notes" | null>(null)
+  const [isCorrectingVoice, setIsCorrectingVoice] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null)
+  const transcriptRef = useRef<string>("")
+
+  async function correctVoiceInput(rawText: string, target: "objection" | "notes") {
+    if (!rawText.trim()) return
+    setIsCorrectingVoice(true)
+    try {
+      const res = await fetch("/api/ai/voice-correct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rawText, context: { purpose: consultationPurpose, productField: productInterest, tone: agentStyle } }),
+      })
+      const data = await res.json()
+      const corrected = res.ok ? data.corrected : rawText
+      if (target === "objection") setExpectedObjections(prev => prev ? prev + " " + corrected : corrected)
+      else setExtraNotes(prev => prev ? prev + " " + corrected : corrected)
+    } catch {
+      if (target === "objection") setExpectedObjections(prev => prev ? prev + " " + rawText : rawText)
+      else setExtraNotes(prev => prev ? prev + " " + rawText : rawText)
+    } finally {
+      setIsCorrectingVoice(false)
+    }
+  }
+
+  function stopVoiceRecording(target: "objection" | "notes") {
+    try { recognitionRef.current?.stop() } catch { /* ignore */ }
+    recognitionRef.current = null
+    setVoiceTarget(null)
+    if (transcriptRef.current) {
+      correctVoiceInput(transcriptRef.current, target)
+      transcriptRef.current = ""
+    }
+  }
+
+  function toggleVoice(target: "objection" | "notes") {
+    if (voiceTarget === target) { stopVoiceRecording(target); return }
+    if (voiceTarget) { stopVoiceRecording(voiceTarget) }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SR) { toast.error("이 브라우저는 음성 입력을 지원하지 않습니다."); return }
+
+    transcriptRef.current = ""
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rec: any = new SR()
+    rec.lang = "ko-KR"; rec.continuous = true; rec.interimResults = true
+    rec.onresult = (e: any) => {
+      let final = ""
+      for (let i = 0; i < e.results.length; i++) { if (e.results[i].isFinal) final += e.results[i][0].transcript }
+      if (final) transcriptRef.current = final
+    }
+    rec.onerror = (e: any) => {
+      if (e.error !== "aborted") toast.error("음성 인식 오류가 발생했습니다.")
+      recognitionRef.current = null; setVoiceTarget(null)
+    }
+    rec.onend = () => {
+      recognitionRef.current = null; setVoiceTarget(null)
+      if (transcriptRef.current) { correctVoiceInput(transcriptRef.current, target); transcriptRef.current = "" }
+    }
+    recognitionRef.current = rec
+    try {
+      rec.start(); setVoiceTarget(target)
+      toast.info("🎤 녹음 중... 말씀 후 [녹음 중지] 버튼을 눌러주세요")
+    } catch { toast.error("마이크 권한을 확인해주세요."); recognitionRef.current = null }
+  }
 
   // Result state
   const [activeTab, setActiveTab] = useState<TabKey>("PREP")
@@ -149,7 +219,9 @@ export function ScriptGenerator({ initialUsage, limit, planName, initialData, pe
     return {
       customerName, gender, ageGroup, occupation, maritalStatus, hasChildren,
       incomeLevel, existingInsurance, productInterest, consultationPurpose,
-      customerPersonality, expectedObjections, agentStyle, extraNotes, categoryId, forceRegenerate,
+      customerPersonality, expectedObjections, agentStyle,
+      extraNotes: [extraNotes, pensionNote].filter(Boolean).join("\n\n"),
+      categoryId, forceRegenerate,
     }
   }
 
@@ -351,8 +423,37 @@ export function ScriptGenerator({ initialUsage, limit, planName, initialData, pe
         <ChipSelect label="고객 성향" value={customerPersonality} onChange={setCustomerPersonality} options={PERSONALITIES} columns={1} />
         <ChipSelect label="설계사 스타일" value={agentStyle} onChange={setAgentStyle} options={AGENT_STYLES} columns={2} />
 
+        {/* 연금계산기 분석 결과 고정 표시 */}
+        {pensionNote && (
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <Calculator className="h-3.5 w-3.5 text-blue-500" />
+              <Label className="text-xs font-medium text-blue-700">연금계산기 분석 결과 (자동 반영)</Label>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-md px-3 py-2 text-xs text-blue-800 whitespace-pre-line leading-relaxed">
+              {pensionNote.replace("[연금계산기 분석 결과]\n", "")}
+            </div>
+          </div>
+        )}
+
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium">예상 반론</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-medium">예상 반론</Label>
+            <button
+              type="button"
+              onClick={() => toggleVoice("objection")}
+              disabled={isLoading || isCorrectingVoice}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium transition-all disabled:opacity-50 ${
+                voiceTarget === "objection" ? "bg-red-500 text-white animate-pulse" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {isCorrectingVoice && voiceTarget === "objection"
+                ? <><Loader2 className="h-3 w-3 animate-spin" />보정 중</>
+                : voiceTarget === "objection"
+                ? <><MicOff className="h-3 w-3" />녹음 중지</>
+                : <><Mic className="h-3 w-3" />음성 입력</>}
+            </button>
+          </div>
           <Textarea
             placeholder="예: 보험료가 비싸다, 이미 보험이 많다, 나중에 생각해보겠다"
             value={expectedObjections}
@@ -363,7 +464,23 @@ export function ScriptGenerator({ initialUsage, limit, planName, initialData, pe
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium">추가 메모</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-medium">추가 메모</Label>
+            <button
+              type="button"
+              onClick={() => toggleVoice("notes")}
+              disabled={isLoading || isCorrectingVoice}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium transition-all disabled:opacity-50 ${
+                voiceTarget === "notes" ? "bg-red-500 text-white animate-pulse" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {isCorrectingVoice && voiceTarget === "notes"
+                ? <><Loader2 className="h-3 w-3 animate-spin" />보정 중</>
+                : voiceTarget === "notes"
+                ? <><MicOff className="h-3 w-3" />녹음 중지</>
+                : <><Mic className="h-3 w-3" />음성 입력</>}
+            </button>
+          </div>
           <Textarea
             placeholder="예: 최근 부모님이 암 진단을 받으셨다고 함. 건강 관련 관심도 높음."
             value={extraNotes}
