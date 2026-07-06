@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react"
 import { toast } from "sonner"
-import { Shield, Copy, RefreshCw, Lightbulb, Target, MessageSquareQuote, Mic, MicOff, Loader2 } from "lucide-react"
+import { Shield, Copy, RefreshCw, Lightbulb, Target, MessageSquareQuote, Mic, MicOff, Loader2, Save, BookmarkCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -64,6 +64,8 @@ export function ObjectionHandler({ planName, limits, usage }: ObjectionHandlerPr
   const [tipText, setTipText] = useState("")
   const [usedObjection, setUsedObjection] = useState("")
   const [remaining, setRemaining] = useState(limits.scriptLimit - usage.scriptCount)
+  const [isSaving, setIsSaving] = useState(false)
+  const [savedId, setSavedId] = useState<string | null>(null)
 
   const [isRecording, setIsRecording] = useState(false)
   const [isCorrectingVoice, setIsCorrectingVoice] = useState(false)
@@ -129,6 +131,35 @@ export function ObjectionHandler({ planName, limits, usage }: ObjectionHandlerPr
     toast.info("녹음 중... 말씀하신 후 정지 버튼을 누르세요")
   }
 
+  async function handleSave() {
+    if (strategies.length === 0) return
+    setIsSaving(true)
+    try {
+      const outputText = strategies.map((s, i) =>
+        `[전략 ${i + 1}] ${s.name}\n상황: ${s.situation}\n\n${s.script}\n\n핵심 포인트: ${s.point}`
+      ).join('\n\n---\n\n') + (tipText ? `\n\n---\n\n[전문가 추가 팁]\n${tipText}` : '')
+
+      const res = await fetch('/api/outputs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'script',
+          title: `거절 극복: "${usedObjection}" — ${productType}`,
+          outputText,
+          inputData: { objectionType, customObjection, productType, customerContext, agentStyle },
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setSavedId(data.id)
+      toast.success('내 결과물 보관함에 저장되었습니다!')
+    } catch {
+      toast.error('저장에 실패했습니다')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   async function handleGenerate() {
     if (!objectionType) { toast.error("거절 유형을 선택해주세요"); return }
     if (objectionType === "custom" && !customObjection.trim()) { toast.error("거절 멘트를 입력해주세요"); return }
@@ -137,6 +168,7 @@ export function ObjectionHandler({ planName, limits, usage }: ObjectionHandlerPr
     setLoading(true)
     setStrategies([])
     setTipText("")
+    setSavedId(null)
 
     try {
       const res = await fetch("/api/ai/objection", {
@@ -376,7 +408,7 @@ export function ObjectionHandler({ planName, limits, usage }: ObjectionHandlerPr
             </Card>
           )}
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 flex-wrap">
             <Button
               variant="outline"
               size="sm"
@@ -394,6 +426,20 @@ export function ObjectionHandler({ planName, limits, usage }: ObjectionHandlerPr
               disabled={loading}
             >
               <RefreshCw className="h-3.5 w-3.5 mr-1.5" />다시 생성
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={isSaving || !!savedId}
+              className={savedId ? "bg-green-600 hover:bg-green-600 text-white" : "bg-orange-500 hover:bg-orange-600 text-white"}
+            >
+              {isSaving ? (
+                <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />저장 중</>
+              ) : savedId ? (
+                <><BookmarkCheck className="h-3.5 w-3.5 mr-1.5" />저장 완료</>
+              ) : (
+                <><Save className="h-3.5 w-3.5 mr-1.5" />보관함에 저장</>
+              )}
             </Button>
           </div>
         </div>
