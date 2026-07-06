@@ -5,6 +5,30 @@ import crypto from 'crypto'
 // Toss Payments 연동
 // 공식 문서: https://docs.tosspayments.com/reference
 // 환경변수: TOSS_SECRET_KEY, NEXT_PUBLIC_TOSS_CLIENT_KEY, TOSS_WEBHOOK_SECRET
+//
+// ──────────────────────────────────────────────────────────────────
+// TODO: 빌링키 자동결제 구현 (Toss 계정 연동 시점에 반드시 함께 구현)
+//
+// [구현 목록]
+// 1. issueBillingKey(customerKey) → POST /v1/billing/authorizations/issue
+//    - 최초 카드 등록 시 빌링키 발급
+//    - profiles 테이블에 toss_billing_key, toss_customer_key 컬럼 저장
+//
+// 2. chargeBillingKey(billingKey, amount, orderId, orderName)
+//    → POST /v1/billing/{billingKey}
+//    - 구독 월정액 자동청구 (Cron으로 매달 실행)
+//    - 추가 10건팩 원클릭 결제 (모달에서 버튼 1번으로 즉시 결제)
+//
+// 3. deleteBillingKey(billingKey) → 카드 변경/삭제 시 처리
+//
+// [필요한 DB 컬럼 - profiles 테이블]
+//   toss_billing_key  text  -- 자동결제용 빌링키
+//   toss_customer_key text  -- Toss 고객 고유키 (fp_{userId})
+//   billing_card_last4 text -- UI 표시용 카드 끝 4자리
+//   billing_card_brand text -- 카드사 (신한, 국민 등)
+//
+// [참고 문서] https://docs.tosspayments.com/guides/billing/integration
+// ──────────────────────────────────────────────────────────────────
 export class TossProvider implements BillingProviderAdapter {
   readonly provider = 'toss' as const
   private readonly secretKey = process.env.TOSS_SECRET_KEY ?? ''

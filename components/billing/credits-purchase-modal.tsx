@@ -30,6 +30,9 @@ export function CreditsPurchaseModal({ open, onClose, featureLabel = "AI 기능"
   async function handlePurchase() {
     setStep('paying')
     try {
+      // TODO: 빌링키 자동결제 구현 후 → 등록된 카드가 있으면 Toss 페이지 이동 없이
+      //       /api/billing/credits/charge-billing-key 직접 호출로 원클릭 결제 처리
+      //       등록 카드 없을 때만 아래 Toss 결제 페이지로 이동하도록 분기
       // Toss 결제 페이지로 이동 (credits 전용 checkout)
       const orderId = `credits-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
       const params = new URLSearchParams({
