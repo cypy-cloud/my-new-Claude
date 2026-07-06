@@ -3,6 +3,12 @@ import { calcCost } from './types'
 
 const DEFAULT_MODEL = 'claude-haiku-4-5-20251001'
 
+// claude-sonnet-5 / claude-opus-4-8 등 최신 세대 모델은 temperature 파라미터를
+// 더 이상 지원하지 않고 보내면 400 에러를 반환한다 (Anthropic API 확인됨).
+function supportsTemperature(model: string): boolean {
+  return model.startsWith('claude-haiku')
+}
+
 export class AnthropicProvider implements AIProvider {
   readonly name: AIProviderName = 'anthropic'
   readonly defaultModel = DEFAULT_MODEL
@@ -20,7 +26,7 @@ export class AnthropicProvider implements AIProvider {
       body: JSON.stringify({
         model,
         max_tokens: options?.maxTokens ?? 1024,
-        temperature: options?.temperature ?? 0.7,
+        ...(supportsTemperature(model) ? { temperature: options?.temperature ?? 0.7 } : {}),
         system: options?.systemPrompt,
         messages: [{ role: 'user', content: prompt }],
       }),
@@ -34,9 +40,10 @@ export class AnthropicProvider implements AIProvider {
     const data = await response.json()
     const inputTokens: number = data.usage.input_tokens
     const outputTokens: number = data.usage.output_tokens
+    const textBlock = data.content.find((block: { type: string }) => block.type === 'text')
 
     return {
-      text: data.content[0].text,
+      text: textBlock?.text ?? '',
       usage: { inputTokens, outputTokens, totalTokens: inputTokens + outputTokens },
       model: data.model,
       provider: this.name,
@@ -57,7 +64,7 @@ export class AnthropicProvider implements AIProvider {
       body: JSON.stringify({
         model,
         max_tokens: options?.maxTokens ?? 1024,
-        temperature: options?.temperature ?? 0.7,
+        ...(supportsTemperature(model) ? { temperature: options?.temperature ?? 0.7 } : {}),
         system: options?.systemPrompt,
         messages: [{ role: 'user', content: prompt }],
         stream: true,
