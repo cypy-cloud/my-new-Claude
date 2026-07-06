@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { toast } from "sonner"
-import { Star, RefreshCw, Copy, Check, Lightbulb, PenLine } from "lucide-react"
+import { Star, RefreshCw, Copy, Check, Lightbulb, PenLine, Mic, MicOff, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -53,6 +53,60 @@ export function ReviewWriter({ planName, limits, usage }: ReviewWriterProps) {
   const [reviews, setReviews] = useState<Review[]>([])
   const [tips, setTips] = useState("")
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
+  const [isRecording, setIsRecording] = useState(false)
+  const [isCorrectingVoice, setIsCorrectingVoice] = useState(false)
+  const recognitionRef = useRef<any>(null)
+  const transcriptRef = useRef("")
+
+  async function correctVoiceInput(rawText: string) {
+    if (!rawText.trim()) return
+    setIsCorrectingVoice(true)
+    try {
+      const res = await fetch("/api/ai/voice-correct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rawText, context: { purpose: "상담내용", productField: form.productName, tone: "자연스러운" } }),
+      })
+      const data = await res.json()
+      update("keyPoints", (form.keyPoints ? form.keyPoints + " " : "") + (data.corrected ?? rawText))
+    } catch {
+      update("keyPoints", (form.keyPoints ? form.keyPoints + " " : "") + rawText)
+    } finally {
+      setIsCorrectingVoice(false)
+    }
+  }
+
+  function stopRecording() {
+    recognitionRef.current?.stop()
+    setIsRecording(false)
+    const transcript = transcriptRef.current.trim()
+    transcriptRef.current = ""
+    if (transcript) correctVoiceInput(transcript)
+  }
+
+  function toggleRecording() {
+    if (isRecording) { stopRecording(); return }
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) { toast.error("이 브라우저는 음성 입력을 지원하지 않습니다"); return }
+    const recognition = new SpeechRecognition()
+    recognition.lang = "ko-KR"
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognitionRef.current = recognition
+    transcriptRef.current = ""
+    recognition.onresult = (e: any) => {
+      let final = ""
+      for (let i = 0; i < e.results.length; i++) {
+        if (e.results[i].isFinal) final += e.results[i][0].transcript
+      }
+      if (final) transcriptRef.current = final
+    }
+    recognition.onend = () => { if (isRecording) stopRecording() }
+    recognition.onerror = () => { setIsRecording(false); toast.error("음성 인식 오류가 발생했습니다") }
+    recognition.start()
+    setIsRecording(true)
+    toast.info("녹음 중... 말씀하신 후 정지 버튼을 누르세요")
+  }
 
   function update(key: string, value: string) {
     setForm(prev => ({ ...prev, [key]: value }))
@@ -122,13 +176,35 @@ export function ReviewWriter({ planName, limits, usage }: ReviewWriterProps) {
           </div>
 
           <div className="space-y-1.5">
-            <Label>주요 상담 내용 <span className="text-red-500">*</span></Label>
+            <div className="flex items-center justify-between">
+              <Label>주요 상담 내용 <span className="text-red-500">*</span></Label>
+              <button
+                type="button"
+                onClick={toggleRecording}
+                disabled={isCorrectingVoice}
+                className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full border transition-colors ${
+                  isRecording
+                    ? "bg-red-50 border-red-300 text-red-600 animate-pulse"
+                    : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
+                }`}
+              >
+                {isCorrectingVoice ? (
+                  <><Loader2 className="h-3 w-3 animate-spin" />교정 중</>
+                ) : isRecording ? (
+                  <><MicOff className="h-3 w-3" />정지</>
+                ) : (
+                  <><Mic className="h-3 w-3" />음성 입력</>
+                )}
+              </button>
+            </div>
             <Textarea
               placeholder="예: 40대 맞벌이 부부로 자녀 교육비와 노후 준비를 동시에 고민하셨고, 종신보험으로 사망보장과 해지환급금을 활용한 교육자금 마련을 제안드렸습니다."
               value={form.keyPoints}
               onChange={e => update("keyPoints", e.target.value)}
               rows={3}
+              className="resize-none text-sm"
             />
+            <p className="text-xs text-gray-400">마이크 버튼으로 음성 입력도 가능합니다. 어설픈 발음도 AI가 자동 교정합니다.</p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
