@@ -200,7 +200,7 @@ export default function HomePage() {
             {[...Array(5)].map((_, i) => <Star key={i} className="h-5 w-5 text-orange-400 fill-orange-400" />)}
           </div>
           <blockquote className="text-xl md:text-2xl text-white font-medium mb-6 leading-relaxed">
-            &ldquo;하루에 문자 20개씩 쓰던 게 이제 5분 안에 끍납니다.<br className="hidden sm:block" />
+            &ldquo;하루에 문자 20개씩 쓰던 게 이제 5분 안에 끝납니다.<br className="hidden sm:block" />
             고객 응대에 더 집중할 수 있게 됐어요.&rdquo;
           </blockquote>
           <cite className="text-blue-300 text-sm not-italic">— 김○○ 설계사, 삼성생명 10년 경력</cite>
