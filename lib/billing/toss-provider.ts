@@ -6,29 +6,28 @@ import crypto from 'crypto'
 // 공식 문서: https://docs.tosspayments.com/reference
 // 환경변수: TOSS_SECRET_KEY, NEXT_PUBLIC_TOSS_CLIENT_KEY, TOSS_WEBHOOK_SECRET
 //
-// ──────────────────────────────────────────────────────────────────
-// TODO: 빌링키 자동결제 구현 (Toss 계정 연동 시점에 반드시 함께 구현)
-//
-// [구현 목록]
-// 1. issueBillingKey(customerKey) → POST /v1/billing/authorizations/issue
-//    - 최초 카드 등록 시 빌링키 발급
-//    - profiles 테이블에 toss_billing_key, toss_customer_key 컬럼 저장
-//
-// 2. chargeBillingKey(billingKey, amount, orderId, orderName)
-//    → POST /v1/billing/{billingKey}
-//    - 구독 월정액 자동청구 (Cron으로 매달 실행)
-//    - 추가 10건팩 원클릭 결제 (모달에서 버튼 1번으로 즉시 결제)
-//
-// 3. deleteBillingKey(billingKey) → 카드 변경/삭제 시 처리
-//
-// [필요한 DB 컬럼 - profiles 테이블]
-//   toss_billing_key  text  -- 자동결제용 빌링키
-//   toss_customer_key text  -- Toss 고객 고유키 (fp_{userId})
-//   billing_card_last4 text -- UI 표시용 카드 끝 4자리
-//   billing_card_brand text -- 카드사 (신한, 국민 등)
-//
-// [참고 문서] https://docs.tosspayments.com/guides/billing/integration
-// ──────────────────────────────────────────────────────────────────
+// 빌링(정기결제) 흐름:
+//   1. 클라이언트: TossPayments(clientKey).requestBillingAuth('카드', { customerKey, successUrl, failUrl })
+//      → 카드 등록 화면으로 이동, 성공 시 successUrl로 authKey&customerKey 쿼리와 함께 리다이렉트
+//   2. 서버: issueBillingKey(authKey, customerKey)로 authKey를 billingKey로 교환, profiles에 저장
+//   3. 매달 크론: chargeBillingKey(billingKey, customerKey, amount, orderId, orderName)으로 자동 청구
+//   참고: https://docs.tosspayments.com/guides/billing/integration
+export interface BillingKeyResult {
+  success: boolean
+  billingKey?: string
+  cardLast4?: string
+  cardBrand?: string
+  error?: string
+}
+
+export interface ChargeResult {
+  success: boolean
+  paymentKey?: string
+  approvedAt?: string
+  error?: string
+  errorCode?: string
+}
+
 export class TossProvider implements BillingProviderAdapter {
   readonly provider = 'toss' as const
   private readonly secretKey = process.env.TOSS_SECRET_KEY ?? ''
@@ -83,6 +82,55 @@ export class TossProvider implements BillingProviderAdapter {
       transactionId: data.paymentKey,
       customerId: data.customerKey ?? undefined,
     }
+  }
+
+  // authKey(카드 등록 인증 성공 시 리다이렉트로 받은 값)를 billingKey로 교환한다.
+  async issueBillingKey(authKey: string, customerKey: string): Promise<BillingKeyResult> {
+    const res = await fetch(`${this.baseUrl}/billing/authorizations/issue`, {
+      method: 'POST',
+      headers: { Authorization: this.authHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ authKey, customerKey }),
+    })
+    const data = await res.json()
+    if (!res.ok) return { success: false, error: data.message ?? '카드 등록에 실패했습니다' }
+
+    return {
+      success: true,
+      billingKey: data.billingKey,
+      cardLast4: data.card?.number ? String(data.card.number).slice(-4) : undefined,
+      cardBrand: data.card?.issuerCode ?? data.card?.acquirerCode ?? undefined,
+    }
+  }
+
+  // 빌링키로 자동 청구 (구독 갱신, 크레딧 원클릭 결제 등)
+  async chargeBillingKey(params: {
+    billingKey: string
+    customerKey: string
+    amount: number
+    orderId: string
+    orderName: string
+  }): Promise<ChargeResult> {
+    const res = await fetch(`${this.baseUrl}/billing/${params.billingKey}`, {
+      method: 'POST',
+      headers: { Authorization: this.authHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customerKey: params.customerKey,
+        amount: params.amount,
+        orderId: params.orderId,
+        orderName: params.orderName,
+      }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      return { success: false, error: data.message ?? '결제 승인에 실패했습니다', errorCode: data.code }
+    }
+    return { success: true, paymentKey: data.paymentKey, approvedAt: data.approvedAt }
+  }
+
+  // 카드 변경/해지 시 빌링키 폐기. Toss는 별도 삭제 API를 제공하지 않으므로
+  // profiles에서 저장된 빌링키를 제거하는 것으로 처리한다(호출부에서 DB 업데이트).
+  async deleteBillingKey(): Promise<{ success: true }> {
+    return { success: true }
   }
 
   async cancelSubscription(params: { providerSubscriptionId: string; immediately?: boolean }): Promise<PaymentResult> {

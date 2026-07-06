@@ -18,6 +18,8 @@ export function CreditsPurchaseModal({ open, onClose, featureLabel = "AI 기능"
   const [step, setStep] = useState<'confirm' | 'paying'>('confirm')
   const [currentCredits, setCurrentCredits] = useState<number | null>(null)
   const [selectedPack, setSelectedPack] = useState<CreditPack>(CREDIT_PACKS[0])
+  const [hasBillingKey, setHasBillingKey] = useState(false)
+  const [cardLast4, setCardLast4] = useState<string | null>(null)
 
   const isFreeUser = !planId || planId === 'free'
 
@@ -28,25 +30,51 @@ export function CreditsPurchaseModal({ open, onClose, featureLabel = "AI 기능"
       .then(r => r.json())
       .then(d => setCurrentCredits(d.totalCredits ?? 0))
       .catch(() => setCurrentCredits(0))
+    fetch('/api/billing/card/status')
+      .then(r => r.json())
+      .then(d => { setHasBillingKey(!!d.hasBillingKey); setCardLast4(d.cardLast4 ?? null) })
+      .catch(() => { setHasBillingKey(false); setCardLast4(null) })
   }, [open, isFreeUser])
 
   async function handlePurchase() {
     setStep('paying')
     try {
-      // TODO: 빌링키 자동결제 구현 후 → 등록된 카드가 있으면 Toss 페이지 이동 없이
-      //       /api/billing/credits/charge-billing-key 직접 호출로 원클릭 결제 처리
-      //       등록 카드 없을 때만 아래 Toss 결제 페이지로 이동하도록 분기
-      const orderId = `credits-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-      const params = new URLSearchParams({
-        orderId,
-        amount: String(selectedPack.price),
-        packSize: String(selectedPack.packSize),
-      })
-      window.location.href = `/billing/checkout/credits?${params.toString()}`
+      if (hasBillingKey) {
+        const res = await fetch('/api/billing/credits/charge-billing-key', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ packSize: selectedPack.packSize, featureType: 'all' }),
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          if (data.noBillingKey) {
+            goToCheckoutRedirect()
+            return
+          }
+          toast.error(data.error ?? "결제에 실패했습니다")
+          setStep('confirm')
+          return
+        }
+        toast.success(data.message ?? "크레딧이 충전되었습니다")
+        onSuccess?.(data.totalCredits)
+        onClose()
+        return
+      }
+      goToCheckoutRedirect()
     } catch {
       toast.error("결제 초기화에 실패했습니다")
       setStep('confirm')
     }
+  }
+
+  function goToCheckoutRedirect() {
+    const orderId = `credits-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    const params = new URLSearchParams({
+      orderId,
+      amount: String(selectedPack.price),
+      packSize: String(selectedPack.packSize),
+    })
+    window.location.href = `/billing/checkout/credits?${params.toString()}`
   }
 
   if (!open) return null
@@ -165,9 +193,16 @@ export function CreditsPurchaseModal({ open, onClose, featureLabel = "AI 기능"
               </div>
             )}
 
+            {hasBillingKey && (
+              <div className="flex items-center gap-1.5 text-xs text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 rounded-lg px-3 py-2 mb-4">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                등록된 카드{cardLast4 ? ` (끝자리 ${cardLast4})` : ""}로 바로 결제됩니다
+              </div>
+            )}
+
             <Button onClick={handlePurchase} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold">
               <Zap className="h-4 w-4 mr-1.5" />
-              {selectedPack.label} ₩{selectedPack.price.toLocaleString()} 결제하기
+              {selectedPack.label} ₩{selectedPack.price.toLocaleString()} {hasBillingKey ? "바로 결제하기" : "결제하기"}
             </Button>
             <div className="flex items-center justify-center gap-1 mt-2.5 text-xs text-gray-400">
               <ShieldCheck className="h-3 w-3" />
@@ -179,7 +214,9 @@ export function CreditsPurchaseModal({ open, onClose, featureLabel = "AI 기능"
         {!isFreeUser && step === 'paying' && (
           <div className="flex flex-col items-center gap-3 py-6">
             <Loader2 className="h-8 w-8 text-purple-500 animate-spin" />
-            <p className="text-sm text-gray-600 dark:text-gray-400">결제 페이지로 이동 중...</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {hasBillingKey ? "결제 처리 중..." : "결제 페이지로 이동 중..."}
+            </p>
           </div>
         )}
       </div>

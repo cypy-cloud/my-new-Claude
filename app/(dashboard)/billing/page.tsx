@@ -5,8 +5,11 @@ import { SubscriptionHistory } from "@/components/billing/subscription-history"
 import { AdminPlanSwitcher } from "@/components/billing/admin-plan-switcher"
 import { BillingDashboard } from "@/components/billing/billing-dashboard"
 import { BillingPlans } from "@/components/billing/billing-plans"
+import { TossCardRegister } from "@/components/billing/toss-card-register"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { type PlanId } from "@/lib/subscription/plans"
+
+const PAID_PLANS: PlanId[] = ["basic", "pro", "premium"]
 
 export default async function BillingPage() {
   const supabase = await createClient()
@@ -14,13 +17,14 @@ export default async function BillingPage() {
 
   const { data: profile } = await (supabase as any)
     .from("profiles")
-    .select("plan_type, scheduled_plan_type, scheduled_plan_date")
+    .select("plan_type, scheduled_plan_type, scheduled_plan_date, billing_card_last4, billing_card_brand")
     .eq("id", user!.id)
     .single()
 
   const currentPlanId = (profile?.plan_type as PlanId) ?? "free"
   const scheduledPlanId = (profile?.scheduled_plan_type as PlanId) ?? null
   const scheduledPlanDate = profile?.scheduled_plan_date ?? null
+  const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY
 
   return (
     <div className="space-y-8 max-w-5xl">
@@ -57,6 +61,19 @@ export default async function BillingPage() {
         <h2 className="text-sm font-semibold text-gray-600 mb-3">요금제 비교</h2>
         <BillingPlans currentPlanId={currentPlanId} />
       </div>
+
+      {/* 자동결제 카드 등록 */}
+      {PAID_PLANS.includes(currentPlanId) && clientKey && (
+        <div>
+          <h2 className="text-sm font-semibold text-gray-600 mb-3">자동결제 카드 관리</h2>
+          <TossCardRegister
+            userId={user!.id}
+            clientKey={clientKey}
+            cardLast4={profile?.billing_card_last4}
+            cardBrand={profile?.billing_card_brand}
+          />
+        </div>
+      )}
 
       {/* 자주 묻는 질문 */}
       <Card className="border-0 shadow-sm">
