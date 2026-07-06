@@ -170,40 +170,34 @@ export default function PensionCalculatorPage() {
             print-color-adjust: exact !important;
             color-adjust: exact !important;
           }
-          html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-          }
-          /* 사이드바, 헤더, 하단 네비 등 대시보드 요소 숨기기 */
-          body * { visibility: hidden !important; }
-          #pension-print-area,
-          #pension-print-area * { visibility: visible !important; }
-          #pension-print-area {
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 190mm !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            box-sizing: border-box !important;
-          }
-          /* 2컬럼 그리드 강제 유지 */
+          /* 사이드바, 헤더, 하단 네비 직접 숨기기 */
+          aside,
+          header,
+          nav,
+          footer { display: none !important; }
+
+          /* 사이드바 여백 제거 */
+          .md\\:pl-64 { padding-left: 0 !important; }
+
+          /* no-print 요소 숨기기 */
+          .no-print { display: none !important; }
+
+          /* 인쇄 헤더 표시 */
+          .print-header { display: block !important; }
+
+          /* 2컬럼 그리드 강제 (Tailwind lg 브레이크포인트 우회) */
           #pension-grid {
             display: grid !important;
             grid-template-columns: repeat(2, 1fr) !important;
-            gap: 12px !important;
+            gap: 16px !important;
           }
-          /* 카드 여백 축소로 페이지 절약 */
-          #pension-print-area .space-y-4 > * + * { margin-top: 10px !important; }
-          #pension-print-area .space-y-6 > * + * { margin-top: 12px !important; }
-          .no-print { display: none !important; }
-          .print-header { display: block !important; }
+
           /* 배경색 보존 */
-          .bg-red-50 { background-color: #fef2f2 !important; }
-          .bg-blue-50 { background-color: #eff6ff !important; }
+          .bg-red-50   { background-color: #fef2f2 !important; }
+          .bg-blue-50  { background-color: #eff6ff !important; }
           .bg-orange-50 { background-color: #fff7ed !important; }
           .bg-green-50 { background-color: #f0fdf4 !important; }
-          .bg-gray-50 { background-color: #f9fafb !important; }
+          .bg-gray-50  { background-color: #f9fafb !important; }
           .bg-gray-100 { background-color: #f3f4f6 !important; }
         }
         .print-header { display: none; }
