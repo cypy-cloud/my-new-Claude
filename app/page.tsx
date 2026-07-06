@@ -235,6 +235,7 @@ export default function HomePage() {
           </div>
           <div className="mt-4 pt-4 border-t text-xs text-gray-400 text-center md:text-left space-y-0.5">
             <p>열린교육컨설팅 (FP AI Assistant) · 대표: 임현수 · 사업자등록번호: 259-98-01495</p>
+            <p>주소: 충남 천안시 동남구 청당5로 20 · 유선번호: 010-3949-1525</p>
             <p>문의: gocypy@gmail.com · © 2026 FP AI Assistant. 보험설계사를 위한 AI 업무 자동화.</p>
           </div>
         </div>

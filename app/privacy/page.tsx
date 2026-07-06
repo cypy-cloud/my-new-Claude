@@ -122,6 +122,7 @@ export default function PrivacyPage() {
           <ul className="list-disc pl-5 space-y-1">
             <li>성명: 임현수</li>
             <li>이메일: gocypy@gmail.com</li>
+            <li>연락처: 010-3949-1525</li>
           </ul>
         </section>
 
