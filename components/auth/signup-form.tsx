@@ -10,6 +10,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2, CheckCircle, Mail, Lock, User, Phone, Building2, Shield, ChevronDown } from "lucide-react"
 
+const TERMS_VERSION = "v1.0"
+const PRIVACY_VERSION = "v1.0"
+
 export function SignupForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
@@ -22,11 +25,15 @@ export function SignupForm() {
   const [phone, setPhone] = useState("")
   const [companyName, setCompanyName] = useState("")
   const [insuranceCompany, setInsuranceCompany] = useState("")
+  const [termsAgreed, setTermsAgreed] = useState(false)
+  const [privacyAgreed, setPrivacyAgreed] = useState(false)
+  const [marketingAgreed, setMarketingAgreed] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (password !== confirmPassword) { toast.error("비밀번호가 일치하지 않습니다."); return }
     if (password.length < 8) { toast.error("비밀번호는 8자 이상이어야 합니다."); return }
+    if (!termsAgreed || !privacyAgreed) { toast.error("이용약관과 개인정보처리방침에 동의해야 가입할 수 있습니다."); return }
 
     setIsLoading(true)
     try {
@@ -40,6 +47,11 @@ export function SignupForm() {
             phone: phone || null,
             company_name: companyName || null,
             insurance_company: insuranceCompany || null,
+            terms_agreed: termsAgreed,
+            terms_version: TERMS_VERSION,
+            privacy_agreed: privacyAgreed,
+            privacy_version: PRIVACY_VERSION,
+            marketing_agreed: marketingAgreed,
           },
         },
       })
@@ -151,7 +163,46 @@ export function SignupForm() {
             </div>
           )}
 
-          <Button type="submit" className="w-full h-12 text-base bg-orange-500 hover:bg-orange-600 text-white mt-2" disabled={isLoading}>
+          <div className="space-y-2 pt-1 border-t border-gray-100 mt-1">
+            <label className="flex items-start gap-2 text-sm text-gray-700 pt-3">
+              <input
+                type="checkbox"
+                checked={termsAgreed}
+                onChange={(e) => setTermsAgreed(e.target.checked)}
+                disabled={isLoading}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+              />
+              <span>
+                <span className="text-red-500">[필수]</span>{" "}
+                <Link href="/terms" target="_blank" className="underline text-gray-700 hover:text-orange-600">이용약관</Link>에 동의합니다
+              </span>
+            </label>
+            <label className="flex items-start gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={privacyAgreed}
+                onChange={(e) => setPrivacyAgreed(e.target.checked)}
+                disabled={isLoading}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+              />
+              <span>
+                <span className="text-red-500">[필수]</span>{" "}
+                <Link href="/privacy" target="_blank" className="underline text-gray-700 hover:text-orange-600">개인정보처리방침</Link>에 동의합니다
+              </span>
+            </label>
+            <label className="flex items-start gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={marketingAgreed}
+                onChange={(e) => setMarketingAgreed(e.target.checked)}
+                disabled={isLoading}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+              />
+              <span>[선택] 이벤트·마케팅 정보 수신에 동의합니다</span>
+            </label>
+          </div>
+
+          <Button type="submit" className="w-full h-12 text-base bg-orange-500 hover:bg-orange-600 text-white mt-2" disabled={isLoading || !termsAgreed || !privacyAgreed}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             무료로 시작하기
           </Button>
@@ -159,9 +210,6 @@ export function SignupForm() {
         <p className="text-sm text-center text-gray-500 mt-5">
           이미 계정이 있으신가요?{" "}
           <Link href="/login" className="text-orange-500 hover:text-orange-600 font-semibold">로그인</Link>
-        </p>
-        <p className="text-xs text-center text-gray-400 mt-4">
-          가입하면 <Link href="#" className="underline">이용약관</Link> 및 <Link href="#" className="underline">개인정보처리방침</Link>에 동의하는 것으로 간주됩니다.
         </p>
       </div>
     </div>

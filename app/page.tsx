@@ -229,8 +229,8 @@ export default function HomePage() {
             </div>
             <p className="text-sm text-gray-500">© 2025 FP AI Assistant. 보험설계사를 위한 AI 업무 자동화.</p>
             <div className="flex gap-5 text-sm text-gray-500">
-              <Link href="#" className="hover:text-[#1e3a5f]">이용약관</Link>
-              <Link href="#" className="hover:text-[#1e3a5f]">개인정보처리방침</Link>
+              <Link href="/terms" className="hover:text-[#1e3a5f]">이용약관</Link>
+              <Link href="/privacy" className="hover:text-[#1e3a5f]">개인정보처리방침</Link>
             </div>
           </div>
         </div>
