@@ -94,9 +94,11 @@ export default async function DashboardPage() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-semibold text-gray-700">이번 달 사용량 ({yearMonth})</h2>
-          <Link href="/billing" className="text-xs text-orange-500 hover:underline font-medium">
-            플랜 업그레이드 →
-          </Link>
+          {planId !== "premium" && (
+            <Link href="/billing" className="text-xs text-orange-500 hover:underline font-medium">
+              플랜 업그레이드 →
+            </Link>
+          )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {stats.map((s) => {
@@ -194,7 +196,8 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Plan + Upgrade */}
+      {/* Plan + Upgrade (최상위 플랜이면 숨김) */}
+      {planId !== "premium" && (
       <Card className="border-0 shadow-sm bg-gradient-to-r from-[#1e3a5f] to-[#2d5a8e] text-white">
         <CardContent className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -214,6 +217,7 @@ export default async function DashboardPage() {
           </Button>
         </CardContent>
       </Card>
+      )}
 
       {/* Tips */}
       <Card className="border-0 shadow-sm border-l-4 border-l-orange-400 bg-orange-50">
