@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react"
 import { toast } from "sonner"
-import { Sparkles, Copy, RefreshCw, ChevronDown, ChevronUp, AlertTriangle, FileText, Image, Share2, MessageCircle, Hash, BookOpen, Mic, MicOff } from "lucide-react"
+import { Sparkles, Copy, RefreshCw, ChevronDown, ChevronUp, AlertTriangle, FileText, Image, Share2, MessageCircle, Hash, BookOpen, Mic, MicOff, Bookmark, BookmarkCheck, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -105,12 +105,50 @@ export default function ContentCreatorPage() {
   const [sections, setSections] = useState<ContentSections | null>(null)
   const [remaining, setRemaining] = useState<number | null>(null)
 
+  // 저장
+  const [isSaving, setIsSaving] = useState(false)
+  const [savedId, setSavedId] = useState<string | null>(null)
+
   // 음성 입력
   const [isRecording, setIsRecording] = useState(false)
   const recognitionRef = useRef<any>(null)
   const transcriptRef = useRef("")
 
   const set = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }))
+
+  async function handleSave() {
+    if (!sections) return
+    setIsSaving(true)
+    try {
+      const outputText = [
+        sections.BLOG_TITLES ? `[블로그 제목 5개]\n${sections.BLOG_TITLES}` : '',
+        sections.BLOG_BODY   ? `[블로그 본문]\n${sections.BLOG_BODY}` : '',
+        sections.INSTAGRAM   ? `[인스타그램]\n${sections.INSTAGRAM}` : '',
+        sections.FACEBOOK    ? `[페이스북]\n${sections.FACEBOOK}` : '',
+        sections.KAKAO_CHANNEL ? `[카카오채널]\n${sections.KAKAO_CHANNEL}` : '',
+        sections.HASHTAGS    ? `[해시태그]\n${sections.HASHTAGS}` : '',
+      ].filter(Boolean).join('\n\n---\n\n')
+
+      const res = await fetch('/api/outputs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'content',
+          title: `블로그·SNS: ${form.topic}`,
+          outputText,
+          inputData: { ...form },
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setSavedId(data.id)
+      toast.success('내 결과물 보관함에 저장되었습니다!')
+    } catch {
+      toast.error('저장에 실패했습니다')
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   function toggleVoice() {
     if (isRecording) {
@@ -169,6 +207,7 @@ export default function ContentCreatorPage() {
         return
       }
       setSections(data.sections)
+      setSavedId(null)
       if (data.remaining !== undefined) setRemaining(data.remaining)
       if (data.cached) {
         toast.info("이전에 생성한 콘텐츠를 불러왔습니다. 새로 생성하려면 재생성 버튼을 눌러주세요.")
@@ -341,6 +380,24 @@ export default function ContentCreatorPage() {
             </div>
           ) : (
             <>
+              {/* 저장 버튼 */}
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={isSaving || !!savedId}
+                  className={savedId ? "border-green-400 text-green-600" : "border-gray-300 text-gray-600 hover:border-orange-400 hover:text-orange-600"}
+                >
+                  {isSaving ? (
+                    <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />저장 중...</>
+                  ) : savedId ? (
+                    <><BookmarkCheck className="h-3.5 w-3.5 mr-1.5" />보관함에 저장됨</>
+                  ) : (
+                    <><Bookmark className="h-3.5 w-3.5 mr-1.5" />내 보관함에 저장</>
+                  )}
+                </Button>
+              </div>
               {sections.BLOG_TITLES && (
                 <CollapsibleSection
                   icon={BookOpen}
