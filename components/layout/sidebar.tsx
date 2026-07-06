@@ -48,15 +48,17 @@ const supportNav = [
 interface SidebarProps {
   profile: Profile | null
   planName?: string
+  onNavigate?: () => void
 }
 
-function NavLink({ href, label, icon: Icon, pathname }: {
-  href: string; label: string; icon: React.ElementType; pathname: string
+function NavLink({ href, label, icon: Icon, pathname, onClick }: {
+  href: string; label: string; icon: React.ElementType; pathname: string; onClick?: () => void
 }) {
   const isActive = pathname === href || pathname.startsWith(href + "/")
   return (
     <Link
       href={href}
+      onClick={onClick}
       className={cn(
         "flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
         isActive
@@ -70,7 +72,7 @@ function NavLink({ href, label, icon: Icon, pathname }: {
   )
 }
 
-export function Sidebar({ profile, planName }: SidebarProps) {
+export function Sidebar({ profile, planName, onNavigate }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -88,7 +90,7 @@ export function Sidebar({ profile, planName }: SidebarProps) {
   return (
     <>
     <style>{`.sidebar-nav::-webkit-scrollbar{display:none!important;width:0!important}`}</style>
-    <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 bg-[#1e3a5f] overflow-hidden">
+    <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 bg-[#1e3a5f] overflow-hidden h-full w-64">
       <div className="flex items-center h-16 px-5 border-b border-white/10">
         <Link href="/dashboard" className="flex items-center gap-2.5">
           <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -103,18 +105,18 @@ export function Sidebar({ profile, planName }: SidebarProps) {
 
       <nav className="sidebar-nav flex-1 min-h-0 px-3 py-2 space-y-0 overflow-y-auto" style={{ scrollbarWidth: 'none' } as React.CSSProperties}>
         <p className="text-xs font-semibold text-blue-400 px-3 mb-1 uppercase tracking-wider">AI 기능</p>
-        {mainNav.map((item) => <NavLink key={item.href} {...item} pathname={pathname} />)}
+        {mainNav.map((item) => <NavLink key={item.href} {...item} pathname={pathname} onClick={onNavigate} />)}
 
         <div className="my-1.5 border-t border-white/10" />
 
         <p className="text-xs font-semibold text-blue-400 px-3 mb-1 uppercase tracking-wider">고객지원</p>
-        {supportNav.map((item) => <NavLink key={item.href} {...item} pathname={pathname} />)}
+        {supportNav.map((item) => <NavLink key={item.href} {...item} pathname={pathname} onClick={onNavigate} />)}
 
         {isAdmin && (
           <>
             <div className="my-1.5 border-t border-white/10" />
             <p className="text-xs font-semibold text-blue-400 px-3 mb-1 uppercase tracking-wider">관리자</p>
-            <NavLink href="/admin/dashboard" label="관리자 페이지" icon={Shield} pathname={pathname} />
+            <NavLink href="/admin/dashboard" label="관리자 페이지" icon={Shield} pathname={pathname} onClick={onNavigate} />
           </>
         )}
       </nav>
