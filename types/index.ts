@@ -96,7 +96,7 @@ export interface Customer {
 }
 
 export const CUSTOMER_STATUS_LABELS: Record<CustomerStatus, string> = {
-  prospect: '잠재고객',
+  prospect: '가망고객',
   active: '활성고객',
   dormant: '휴면고객',
   contracted: '계약완료',
