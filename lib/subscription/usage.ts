@@ -26,10 +26,10 @@ export interface UsageLimitCheck {
   planId: PlanId
 }
 
-// Claude Sonnet pricing (USD per token)
+// Claude Sonnet 5 할인가 (USD per token, ~2026-08-31까지, CLAUDE.md 기준)
 const TOKEN_COST = {
-  input: 3.0 / 1_000_000,
-  output: 15.0 / 1_000_000,
+  input: 2.0 / 1_000_000,
+  output: 10.0 / 1_000_000,
 }
 
 export async function getCurrentUserPlan(): Promise<PlanId> {
