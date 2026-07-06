@@ -11,6 +11,7 @@ export interface AIGenerateState {
   remaining: number
   error: string | null
   provider: string | null
+  model: string | null
 }
 
 interface UseAIGenerateOptions {
@@ -37,6 +38,7 @@ export function useAIGenerate(
     remaining: initialRemaining,
     error: null,
     provider: null,
+    model: null,
   })
 
   // Track in-flight request to prevent double-submission
@@ -96,6 +98,7 @@ export function useAIGenerate(
           remaining: data.remaining ?? 0,
           error: null,
           provider: data.provider ?? null,
+          model: data.model ?? null,
         })
         break
 

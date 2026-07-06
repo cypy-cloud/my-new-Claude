@@ -740,7 +740,7 @@ export function ScriptGenerator({ initialUsage, limit, planName, planId, initial
 
         {state.provider && hasResult && (
           <p className="text-xs text-gray-400 text-center">
-            {state.cached ? "캐시에서 불러옴" : `${state.provider} 모델로 생성됨`}
+            {state.cached ? "캐시에서 불러옴" : `${state.provider}${state.model ? ` (${state.model})` : ''} 모델로 생성됨`}
           </p>
         )}
 
