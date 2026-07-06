@@ -210,8 +210,8 @@ export default function HomePage() {
       <section className="py-20 bg-orange-50">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <TrendingUp className="h-12 w-12 text-orange-500 mx-auto mb-6" />
-          <h2 className="text-3xl font-bold text-[#1e3a5f] mb-4">지금 바로 시작해보세요</h2>
-          <p className="text-gray-600 mb-8">신용카드 없이 무료로 시작 · 언제든지 해지 가능</p>
+          <h2 className="text-4xl md:text-5xl font-bold text-[#1e3a5f] mb-4">지금 바로 시작해보세요</h2>
+          <p className="text-sm text-gray-600 mb-8">신용카드 없이 무료로 시작 · 언제든지 해지 가능</p>
           <Button size="lg" asChild className="bg-orange-500 hover:bg-orange-600 text-white h-12 px-10 text-base">
             <Link href="/signup">무료로 시작하기 <ArrowRight className="ml-2 h-5 w-5" /></Link>
           </Button>
