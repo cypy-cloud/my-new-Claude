@@ -37,8 +37,8 @@ const PLANS = [
 ]
 
 const STATS = [
-  { label: "가입 설계사", value: "1,200+", icon: Shield },
-  { label: "생성된 메시지", value: "48,000+", icon: MessageSquare },
+  { label: "가입 설계사", value: "500+", icon: Shield },
+  { label: "생성된 메시지", value: "12,000+", icon: MessageSquare },
   { label: "평균 업무 절감", value: "2시간/일", icon: Clock },
   { label: "사용자 만족도", value: "4.9/5", icon: Star },
 ]
@@ -203,7 +203,7 @@ export default function HomePage() {
             &ldquo;하루에 문자 20개씩 쓰던 게 이제 5분 안에 끝납니다.<br className="hidden sm:block" />
             고객 응대에 더 집중할 수 있게 됐어요.&rdquo;
           </blockquote>
-          <cite className="text-blue-300 text-sm not-italic">— 김○○ 설계사, 삼성생명 10년 경력</cite>
+          <cite className="text-blue-300 text-sm not-italic">— 김○○ 설계사, GA소속 10년 경력</cite>
         </div>
       </section>
 
