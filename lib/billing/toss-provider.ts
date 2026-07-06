@@ -2,32 +2,10 @@ import type { BillingProviderAdapter, CheckoutSession, PaymentResult } from './b
 import type { PlanId } from '@/lib/subscription/plans'
 import crypto from 'crypto'
 
-// Toss Payments 연동
+// Toss Payments 연동 — 요금제 결제(위젯 1회성 체크아웃) 전용.
+// 정기결제(빌링키)는 포트원(PortOne) + 한국결제네트웍스/KCP로 이전됨 (lib/billing/portone-provider.ts 참고).
 // 공식 문서: https://docs.tosspayments.com/reference
 // 환경변수: TOSS_SECRET_KEY, NEXT_PUBLIC_TOSS_CLIENT_KEY, TOSS_WEBHOOK_SECRET
-//
-// 빌링(정기결제) 흐름:
-//   1. 클라이언트: TossPayments(clientKey).requestBillingAuth('카드', { customerKey, successUrl, failUrl })
-//      → 카드 등록 화면으로 이동, 성공 시 successUrl로 authKey&customerKey 쿼리와 함께 리다이렉트
-//   2. 서버: issueBillingKey(authKey, customerKey)로 authKey를 billingKey로 교환, profiles에 저장
-//   3. 매달 크론: chargeBillingKey(billingKey, customerKey, amount, orderId, orderName)으로 자동 청구
-//   참고: https://docs.tosspayments.com/guides/billing/integration
-export interface BillingKeyResult {
-  success: boolean
-  billingKey?: string
-  cardLast4?: string
-  cardBrand?: string
-  error?: string
-}
-
-export interface ChargeResult {
-  success: boolean
-  paymentKey?: string
-  approvedAt?: string
-  error?: string
-  errorCode?: string
-}
-
 export class TossProvider implements BillingProviderAdapter {
   readonly provider = 'toss' as const
   private readonly secretKey = process.env.TOSS_SECRET_KEY ?? ''
@@ -82,55 +60,6 @@ export class TossProvider implements BillingProviderAdapter {
       transactionId: data.paymentKey,
       customerId: data.customerKey ?? undefined,
     }
-  }
-
-  // authKey(카드 등록 인증 성공 시 리다이렉트로 받은 값)를 billingKey로 교환한다.
-  async issueBillingKey(authKey: string, customerKey: string): Promise<BillingKeyResult> {
-    const res = await fetch(`${this.baseUrl}/billing/authorizations/issue`, {
-      method: 'POST',
-      headers: { Authorization: this.authHeader(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ authKey, customerKey }),
-    })
-    const data = await res.json()
-    if (!res.ok) return { success: false, error: data.message ?? '카드 등록에 실패했습니다' }
-
-    return {
-      success: true,
-      billingKey: data.billingKey,
-      cardLast4: data.card?.number ? String(data.card.number).slice(-4) : undefined,
-      cardBrand: data.card?.issuerCode ?? data.card?.acquirerCode ?? undefined,
-    }
-  }
-
-  // 빌링키로 자동 청구 (구독 갱신, 크레딧 원클릭 결제 등)
-  async chargeBillingKey(params: {
-    billingKey: string
-    customerKey: string
-    amount: number
-    orderId: string
-    orderName: string
-  }): Promise<ChargeResult> {
-    const res = await fetch(`${this.baseUrl}/billing/${params.billingKey}`, {
-      method: 'POST',
-      headers: { Authorization: this.authHeader(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        customerKey: params.customerKey,
-        amount: params.amount,
-        orderId: params.orderId,
-        orderName: params.orderName,
-      }),
-    })
-    const data = await res.json()
-    if (!res.ok) {
-      return { success: false, error: data.message ?? '결제 승인에 실패했습니다', errorCode: data.code }
-    }
-    return { success: true, paymentKey: data.paymentKey, approvedAt: data.approvedAt }
-  }
-
-  // 카드 변경/해지 시 빌링키 폐기. Toss는 별도 삭제 API를 제공하지 않으므로
-  // profiles에서 저장된 빌링키를 제거하는 것으로 처리한다(호출부에서 DB 업데이트).
-  async deleteBillingKey(): Promise<{ success: true }> {
-    return { success: true }
   }
 
   async cancelSubscription(params: { providerSubscriptionId: string; immediately?: boolean }): Promise<PaymentResult> {

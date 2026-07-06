@@ -9,12 +9,12 @@ export async function GET() {
 
   const { data: profile } = await (supabase as any)
     .from('profiles')
-    .select('toss_billing_key, billing_card_last4, billing_card_brand')
+    .select('portone_billing_key, billing_card_last4, billing_card_brand')
     .eq('id', user.id)
     .single()
 
   return NextResponse.json({
-    hasBillingKey: !!profile?.toss_billing_key,
+    hasBillingKey: !!profile?.portone_billing_key,
     cardLast4: profile?.billing_card_last4 ?? null,
     cardBrand: profile?.billing_card_brand ?? null,
   })

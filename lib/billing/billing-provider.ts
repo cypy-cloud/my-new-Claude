@@ -1,6 +1,6 @@
 import type { PlanId } from '@/lib/subscription/plans'
 
-export type BillingProvider = 'mock' | 'toss' | 'stripe'
+export type BillingProvider = 'mock' | 'toss' | 'portone' | 'stripe'
 
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'expired'
 export type PaymentStatus = 'pending' | 'succeeded' | 'failed' | 'refunded' | 'canceled'

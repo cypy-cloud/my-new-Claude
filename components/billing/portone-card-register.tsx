@@ -5,39 +5,27 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { CreditCard, Loader2, ShieldCheck } from "lucide-react"
 
-interface TossCardRegisterProps {
+interface PortOneCardRegisterProps {
   userId: string
-  clientKey: string
+  storeId: string
+  channelKey: string
+  fullName: string
+  phoneNumber?: string | null
+  email?: string | null
   cardLast4?: string | null
   cardBrand?: string | null
 }
 
-declare global {
-  interface Window {
-    TossPayments?: (clientKey: string) => {
-      requestBillingAuth: (
-        method: "카드",
-        params: { customerKey: string; successUrl: string; failUrl: string }
-      ) => Promise<void>
-    }
-  }
-}
-
-let sdkLoadPromise: Promise<void> | null = null
-function loadTossSdk(): Promise<void> {
-  if (window.TossPayments) return Promise.resolve()
-  if (sdkLoadPromise) return sdkLoadPromise
-  sdkLoadPromise = new Promise((resolve, reject) => {
-    const script = document.createElement("script")
-    script.src = "https://js.tosspayments.com/v1/payment"
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error("결제 SDK 로드 실패"))
-    document.head.appendChild(script)
-  })
-  return sdkLoadPromise
-}
-
-export function TossCardRegister({ userId, clientKey, cardLast4, cardBrand }: TossCardRegisterProps) {
+export function PortOneCardRegister({
+  userId,
+  storeId,
+  channelKey,
+  fullName,
+  phoneNumber,
+  email,
+  cardLast4,
+  cardBrand,
+}: PortOneCardRegisterProps) {
   const [loading, setLoading] = useState(false)
   const [removing, setRemoving] = useState(false)
   const hasCard = !!cardLast4
@@ -45,18 +33,44 @@ export function TossCardRegister({ userId, clientKey, cardLast4, cardBrand }: To
   async function handleRegister() {
     setLoading(true)
     try {
-      await loadTossSdk()
-      const customerKey = `fp_${userId.replace(/-/g, "").slice(0, 20)}`
-      const tossPayments = window.TossPayments!(clientKey)
-      await tossPayments.requestBillingAuth("카드", {
-        customerKey,
-        successUrl: `${window.location.origin}/billing/register-card/success`,
-        failUrl: `${window.location.origin}/billing/register-card/fail`,
+      const PortOne = await import("@portone/browser-sdk/v2")
+      const customerId = `fp_${userId.replace(/-/g, "").slice(0, 20)}`
+      const issueResponse = await PortOne.requestIssueBillingKey({
+        storeId,
+        channelKey,
+        billingKeyMethod: "CARD",
+        issueId: `bk-${customerId}-${Date.now()}`,
+        issueName: "FP AI Assistant 자동결제 카드 등록",
+        customer: {
+          customerId,
+          fullName,
+          phoneNumber: phoneNumber || undefined,
+          email: email || undefined,
+        },
       })
-    } catch (e: any) {
-      if (e?.code !== "USER_CANCEL") {
-        toast.error(e?.message ?? "카드 등록 중 오류가 발생했습니다")
+
+      if (issueResponse?.code) {
+        toast.error(issueResponse.message ?? "카드 등록 중 오류가 발생했습니다")
+        return
       }
+      if (!issueResponse?.billingKey) {
+        toast.error("카드 등록에 실패했습니다")
+        return
+      }
+
+      const res = await fetch("/api/billing/card/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ billingKey: issueResponse.billingKey }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? "카드 등록에 실패했습니다")
+
+      toast.success("자동결제 카드가 등록되었습니다!")
+      window.location.reload()
+    } catch (e: any) {
+      toast.error(e?.message ?? "카드 등록 중 오류가 발생했습니다")
+    } finally {
       setLoading(false)
     }
   }
@@ -105,7 +119,7 @@ export function TossCardRegister({ userId, clientKey, cardLast4, cardBrand }: To
       )}
       <div className="flex items-center gap-1.5 text-xs text-gray-400">
         <ShieldCheck className="h-3.5 w-3.5" />
-        토스페이먼츠 보안 등록 · 카드 정보는 회사 서버에 저장되지 않습니다
+        포트원 보안 등록 · 카드 정보는 회사 서버에 저장되지 않습니다
       </div>
     </div>
   )

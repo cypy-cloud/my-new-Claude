@@ -5,7 +5,7 @@ import { SubscriptionHistory } from "@/components/billing/subscription-history"
 import { AdminPlanSwitcher } from "@/components/billing/admin-plan-switcher"
 import { BillingDashboard } from "@/components/billing/billing-dashboard"
 import { BillingPlans } from "@/components/billing/billing-plans"
-import { TossCardRegister } from "@/components/billing/toss-card-register"
+import { PortOneCardRegister } from "@/components/billing/portone-card-register"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { type PlanId } from "@/lib/subscription/plans"
 
@@ -17,14 +17,15 @@ export default async function BillingPage() {
 
   const { data: profile } = await (supabase as any)
     .from("profiles")
-    .select("plan_type, scheduled_plan_type, scheduled_plan_date, billing_card_last4, billing_card_brand")
+    .select("plan_type, scheduled_plan_type, scheduled_plan_date, billing_card_last4, billing_card_brand, name, phone, email")
     .eq("id", user!.id)
     .single()
 
   const currentPlanId = (profile?.plan_type as PlanId) ?? "free"
   const scheduledPlanId = (profile?.scheduled_plan_type as PlanId) ?? null
   const scheduledPlanDate = profile?.scheduled_plan_date ?? null
-  const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY
+  const storeId = process.env.NEXT_PUBLIC_PORTONE_STORE_ID
+  const channelKey = process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY
 
   return (
     <div className="space-y-8 max-w-5xl">
@@ -63,12 +64,16 @@ export default async function BillingPage() {
       </div>
 
       {/* 자동결제 카드 등록 */}
-      {PAID_PLANS.includes(currentPlanId) && clientKey && (
+      {PAID_PLANS.includes(currentPlanId) && storeId && channelKey && (
         <div>
           <h2 className="text-sm font-semibold text-gray-600 mb-3">자동결제 카드 관리</h2>
-          <TossCardRegister
+          <PortOneCardRegister
             userId={user!.id}
-            clientKey={clientKey}
+            storeId={storeId}
+            channelKey={channelKey}
+            fullName={profile?.name ?? "이용자"}
+            phoneNumber={profile?.phone}
+            email={profile?.email}
             cardLast4={profile?.billing_card_last4}
             cardBrand={profile?.billing_card_brand}
           />
@@ -84,7 +89,7 @@ export default async function BillingPage() {
           {[
             { q: "언제든지 플랜을 변경할 수 있나요?", a: "네, 언제든지 변경 가능합니다. 업그레이드는 즉시 적용됩니다. 다운그레이드는 현재 달 말일까지 기존 플랜을 유지하고, 다음 달 1일부터 새 플랜이 적용됩니다." },
             { q: "사용량은 언제 초기화되나요?", a: "매달 1일 자정에 이번 달 사용량이 초기화됩니다. 업그레이드 시 이미 사용한 횟수는 그대로 유지되므로, 매월 1일에 업그레이드하시면 새 플랜의 한도를 100% 활용하실 수 있습니다." },
-            { q: "결제는 어떻게 이루어지나요?", a: "토스페이먼츠를 통해 신용카드, 체크카드, 간편결제(카카오페이, 네이버페이 등)로 결제할 수 있습니다." },
+            { q: "결제는 어떻게 이루어지나요?", a: "안전한 전자결제 대행사를 통해 신용카드, 체크카드로 결제할 수 있습니다." },
             { q: "환불 정책은 어떻게 되나요?", a: "결제 후 서비스를 1회라도 사용한 경우 환불이 불가합니다. 미사용 상태라면 결제일로부터 7일 이내에 고객센터로 문의해 주세요." },
             { q: "구독 해지 시 데이터는 어떻게 되나요?", a: "구독 해지 후에도 기존에 생성한 데이터는 유지됩니다. 단, 무료 플랜의 저장 용량과 보관 기간 제한이 적용됩니다." },
           ].map((faq) => (

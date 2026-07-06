@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { expireSubscription, activateSubscription, recordPayment } from '@/lib/billing/subscription-service'
 import { notifyRenewalReminder, notifyPlanExpired } from '@/lib/notifications/create-notification'
-import { TossProvider } from '@/lib/billing/toss-provider'
+import { PortOneProvider } from '@/lib/billing/portone-provider'
 import { PLANS, PLAN_LABELS, type PlanId } from '@/lib/subscription/plans'
 
 // Vercel Cron이 매일 호출한다. Authorization: Bearer <CRON_SECRET> 헤더로 인증.
@@ -22,12 +22,12 @@ async function handleCheck(request: NextRequest) {
   const admin = createAdminClient()
   const now = new Date()
   const in3Days = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000)
-  const provider = new TossProvider()
+  const provider = new PortOneProvider()
 
   // 1. 이미 만료된 유료 구독 → 빌링키 자동 청구 시도, 실패/미등록 시 무료 플랜 전환
   const { data: expired } = await (admin as any)
     .from('subscriptions')
-    .select('user_id, plan_type, profiles!inner(toss_billing_key, toss_customer_key)')
+    .select('user_id, plan_type, profiles!inner(portone_billing_key, portone_customer_id)')
     .eq('status', 'active')
     .neq('plan_type', 'free')
     .lt('current_period_end', now.toISOString())
@@ -36,26 +36,26 @@ async function handleCheck(request: NextRequest) {
   let renewedCount = 0
   for (const row of expired ?? []) {
     const planId = row.plan_type as PlanId
-    const billingKey = row.profiles?.toss_billing_key
-    const customerKey = row.profiles?.toss_customer_key
+    const billingKey = row.profiles?.portone_billing_key
+    const customerId = row.profiles?.portone_customer_id
 
-    if (billingKey && customerKey) {
-      const orderId = `renew-${row.user_id.replace(/-/g, '').slice(0, 10)}-${Date.now()}`
+    if (billingKey && customerId) {
+      const paymentId = `renew${row.user_id.replace(/-/g, '').slice(0, 10)}${Date.now()}`
       const result = await provider.chargeBillingKey({
         billingKey,
-        customerKey,
+        customerId,
         amount: PLANS[planId].price,
-        orderId,
+        paymentId,
         orderName: `FP AI Assistant ${PLANS[planId].name} 플랜 정기결제`,
       })
 
       if (result.success) {
-        await activateSubscription({ userId: row.user_id, planType: planId, provider: 'toss', providerCustomerId: customerKey })
+        await activateSubscription({ userId: row.user_id, planType: planId, provider: 'portone', providerCustomerId: customerId })
         await recordPayment({
           userId: row.user_id,
           amount: PLANS[planId].price,
-          provider: 'toss',
-          providerTxId: result.paymentKey ?? orderId,
+          provider: 'portone',
+          providerTxId: result.paymentId ?? paymentId,
           status: 'succeeded',
         })
         renewedCount++
