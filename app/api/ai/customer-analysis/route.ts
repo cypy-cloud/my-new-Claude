@@ -124,7 +124,7 @@ ${mbtiProfile.J_P}
     const result = await generateWithAI(prompt, {
       feature: 'ai_script',
       userId: user.id,
-      model: 'claude-sonnet-4-6',
+      model: 'claude-sonnet-5',
       maxTokens: 3800,
       temperature: 0.7,
       cacheInput: { ageGroup, gender, occupation, income, familyStatus, hasChildren, existingInsurance, mainConcern, personality, mbtiType, extraNotes },

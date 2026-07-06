@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
 
   // 성향분석 결과가 포함된 경우 Sonnet으로 업그레이드 (MBTI 지시 이행률 향상)
   const hasAnalysis = typeof extraNotes === 'string' && extraNotes.includes('[고객성향분석 결과]')
-  const scriptModel = hasAnalysis ? 'claude-sonnet-4-6' : undefined // undefined = 기본 Haiku
+  const scriptModel = hasAnalysis ? 'claude-sonnet-5' : undefined // undefined = 기본 Haiku
 
   let result
   let sections: Record<string, string>

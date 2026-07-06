@@ -11,7 +11,7 @@ import { resolveProductCategory, buildProductCategoryAddendum } from '@/lib/ai-c
 const DISCLAIMER = '\n\n[보험 관련 유의사항] 이 메시지는 보험 상품에 대한 일반적인 안내 목적으로 작성되었습니다. 보험 상품 가입 전 약관을 반드시 확인하시기 바랍니다. 보험료 및 보장 내용은 계약 조건에 따라 달라질 수 있습니다.'
 
 const HAIKU_MODEL = 'claude-haiku-4-5-20251001'
-const SONNET_MODEL = 'claude-sonnet-4-6'
+const SONNET_MODEL = 'claude-sonnet-5'
 
 // SMS, KAKAO, SOFT, FOLLOWUP → Haiku (저렴한 모델)
 const HAIKU_SECTIONS = ['SMS', 'KAKAO', 'SOFT', 'FOLLOWUP'] as const
