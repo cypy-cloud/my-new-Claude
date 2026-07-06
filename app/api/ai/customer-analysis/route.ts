@@ -61,6 +61,7 @@ export async function POST(request: NextRequest) {
 아래 고객 정보를 바탕으로 실제 현장에서 바로 활용할 수 있는 깊이 있는 맞춤형 분석을 제공해주세요.
 
 중요: 마크다운 문법(#, ##, **, *, -, 등)을 절대 사용하지 마세요. 순수 텍스트로만 작성하세요.
+상품 추천 시 반드시 최신 기준을 사용하세요: 실손의료보험은 현재 5세대(2024년 출시)가 최신입니다. "4세대 실손"이라는 표현은 절대 사용하지 마세요.
 
 고객 기본 정보:
 - 나이대: ${ageGroup}
@@ -124,7 +125,7 @@ ${mbtiProfile.J_P}
       feature: 'ai_script',
       userId: user.id,
       model: 'claude-sonnet-4-6',
-      maxTokens: 2800,
+      maxTokens: 3800,
       temperature: 0.7,
       cacheInput: { ageGroup, gender, occupation, income, familyStatus, hasChildren, existingInsurance, mainConcern, personality, mbtiType, extraNotes },
     })
