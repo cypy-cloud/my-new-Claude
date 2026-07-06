@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useRef } from "react"
+import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { PageTracker } from "@/components/analytics/page-tracker"
-import { Calculator, TrendingUp, PiggyBank, Sparkles, ChevronRight, Info, Printer } from "lucide-react"
+import { Calculator, TrendingUp, PiggyBank, Sparkles, ChevronRight, Info } from "lucide-react"
 
 interface CalcInput {
   currentAge: number
@@ -117,14 +117,7 @@ const DEFAULT: CalcInput = {
 export default function PensionCalculatorPage() {
   const router = useRouter()
   const [input, setInput] = useState<CalcInput>(DEFAULT)
-  const [customerName, setCustomerName] = useState("")
-  const printRef = useRef<HTMLDivElement>(null)
-
   const result = useMemo(() => calcPension(input), [input])
-
-  function handlePrint() {
-    window.print()
-  }
 
   function set(key: keyof CalcInput, val: number) {
     setInput(prev => ({ ...prev, [key]: val }))
@@ -158,92 +151,12 @@ export default function PensionCalculatorPage() {
     <div className="space-y-6 max-w-4xl">
       <PageTracker event="pension_calculator_visit" />
 
-      {/* 인쇄 전용 CSS */}
-      <style>{`
-        @page {
-          size: A4 portrait;
-          margin: 10mm;
-        }
-        @media print {
-          * {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-            color-adjust: exact !important;
-          }
-          /* 사이드바, 헤더, 하단 네비 직접 숨기기 */
-          aside,
-          header,
-          nav,
-          footer { display: none !important; }
+      <h1 className="text-2xl font-bold text-[#1e3a5f] flex items-center gap-2">
+        <Calculator className="h-6 w-6" />
+        연금 계산기
+      </h1>
 
-          /* 사이드바 여백 제거 */
-          .md\\:pl-64 { padding-left: 0 !important; }
-
-          /* no-print 요소 숨기기 */
-          .no-print { display: none !important; }
-
-          /* 인쇄 헤더 표시 */
-          .print-header { display: block !important; }
-
-          /* 2컬럼 그리드 강제 (Tailwind lg 브레이크포인트 우회) */
-          #pension-grid {
-            display: grid !important;
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 16px !important;
-          }
-
-          /* 배경색 보존 */
-          .bg-red-50   { background-color: #fef2f2 !important; }
-          .bg-blue-50  { background-color: #eff6ff !important; }
-          .bg-orange-50 { background-color: #fff7ed !important; }
-          .bg-green-50 { background-color: #f0fdf4 !important; }
-          .bg-gray-50  { background-color: #f9fafb !important; }
-          .bg-gray-100 { background-color: #f3f4f6 !important; }
-        }
-        .print-header { display: none; }
-      `}</style>
-
-      <div className="flex items-center justify-between no-print">
-        <h1 className="text-2xl font-bold text-[#1e3a5f] flex items-center gap-2">
-          <Calculator className="h-6 w-6" />
-          연금 계산기
-        </h1>
-        <div className="flex items-center gap-2">
-          <Input
-            placeholder="고객 이름 입력"
-            value={customerName}
-            onChange={e => setCustomerName(e.target.value)}
-            className="w-36 h-9 text-sm"
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePrint}
-            className="flex items-center gap-1.5 h-9"
-          >
-            <Printer className="h-4 w-4" />
-            인쇄 / PDF 저장
-          </Button>
-        </div>
-      </div>
-
-      <div id="pension-print-area" ref={printRef}>
-
-      {/* 인쇄 시 헤더 */}
-      <div className="print-header mb-4 pb-3 border-b-2 border-[#1e3a5f]">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Calculator className="h-5 w-5 text-[#1e3a5f]" />
-            <span className="text-lg font-bold text-[#1e3a5f]">은퇴 준비 분석 리포트</span>
-          </div>
-          {customerName && (
-            <span className="text-base font-semibold text-gray-700">{customerName} 고객님</span>
-          )}
-        </div>
-        <p className="text-xs text-gray-400 mt-1">작성일: {new Date().toLocaleDateString("ko-KR")} | FP AI Assistant</p>
-      </div>
-
-      <div id="pension-grid" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* 입력 패널 */}
         <div className="space-y-4">
@@ -535,7 +448,7 @@ export default function PensionCalculatorPage() {
           </Card>
 
           {/* AI 스크립트 연결 버튼 */}
-          <Card className="bg-[#1e3a5f] border-0 no-print">
+          <Card className="bg-[#1e3a5f] border-0">
             <CardContent className="pt-5 pb-5">
               <div className="flex items-start gap-3 mb-4">
                 <Sparkles className="h-5 w-5 text-orange-400 flex-shrink-0 mt-0.5" />
@@ -557,19 +470,12 @@ export default function PensionCalculatorPage() {
           </Card>
 
           {/* 안내 */}
-          <div className="flex gap-2 text-xs text-gray-400 bg-gray-50 rounded-lg p-3 no-print">
+          <div className="flex gap-2 text-xs text-gray-400 bg-gray-50 rounded-lg p-3">
             <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
             <p>본 계산기는 참고용이며 실제 결과는 수익률, 물가, 세금 등에 따라 달라질 수 있습니다. 전문 FP 상담을 병행하세요.</p>
           </div>
-
-          {/* 인쇄 시 하단 면책 문구 */}
-          <div className="print-header mt-4 pt-3 border-t text-xs text-gray-400">
-            <p>※ 본 분석은 참고용이며 실제 결과는 수익률·물가·세금 등에 따라 달라질 수 있습니다. 전문 FP 상담을 병행하시기 바랍니다.</p>
-          </div>
         </div>
       </div>
-
-      </div>{/* pension-print-area end */}
     </div>
   )
 }
