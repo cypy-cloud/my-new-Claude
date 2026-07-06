@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { toast } from "sonner"
-import { Shield, ChevronDown, Copy, RefreshCw, Lightbulb, Target, MessageSquareQuote } from "lucide-react"
+import { Shield, Copy, RefreshCw, Lightbulb, Target, MessageSquareQuote, Mic, MicOff, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -64,6 +64,70 @@ export function ObjectionHandler({ planName, limits, usage }: ObjectionHandlerPr
   const [tipText, setTipText] = useState("")
   const [usedObjection, setUsedObjection] = useState("")
   const [remaining, setRemaining] = useState(limits.scriptLimit - usage.scriptCount)
+
+  const [isRecording, setIsRecording] = useState(false)
+  const [isCorrectingVoice, setIsCorrectingVoice] = useState(false)
+  const recognitionRef = useRef<any>(null)
+  const transcriptRef = useRef("")
+
+  async function correctVoiceInput(rawText: string) {
+    if (!rawText.trim()) return
+    setIsCorrectingVoice(true)
+    try {
+      const res = await fetch("/api/ai/voice-correct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rawText, context: { purpose: "고객상황", productField: productType, tone: "자연스러운" } }),
+      })
+      const data = await res.json()
+      setCustomerContext(prev => (prev ? prev + " " : "") + (data.corrected ?? rawText))
+    } catch {
+      setCustomerContext(prev => (prev ? prev + " " : "") + rawText)
+    } finally {
+      setIsCorrectingVoice(false)
+    }
+  }
+
+  function stopRecording() {
+    recognitionRef.current?.stop()
+    setIsRecording(false)
+    const transcript = transcriptRef.current.trim()
+    transcriptRef.current = ""
+    if (transcript) correctVoiceInput(transcript)
+  }
+
+  function toggleRecording() {
+    if (isRecording) { stopRecording(); return }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) { toast.error("이 브라우저는 음성 입력을 지원하지 않습니다"); return }
+
+    const recognition = new SpeechRecognition()
+    recognition.lang = "ko-KR"
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognitionRef.current = recognition
+    transcriptRef.current = ""
+
+    recognition.onresult = (e: any) => {
+      let final = ""
+      for (let i = 0; i < e.results.length; i++) {
+        if (e.results[i].isFinal) final += e.results[i][0].transcript
+      }
+      if (final) transcriptRef.current = final
+    }
+    recognition.onend = () => {
+      if (isRecording) stopRecording()
+    }
+    recognition.onerror = () => {
+      setIsRecording(false)
+      toast.error("음성 인식 오류가 발생했습니다")
+    }
+
+    recognition.start()
+    setIsRecording(true)
+    toast.info("녹음 중... 말씀하신 후 정지 버튼을 누르세요")
+  }
 
   async function handleGenerate() {
     if (!objectionType) { toast.error("거절 유형을 선택해주세요"); return }
@@ -181,30 +245,51 @@ export function ObjectionHandler({ planName, limits, usage }: ObjectionHandlerPr
             </div>
           )}
 
-          <div className="grid gap-4 md:grid-cols-2">
-            {/* 고객 상황 */}
-            <div className="space-y-1.5">
+          {/* 고객 상황 */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
               <Label>고객 상황 <span className="text-gray-400 text-xs">(선택)</span></Label>
-              <Input
-                placeholder="예: 40대 직장인, 자녀 2명..."
-                value={customerContext}
-                onChange={e => setCustomerContext(e.target.value)}
-              />
-            </div>
-
-            {/* 설계사 스타일 */}
-            <div className="space-y-1.5">
-              <Label>나의 상담 스타일</Label>
-              <select
-                value={agentStyle}
-                onChange={e => setAgentStyle(e.target.value)}
-                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              <button
+                type="button"
+                onClick={toggleRecording}
+                disabled={isCorrectingVoice}
+                className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full border transition-colors ${
+                  isRecording
+                    ? "bg-red-50 border-red-300 text-red-600 animate-pulse"
+                    : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
+                }`}
               >
-                {AGENT_STYLES.map(s => (
-                  <option key={s.value} value={s.value}>{s.label}</option>
-                ))}
-              </select>
+                {isCorrectingVoice ? (
+                  <><Loader2 className="h-3 w-3 animate-spin" />교정 중</>
+                ) : isRecording ? (
+                  <><MicOff className="h-3 w-3" />정지</>
+                ) : (
+                  <><Mic className="h-3 w-3" />음성 입력</>
+                )}
+              </button>
             </div>
+            <Textarea
+              placeholder="예: 40대 남자 직장인, 자녀 5세 아들·3세 딸, 와이프가 육아에 전념 중, 현재 보험 없음"
+              value={customerContext}
+              onChange={e => setCustomerContext(e.target.value)}
+              rows={3}
+              className="resize-none text-sm"
+            />
+            <p className="text-xs text-gray-400">마이크 버튼으로 음성 입력도 가능합니다. 어설픈 발음도 AI가 자동 교정합니다.</p>
+          </div>
+
+          {/* 설계사 스타일 */}
+          <div className="space-y-1.5">
+            <Label>나의 상담 스타일</Label>
+            <select
+              value={agentStyle}
+              onChange={e => setAgentStyle(e.target.value)}
+              className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              {AGENT_STYLES.map(s => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
           </div>
 
           <Button
