@@ -83,6 +83,49 @@ export async function notifyUsageLimitWarning(
   }
 }
 
+// 구독 재결제 리마인더 (만료 3일 전 — 자동 정기결제가 없어 수동 재결제 필요)
+export async function notifyRenewalReminder(
+  userId: string,
+  planLabel: string,
+  expiresOn: string,
+) {
+  try {
+    const supabase = createAdminClient()
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+
+    const { count } = await (supabase as any)
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('type', 'billing')
+      .gte('created_at', todayStart.toISOString())
+
+    if ((count ?? 0) > 0) return // 오늘 이미 발송
+
+    await createNotification({
+      userId,
+      type: 'billing',
+      title: `${planLabel} 플랜 만료 예정`,
+      message: `${new Date(expiresOn).toLocaleDateString('ko-KR')}에 ${planLabel} 플랜 이용 기간이 끝납니다. 계속 이용하시려면 결제 페이지에서 재결제해주세요. (자동 결제가 아직 지원되지 않아 직접 재결제가 필요합니다)`,
+      actionUrl: '/billing',
+    })
+  } catch {
+    // 조용히 처리
+  }
+}
+
+// 구독 만료로 무료 플랜 전환 알림
+export async function notifyPlanExpired(userId: string, planLabel: string) {
+  await createNotification({
+    userId,
+    type: 'billing',
+    title: `${planLabel} 플랜이 만료되었습니다`,
+    message: `이용 기간이 끝나 무료 플랜으로 전환되었습니다. 계속 유료 기능을 이용하시려면 다시 결제해주세요.`,
+    actionUrl: '/billing',
+  })
+}
+
 // 파일 삭제 예정 알림 (만료 3일 전)
 export async function notifyFileDeleteWarning(
   userId: string,
