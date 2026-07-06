@@ -126,8 +126,10 @@ export function ScriptGenerator({ initialUsage, limit, planName, initialData, pe
     try {
       const res = await fetch('/api/outputs?type=script&limit=20')
       const data = await res.json()
-      // 고객성향분석으로 저장된 것만 필터 (title에 "성향분석" 포함)
-      const filtered = (data.outputs ?? []).filter((o: any) => o.title?.includes('성향분석') || o.title?.includes('고객분석'))
+      // 고객성향분석으로 저장된 것만 필터 (저장 제목: "고객 성향 분석: ...")
+      const filtered = (data.outputs ?? []).filter((o: any) =>
+        o.title?.includes('성향 분석') || o.title?.includes('성향분석') || o.title?.includes('고객분석')
+      )
       setAnalysisResults(filtered)
       setAnalysisOpen(true)
     } catch {
