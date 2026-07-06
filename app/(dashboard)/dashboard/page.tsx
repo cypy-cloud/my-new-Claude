@@ -3,7 +3,11 @@ import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { MessageSquare, BookOpen, FileText, ArrowRight, TrendingUp, Zap, CreditCard, AlertCircle, MessageCircle } from "lucide-react"
+import {
+  MessageSquare, BookOpen, FileText, ArrowRight, TrendingUp,
+  Zap, CreditCard, AlertCircle, MessageCircle, UserSearch,
+  FileEdit, Newspaper, ShieldOff
+} from "lucide-react"
 import { getPlanLimits, PLAN_LABELS, type PlanId } from "@/lib/subscription/plans"
 import { getMonthlyUsage } from "@/lib/subscription/usage"
 
@@ -24,7 +28,8 @@ export default async function DashboardPage() {
   const limits = getPlanLimits(planId)
   const usage = await getMonthlyUsage(user!.id)
 
-  const stats = [
+  // 플랜별로 보여줄 사용량 카드 정의 (limit > 0인 것만 표시)
+  const allStats = [
     {
       label: "AI 문자/카톡",
       used: usage.smsCount,
@@ -42,6 +47,23 @@ export default async function DashboardPage() {
       href: "/ai-script",
     },
     {
+      label: "AI 성향분석",
+      used: usage.scriptCount,   // 성향분석도 scriptCount 공유
+      limit: limits.scriptLimit,
+      icon: UserSearch,
+      color: "indigo",
+      href: "/customer-analysis",
+      sharedWith: "AI 상담 스크립트와 한도 공유",
+    },
+    {
+      label: "거절극복 스크립트",
+      used: usage.followupCount,
+      limit: limits.followupLimit,
+      icon: ShieldOff,
+      color: "rose",
+      href: "/objection-handler",
+    },
+    {
       label: "AI PDF 분석",
       used: usage.pdfAnalysisCount,
       limit: limits.pdfAnalysisLimit,
@@ -49,30 +71,64 @@ export default async function DashboardPage() {
       color: "orange",
       href: "/ai-document",
     },
-  ]
+    {
+      label: "SNS·블로그 콘텐츠",
+      used: usage.contentCount,
+      limit: limits.contentLimit,
+      icon: FileEdit,
+      color: "green",
+      href: "/content-generator",
+    },
+    {
+      label: "뉴스레터 생성",
+      used: usage.newsletterCount,
+      limit: limits.newsletterLimit,
+      icon: Newspaper,
+      color: "teal",
+      href: "/newsletter",
+    },
+  ].filter(s => s.limit > 0)
 
   const colorMap: Record<string, string> = {
     blue: "bg-blue-500",
     purple: "bg-purple-500",
+    indigo: "bg-indigo-500",
+    rose: "bg-rose-500",
     orange: "bg-orange-500",
+    green: "bg-green-500",
+    teal: "bg-teal-500",
   }
 
   const iconBgMap: Record<string, string> = {
     blue: "bg-blue-100 text-blue-600",
     purple: "bg-purple-100 text-purple-600",
+    indigo: "bg-indigo-100 text-indigo-600",
+    rose: "bg-rose-100 text-rose-500",
     orange: "bg-orange-100 text-orange-500",
+    green: "bg-green-100 text-green-600",
+    teal: "bg-teal-100 text-teal-600",
   }
 
   const warningBorderMap: Record<string, string> = {
     blue: "border-blue-200 bg-blue-50",
     purple: "border-purple-200 bg-purple-50",
+    indigo: "border-indigo-200 bg-indigo-50",
+    rose: "border-rose-200 bg-rose-50",
     orange: "border-orange-200 bg-orange-50",
+    green: "border-green-200 bg-green-50",
+    teal: "border-teal-200 bg-teal-50",
   }
 
   const quickActions = [
     { href: "/ai-message", label: "AI 문자 생성", desc: "고객 메시지 자동 작성", icon: MessageSquare, color: "blue" },
     { href: "/ai-script", label: "AI 스크립트", desc: "맞춤형 상담 스크립트", icon: BookOpen, color: "purple" },
     { href: "/ai-document", label: "AI PDF 분석", desc: "PDF 설명자료 자동화", icon: FileText, color: "orange" },
+    ...(limits.contentLimit > 0
+      ? [{ href: "/content-generator", label: "SNS·블로그", desc: "콘텐츠 자동 생성", icon: FileEdit, color: "green" }]
+      : []),
+    ...(limits.newsletterLimit > 0
+      ? [{ href: "/newsletter", label: "뉴스레터", desc: "뉴스레터 자동 작성", icon: Newspaper, color: "teal" }]
+      : []),
   ]
 
   return (
@@ -100,8 +156,8 @@ export default async function DashboardPage() {
             </Link>
           )}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {stats.map((s) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {allStats.map((s) => {
             const Icon = s.icon
             const pct = s.limit > 0 ? Math.min(100, (s.used / s.limit) * 100) : 0
             const isWarning = pct >= 80 && pct < 100
@@ -144,6 +200,9 @@ export default async function DashboardPage() {
                         <span className="text-xs text-gray-400">잔여 {s.limit - s.used}회</span>
                       )}
                     </div>
+                    {'sharedWith' in s && s.sharedWith && (
+                      <p className="text-xs text-gray-400 mt-1.5 border-t border-gray-100 pt-1.5">{s.sharedWith}</p>
+                    )}
                   </CardContent>
                 </Card>
               </Link>
@@ -196,7 +255,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Plan + Upgrade (최상위 플랜이면 숨김) */}
+      {/* Plan + Upgrade */}
       {planId !== "premium" && (
       <Card className="border-0 shadow-sm bg-gradient-to-r from-[#1e3a5f] to-[#2d5a8e] text-white">
         <CardContent className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
