@@ -338,18 +338,7 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
                 {FAMILY_STATUS.map(f => <option key={f} value={f}>{f}</option>)}
               </select>
             </div>
-            <div className="space-y-1.5">
-              <Label>성격 유형</Label>
-              <select value={personality} onChange={e => setPersonality(e.target.value)}
-                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
-                <option value="">선택</option>
-                {PERSONALITY_TYPES.map(p => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </div>
-          </div>
-
-          {/* MBTI — 프로 이상만 */}
-          <div className="grid gap-4 md:grid-cols-2">
+            {/* MBTI 유형 — 성격 유형 앞에 배치 */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label>MBTI 유형 <span className="text-gray-400 text-xs">(선택)</span></Label>
@@ -366,12 +355,31 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
               </div>
               <select
                 value={mbtiType}
-                onChange={e => setMbtiType(e.target.value)}
-                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                onChange={e => { setMbtiType(e.target.value); if (e.target.value) setPersonality("") }}
+                disabled={!!personality}
+                className={`w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-opacity ${personality ? 'opacity-40 cursor-not-allowed' : ''}`}
               >
                 <option value="">모름 / 미검사</option>
                 {MBTI_TYPES.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
+              {personality && <p className="text-xs text-gray-400">성격 유형 선택 시 비활성화</p>}
+            </div>
+          </div>
+
+          {/* 성격 유형 + 기존 보험 */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>성격 유형</Label>
+              <select
+                value={personality}
+                onChange={e => { setPersonality(e.target.value); if (e.target.value) setMbtiType("") }}
+                disabled={!!mbtiType}
+                className={`w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring transition-opacity ${mbtiType ? 'opacity-40 cursor-not-allowed' : ''}`}
+              >
+                <option value="">선택</option>
+                {PERSONALITY_TYPES.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+              {mbtiType && <p className="text-xs text-gray-400">MBTI 선택 시 비활성화</p>}
             </div>
             <div className="space-y-1.5">
               <Label>기존 보험 현황</Label>
