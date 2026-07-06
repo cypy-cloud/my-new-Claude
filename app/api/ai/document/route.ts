@@ -7,6 +7,8 @@ import { trackFeatureComplete } from '@/lib/analytics/track'
 import { handleApiError } from '@/lib/errors/api-error-handler'
 import { resolveProductCategory, buildProductCategoryAddendum } from '@/lib/ai-core/product-category'
 
+export const maxDuration = 60
+
 const DISCLAIMER = '\n\n【필수 고지문】\n본 자료는 업로드된 자료를 바탕으로 AI가 작성한 참고용 설명자료입니다. 실제 보장 여부, 보험금 지급 여부, 가입 가능 여부는 해당 보험회사의 약관, 인수기준, 심사결과에 따라 달라질 수 있습니다.'
 
 const SECTION_MARKERS = ['SUMMARY', 'COVERAGE', 'MISCONCEPTIONS', 'CHECKLIST', 'EXCLUSIONS', 'QNA', 'AGENT_SCRIPT', 'CAUTION']
@@ -112,7 +114,7 @@ export async function POST(request: NextRequest) {
     result = await generateWithAI(prompt, {
       feature: 'ai_document',
       userId: user.id,
-      maxTokens: 4500,
+      maxTokens: 9000,
       temperature: 0.6,
       cacheInput,
       promptVersion: version,
@@ -125,7 +127,7 @@ export async function POST(request: NextRequest) {
       result = await generateWithAI(prompt, {
         feature: 'ai_document',
         userId: user.id,
-        maxTokens: 4500,
+        maxTokens: 9000,
         temperature: 0.6,
         cacheInput,
         promptVersion: version,
