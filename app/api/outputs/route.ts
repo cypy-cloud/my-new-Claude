@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
   let query = (supabase as any)
     .from('generated_outputs')
-    .select('id, type, title, output_text, ai_provider, model, is_favorite, created_at, updated_at')
+    .select('id, type, title, output_text, input_data, ai_provider, model, is_favorite, created_at, updated_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(limit)
