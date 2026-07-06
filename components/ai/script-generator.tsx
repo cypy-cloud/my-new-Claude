@@ -396,7 +396,7 @@ export function ScriptGenerator({ initialUsage, limit, planName, initialData, pe
   return (
     <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] gap-6">
       {/* ── 입력 폼 ─────────────────────────────────────── */}
-      <div className="space-y-4 xl:max-h-[calc(100vh-160px)] xl:overflow-y-auto xl:pr-2">
+      <div className="space-y-4 xl:sticky xl:top-4 xl:max-h-[calc(100vh-80px)] xl:overflow-y-auto xl:overscroll-contain xl:pr-2">
         {/* 사용량 */}
         <div className={`flex items-center justify-between p-3 rounded-lg border text-sm ${
           isLimitReached ? "bg-red-50 border-red-200 text-red-700" :
