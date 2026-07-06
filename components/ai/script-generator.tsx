@@ -76,11 +76,25 @@ interface Props {
   limit: number
   planName: string
   initialData?: InitialData
+  pensionData?: Record<string, string>
+}
+
+// 연금계산기 데이터를 extraNotes 문자열로 변환
+function buildPensionNote(p: Record<string, string>): string {
+  const fmt = (v: string, unit = "만원") => v ? `${Number(v).toLocaleString()}${unit}` : "-"
+  return [
+    `[연금계산기 분석 결과]`,
+    `현재 나이: ${p.current_age}세 / 은퇴 목표: ${p.retire_age}세 / 기대 수명: ${p.life_expectancy}세`,
+    `은퇴 후 월 생활비: ${fmt(p.monthly_expense)} / 국민연금 예상: ${fmt(p.national_pension)}`,
+    `현재 저축액: ${fmt(p.current_savings)} / 월 저축 가능액: ${fmt(p.monthly_contrib)}`,
+    `은퇴 시 필요 총자산: ${fmt(p.total_needed)} / 예상 부족액: ${fmt(p.shortfall)}`,
+    `은퇴 준비율: ${Number(p.preparedness_rate).toFixed(0)}% / 추가 필요 월 저축: ${fmt(p.additional_monthly)}`,
+  ].join("\n")
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function ScriptGenerator({ initialUsage, limit, planName, initialData }: Props) {
+export function ScriptGenerator({ initialUsage, limit, planName, initialData, pensionData }: Props) {
   // Form state
   const [customerName, setCustomerName] = useState(initialData?.customerName ?? "")
   const [gender, setGender] = useState(initialData?.gender ?? "")
@@ -95,7 +109,11 @@ export function ScriptGenerator({ initialUsage, limit, planName, initialData }: 
   const [customerPersonality, setCustomerPersonality] = useState("")
   const [expectedObjections, setExpectedObjections] = useState(initialData?.expectedObjections ?? "")
   const [agentStyle, setAgentStyle] = useState("친근하고 따뜻하게")
-  const [extraNotes, setExtraNotes] = useState(initialData?.extraNotes ?? "")
+  const [extraNotes, setExtraNotes] = useState(() => {
+    const base = initialData?.extraNotes ?? ""
+    const pension = pensionData ? buildPensionNote(pensionData) : ""
+    return [base, pension].filter(Boolean).join("\n\n")
+  })
   const [categoryId, setCategoryId] = useState("")
 
   // Result state

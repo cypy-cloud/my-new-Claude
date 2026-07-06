@@ -105,8 +105,8 @@ export async function POST(request: NextRequest) {
     result = await generateWithAI(prompt, {
       feature: 'ai_script',
       userId: user.id,
-      maxTokens: 2500,
-      temperature: 0.7,
+      maxTokens: 6000,
+      temperature: 0.75,
       cacheInput,
       promptVersion: version,
       forceRegenerate,

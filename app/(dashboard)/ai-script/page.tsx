@@ -6,9 +6,47 @@ import { getMonthlyUsage } from "@/lib/subscription/usage"
 export default async function AiScriptPage({
   searchParams,
 }: {
-  searchParams: Promise<{ customerId?: string; interactionId?: string }>
+  searchParams: Promise<{
+    customerId?: string
+    interactionId?: string
+    pension_calc?: string
+    current_age?: string
+    retire_age?: string
+    life_expectancy?: string
+    monthly_expense?: string
+    current_savings?: string
+    monthly_contrib?: string
+    return_rate?: string
+    inflation_rate?: string
+    national_pension?: string
+    total_needed?: string
+    shortfall?: string
+    additional_monthly?: string
+    preparedness_rate?: string
+  }>
 }) {
-  const { customerId, interactionId } = await searchParams
+  const params = await searchParams
+  const { customerId, interactionId } = params
+
+  // 연금계산기에서 넘어온 경우 pensionData 구성
+  let pensionData: Record<string, string> | undefined
+  if (params.pension_calc === "1") {
+    pensionData = {
+      current_age: params.current_age ?? "",
+      retire_age: params.retire_age ?? "",
+      life_expectancy: params.life_expectancy ?? "",
+      monthly_expense: params.monthly_expense ?? "",
+      current_savings: params.current_savings ?? "",
+      monthly_contrib: params.monthly_contrib ?? "",
+      return_rate: params.return_rate ?? "",
+      inflation_rate: params.inflation_rate ?? "",
+      national_pension: params.national_pension ?? "",
+      total_needed: params.total_needed ?? "",
+      shortfall: params.shortfall ?? "",
+      additional_monthly: params.additional_monthly ?? "",
+      preparedness_rate: params.preparedness_rate ?? "",
+    }
+  }
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -86,6 +124,7 @@ export default async function AiScriptPage({
         limit={limits.scriptLimit}
         planName={planName}
         initialData={initialData}
+        pensionData={pensionData}
       />
     </div>
   )
