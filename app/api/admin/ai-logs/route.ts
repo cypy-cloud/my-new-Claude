@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
   let query = (admin as any)
     .from('ai_requests')
-    .select('id, user_id, feature_type, status, input_tokens, output_tokens, estimated_cost, created_at', { count: 'exact' })
+    .select('id, user_id, feature_type, provider, model, status, input_tokens, output_tokens, estimated_cost, created_at', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1)
 

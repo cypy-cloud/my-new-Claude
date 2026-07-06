@@ -130,6 +130,16 @@ ${mbtiProfile.J_P}
       cacheInput: { ageGroup, gender, occupation, income, familyStatus, hasChildren, existingInsurance, mainConcern, personality, mbtiType, extraNotes },
     })
 
+    // Mock 폴백은 스크립트 생성용 템플릿([PREP]/[GREETING]...)을 반환하므로
+    // 성향분석 태그([성향분석]/[니즈예측]...)와 형식이 맞지 않아 빈 결과로 파싱됨.
+    // AI 연결 실패를 "완료"로 위장하지 않도록 여기서 명시적으로 에러 처리한다.
+    if (result.provider === 'mock') {
+      return NextResponse.json(
+        { error: 'AI 서비스에 일시적으로 연결할 수 없습니다. 잠시 후 다시 시도해주세요.' },
+        { status: 503 }
+      )
+    }
+
     const wasCached = !!result.cachedAt
     if (!wasCached) {
       await incrementUsage(user.id, 'script', {

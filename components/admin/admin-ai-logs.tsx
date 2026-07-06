@@ -10,6 +10,8 @@ interface LogRow {
   id: string
   user_id: string
   feature_type: string
+  provider: string
+  model: string
   status: string
   input_tokens: number
   output_tokens: number
@@ -87,14 +89,14 @@ export function AdminAiLogs() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b">
                   <tr>
-                    {['시각', '사용자 ID', '기능', '상태', '입력 토큰', '출력 토큰', '비용(원)'].map(h => (
+                    {['시각', '사용자 ID', '기능', 'Provider/모델', '상태', '입력 토큰', '출력 토큰', '비용(원)'].map(h => (
                       <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-600">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {logs.length === 0 ? (
-                    <tr><td colSpan={7} className="text-center py-12 text-gray-400">기록 없음</td></tr>
+                    <tr><td colSpan={8} className="text-center py-12 text-gray-400">기록 없음</td></tr>
                   ) : logs.map(l => (
                     <tr key={l.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
@@ -104,6 +106,12 @@ export function AdminAiLogs() {
                         {l.user_id.slice(0, 8)}…
                       </td>
                       <td className="px-4 py-3 text-xs">{l.feature_type}</td>
+                      <td className="px-4 py-3 text-xs">
+                        <span className={l.provider === 'mock' ? 'text-red-600 font-semibold' : 'text-gray-600'}>
+                          {l.provider}
+                        </span>
+                        <span className="text-gray-400"> / {l.model}</span>
+                      </td>
                       <td className="px-4 py-3">
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLES[l.status] ?? 'bg-gray-100 text-gray-700'}`}>
                           {l.status}
