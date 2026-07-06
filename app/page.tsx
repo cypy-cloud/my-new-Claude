@@ -24,7 +24,7 @@ const FEATURES = [
   {
     icon: FileText, color: "orange", iconBg: "bg-orange-100", iconColor: "text-orange-500",
     title: "AI PDF 설명자료",
-    desc: "복잡한 보험 약관 PDF를 업로드하면 AI가 고객용 쉽은 설명자료로 변환해드립니다.",
+    desc: "복잡한 보험 약관 PDF를 업로드하면 AI가 고객용 쉬운 설명자료로 변환해드립니다.",
     items: ["핵심 보장 내용 요약", "주요 혜택 정리", "보험료 조건 안내", "고객 설명용 예시"],
   },
 ]
