@@ -222,21 +222,23 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
           <ClipboardList className="h-3.5 w-3.5" />
           고객 정보 입력
         </button>
-        <button
-          onClick={() => setActiveTab("qr")}
-          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-            activeTab === "qr"
-              ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          <QrCode className="h-3.5 w-3.5" />
-          MBTI 간이검사 QR
-        </button>
+        {planName !== "무료" && (
+          <button
+            onClick={() => setActiveTab("qr")}
+            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+              activeTab === "qr"
+                ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <QrCode className="h-3.5 w-3.5" />
+            MBTI 간이검사 QR
+          </button>
+        )}
       </div>
 
-      {/* QR 탭 */}
-      {activeTab === "qr" && (
+      {/* QR 탭 — 유료 사용자만 */}
+      {activeTab === "qr" && planName !== "무료" && (
         <Card className="border-orange-200">
           <CardContent className="pt-6 flex flex-col items-center gap-4">
             <div className="text-center space-y-1">
