@@ -22,6 +22,7 @@ export type EventName =
   | 'notice_view'
   | 'changelog_view'
   | 'tutorial_complete'
+  | 'pension_calculator_visit'
 
 export type FeatureType = 'ai_message' | 'ai_script' | 'ai_document' | 'ai_followup'
 
