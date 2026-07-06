@@ -162,7 +162,7 @@ export default function PensionCalculatorPage() {
       <style>{`
         @page {
           size: A4 portrait;
-          margin: 8mm;
+          margin: 0;
         }
         @media print {
           * {
@@ -170,37 +170,32 @@ export default function PensionCalculatorPage() {
             print-color-adjust: exact !important;
             color-adjust: exact !important;
           }
+          html, body {
+            width: 210mm;
+            height: 297mm;
+            overflow: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
           /* 사이드바, 헤더, 하단 네비 숨기기 */
-          aside,
-          header,
-          nav,
-          [class*="bottom-nav"],
-          [class*="BottomNav"] {
-            display: none !important;
-          }
-          /* 사이드바 여백 제거 */
-          [class*="md:pl-64"],
-          .md\\:pl-64 {
-            padding-left: 0 !important;
-          }
           body * { visibility: hidden !important; }
           #pension-print-area,
           #pension-print-area * { visibility: visible !important; }
           #pension-print-area {
-            position: fixed !important;
+            position: absolute !important;
             top: 0 !important;
             left: 0 !important;
-            right: 0 !important;
-            width: 100% !important;
-            padding: 0 !important;
+            width: 210mm !important;
+            padding: 6mm 6mm 0 6mm !important;
             margin: 0 !important;
-            zoom: 0.68;
+            box-sizing: border-box !important;
+            zoom: 0.58 !important;
           }
           /* 2컬럼 그리드 강제 유지 */
           #pension-grid {
             display: grid !important;
             grid-template-columns: repeat(2, 1fr) !important;
-            gap: 16px !important;
+            gap: 14px !important;
           }
           .no-print { display: none !important; }
           .print-header { display: block !important; }
