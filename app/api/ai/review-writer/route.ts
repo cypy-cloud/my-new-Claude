@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     const result = await generateWithAI(prompt, {
       feature: 'ai_script',
       userId: user.id,
-      maxTokens: 1400,
+      maxTokens: 3000,
       temperature: 0.8,
       cacheInput: { productName, keyPoints, customerReaction, outcome, agentStyle, reviewPlatform, reviewTone },
     })

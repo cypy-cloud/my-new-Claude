@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     const result = await generateWithAI(prompt, {
       feature: 'ai_script',
       userId: user.id,
-      maxTokens: 1600,
+      maxTokens: 3000,
       temperature: 0.7,
       cacheInput: { customerName, ageGroup, gender, occupation, familyStatus, childrenStatus, interestProducts, contractDate, birthMonth, currentMonth, currentYear },
     })
