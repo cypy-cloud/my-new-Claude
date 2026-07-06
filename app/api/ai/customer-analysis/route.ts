@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
     existingInsurance,
     mainConcern,
     personality,
+    mbtiType,
     extraNotes,
   } = body
 
@@ -54,9 +55,18 @@ export async function POST(request: NextRequest) {
 - 기존 보험: ${existingInsurance || '없음'}
 - 주요 관심사/걱정: ${mainConcern}
 - 성격 유형: ${personality || '정보 없음'}
+- MBTI: ${mbtiType || '미검사'}
 - 추가 메모: ${extraNotes || '없음'}
 
-아래 형식으로 정확하게 작성해주세요. 추가 메모가 많을수록 더 구체적이고 상세하게 분석해주세요:
+${mbtiType ? `
+MBTI ${mbtiType} 특성을 반드시 분석에 반영해주세요:
+- ${mbtiType[0] === 'I' ? '내향형: 조용하고 신중, 압박보다 충분한 시간과 자료 제공이 효과적' : '외향형: 활동적이고 사교적, 대화와 관계 중심 접근이 효과적'}
+- ${mbtiType[1] === 'N' ? '직관형: 큰 그림과 미래 가능성에 집중, 스토리텔링과 비전 제시에 반응' : '감각형: 구체적 사실과 수치 중심, 실용적 혜택을 명확히 제시해야 효과적'}
+- ${mbtiType[2] === 'F' ? '감정형: 관계와 가치 중심, 공감과 진정성이 핵심, 논리보다 감성 접근' : '사고형: 논리와 분석 중심, 데이터와 근거를 바탕으로 설득해야 효과적'}
+- ${mbtiType[3] === 'P' ? '인식형: 유연하고 개방적, 강요 금물, 선택지를 주고 스스로 결정하게 유도' : '판단형: 계획적이고 결단력 있음, 명확한 플랜과 다음 단계 제시가 효과적'}
+` : ''}
+
+아래 형식으로 정확하게 작성해주세요. MBTI와 추가 메모가 있을수록 더 구체적이고 상세하게 분석해주세요:
 
 [성향분석]
 (이 고객의 심리적 특성, 의사결정 방식, 보험에 대한 태도를 4~5문장으로 상세히 분석)
@@ -88,7 +98,7 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       maxTokens: 1600,
       temperature: 0.7,
-      cacheInput: { ageGroup, gender, occupation, income, familyStatus, hasChildren, existingInsurance, mainConcern, personality, extraNotes },
+      cacheInput: { ageGroup, gender, occupation, income, familyStatus, hasChildren, existingInsurance, mainConcern, personality, mbtiType, extraNotes },
     })
 
     const wasCached = !!result.cachedAt

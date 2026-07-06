@@ -2,15 +2,25 @@
 
 import { useState, useRef } from "react"
 import { toast } from "sonner"
-import { Brain, Copy, RefreshCw, Star, AlertTriangle, MessageSquare, Tag, TrendingUp, Mic, MicOff, Loader2, Save, BookmarkCheck } from "lucide-react"
+import { Brain, Copy, RefreshCw, Star, AlertTriangle, MessageSquare, Tag, TrendingUp, Mic, MicOff, Loader2, Save, BookmarkCheck, QrCode, ClipboardList } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import QRCode from "react-qr-code"
 import type { MonthlyUsageData } from "@/lib/subscription/usage"
 import type { PlanLimits } from "@/lib/subscription/plans"
+
+const MBTI_URL = "https://m.site.naver.com/2bjIA"
+
+const MBTI_TYPES = [
+  "ISTJ", "ISFJ", "INFJ", "INTJ",
+  "ISTP", "ISFP", "INFP", "INTP",
+  "ESTP", "ESFP", "ENFP", "ENTP",
+  "ESTJ", "ESFJ", "ENFJ", "ENTJ",
+]
 
 const AGE_GROUPS = ["20대", "30대 초반", "30대 후반", "40대 초반", "40대 후반", "50대", "60대 이상"]
 const INCOME_LEVELS = ["월 200만원 미만", "월 200~300만원", "월 300~500만원", "월 500만원 이상"]
@@ -44,6 +54,8 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
   const [mainConcern, setMainConcern] = useState("")
   const [personality, setPersonality] = useState("")
   const [extraNotes, setExtraNotes] = useState("")
+  const [mbtiType, setMbtiType] = useState("")
+  const [activeTab, setActiveTab] = useState<"form" | "qr">("form")
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [remaining, setRemaining] = useState(limits.scriptLimit - usage.scriptCount)
@@ -108,7 +120,7 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
     if (!result) return
     setIsSaving(true)
     try {
-      const customerDesc = [ageGroup, gender, occupation, income, familyStatus].filter(Boolean).join(", ")
+      const customerDesc = [ageGroup, gender, occupation, income, familyStatus, mbtiType].filter(Boolean).join(", ")
       const outputText = [
         `[고객 정보] ${customerDesc}`,
         `[주요 관심사] ${mainConcern}`,
@@ -128,7 +140,7 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
           type: 'script',
           title: `고객 성향 분석: ${[ageGroup, gender, occupation].filter(Boolean).join(' ')}`,
           outputText,
-          inputData: { ageGroup, gender, occupation, income, familyStatus, mainConcern, existingInsurance, extraNotes, personality },
+          inputData: { ageGroup, gender, occupation, income, familyStatus, mainConcern, existingInsurance, extraNotes, personality, mbtiType },
         }),
       })
       const data = await res.json()
@@ -155,7 +167,7 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
       const res = await fetch("/api/ai/customer-analysis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ageGroup, gender, occupation, income, familyStatus, hasChildren, existingInsurance, mainConcern, personality, extraNotes }),
+        body: JSON.stringify({ ageGroup, gender, occupation, income, familyStatus, hasChildren, existingInsurance, mainConcern, personality, mbtiType, extraNotes }),
       })
 
       const data = await res.json()
@@ -197,8 +209,56 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
         )}
       </div>
 
+      {/* 탭 */}
+      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 w-fit">
+        <button
+          onClick={() => setActiveTab("form")}
+          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+            activeTab === "form"
+              ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <ClipboardList className="h-3.5 w-3.5" />
+          고객 정보 입력
+        </button>
+        <button
+          onClick={() => setActiveTab("qr")}
+          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+            activeTab === "qr"
+              ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <QrCode className="h-3.5 w-3.5" />
+          MBTI 간이검사 QR
+        </button>
+      </div>
+
+      {/* QR 탭 */}
+      {activeTab === "qr" && (
+        <Card className="border-orange-200">
+          <CardContent className="pt-6 flex flex-col items-center gap-4">
+            <div className="text-center space-y-1">
+              <h3 className="font-semibold text-gray-900 dark:text-white">MBTI 간이검사</h3>
+              <p className="text-sm text-gray-500">고객이 스마트폰으로 QR코드를 스캔하면 바로 검사를 시작할 수 있습니다</p>
+            </div>
+            <div className="bg-white p-4 rounded-xl shadow-md border">
+              <QRCode value={MBTI_URL} size={200} />
+            </div>
+            <div className="flex items-center gap-2 bg-orange-50 dark:bg-orange-950/20 rounded-lg px-4 py-2 text-sm text-orange-700 dark:text-orange-300">
+              <span>📱</span>
+              <span>검사 후 나온 MBTI 유형을 아래 입력 폼에 선택해주세요</span>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setActiveTab("form")}>
+              ← 고객 정보 입력으로 돌아가기
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* 입력 폼 */}
-      <Card>
+      {activeTab === "form" && <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Brain className="h-4 w-4 text-orange-500" />
@@ -257,19 +317,42 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
             </div>
           </div>
 
+          {/* MBTI */}
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
-              <Label>주요 관심사/걱정 <span className="text-red-500">*</span></Label>
-              <select value={mainConcern} onChange={e => setMainConcern(e.target.value)}
-                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
-                <option value="">선택</option>
-                {CONCERNS.map(c => <option key={c} value={c}>{c}</option>)}
+              <div className="flex items-center justify-between">
+                <Label>MBTI 유형 <span className="text-gray-400 text-xs">(선택)</span></Label>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("qr")}
+                  className="flex items-center gap-1 text-xs text-orange-500 hover:text-orange-600 font-medium"
+                >
+                  <QrCode className="h-3 w-3" />
+                  QR 검사
+                </button>
+              </div>
+              <select
+                value={mbtiType}
+                onChange={e => setMbtiType(e.target.value)}
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">모름 / 미검사</option>
+                {MBTI_TYPES.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
             <div className="space-y-1.5">
               <Label>기존 보험 현황</Label>
               <Input placeholder="예: 실손보험 있음, 생명보험 없음..." value={existingInsurance} onChange={e => setExistingInsurance(e.target.value)} />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>주요 관심사/걱정 <span className="text-red-500">*</span></Label>
+            <select value={mainConcern} onChange={e => setMainConcern(e.target.value)}
+              className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+              <option value="">선택</option>
+              {CONCERNS.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
           </div>
 
           <div className="space-y-1.5">
@@ -305,7 +388,7 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
             }
           </Button>
         </CardContent>
-      </Card>
+      </Card>}
 
       {/* 결과 */}
       {result && (
