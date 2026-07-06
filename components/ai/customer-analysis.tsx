@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import QRCode from "react-qr-code"
 import type { MonthlyUsageData } from "@/lib/subscription/usage"
-import type { PlanLimits } from "@/lib/subscription/plans"
+import type { PlanLimits, PlanId } from "@/lib/subscription/plans"
+import { UsageWarningBanner } from "@/components/billing/usage-limit-banner"
 
 const MBTI_URL = "https://m.site.naver.com/2bjIA"
 
@@ -39,11 +40,12 @@ interface AnalysisResult {
 
 interface CustomerAnalysisProps {
   planName: string
+  planId?: PlanId
   limits: PlanLimits
   usage: MonthlyUsageData
 }
 
-export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisProps) {
+export function CustomerAnalysis({ planName, planId, limits, usage }: CustomerAnalysisProps) {
   const [ageGroup, setAgeGroup] = useState("")
   const [gender, setGender] = useState("")
   const [occupation, setOccupation] = useState("")
@@ -237,6 +239,14 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
           <span className="text-xs text-red-600 font-medium">한도 초과 — 업그레이드 필요</span>
         )}
       </div>
+
+      <UsageWarningBanner
+        featureLabel="성향분석·스크립트"
+        used={scriptUsed}
+        limit={scriptLimit}
+        recommendedPlanId={planId === 'pro' ? 'premium' : planId === 'basic' ? 'pro' : null}
+        inline
+      />
 
       {/* 탭 */}
       <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 w-fit">

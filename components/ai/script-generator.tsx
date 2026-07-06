@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge"
 import { useAIGenerate } from "@/hooks/useAIGenerate"
 import { clientTrackFeatureStart, clientTrackDownload } from "@/lib/analytics/client-track"
 import { CategorySelect } from "@/components/ai/category-select"
+import { UsageWarningBanner } from "@/components/billing/usage-limit-banner"
 import { OutputRater } from "@/components/ai/output-rater"
 import { SafetyCheckDisplay } from "@/components/ai/safety-check-display"
 
@@ -76,6 +77,7 @@ interface Props {
   initialUsage: number
   limit: number
   planName: string
+  planId?: string
   initialData?: InitialData
   pensionData?: Record<string, string>
 }
@@ -95,7 +97,7 @@ function buildPensionNote(p: Record<string, string>): string {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function ScriptGenerator({ initialUsage, limit, planName, initialData, pensionData }: Props) {
+export function ScriptGenerator({ initialUsage, limit, planName, planId, initialData, pensionData }: Props) {
   // Form state
   const [customerName, setCustomerName] = useState(initialData?.customerName ?? "")
   const [gender, setGender] = useState(initialData?.gender ?? "")
@@ -407,6 +409,14 @@ export function ScriptGenerator({ initialUsage, limit, planName, initialData, pe
           {isLimitReached && <Badge variant="destructive" className="text-xs">한도 초과</Badge>}
           {!isLimitReached && state.remaining <= 3 && <Badge className="text-xs bg-yellow-500 text-white">{state.remaining}회 남음</Badge>}
         </div>
+
+        <UsageWarningBanner
+          featureLabel="AI 스크립트"
+          used={usedCount}
+          limit={limit}
+          recommendedPlanId={planId === 'basic' ? 'pro' : planId === 'pro' ? 'premium' : null}
+          inline
+        />
 
         {initialData?.customerId && (
           <div className="flex items-center gap-1.5 text-xs text-purple-700 bg-purple-50 border border-purple-100 rounded-lg px-3 py-2">

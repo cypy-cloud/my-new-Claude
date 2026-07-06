@@ -123,6 +123,7 @@ export default async function AiScriptPage({
         initialUsage={usage.scriptCount}
         limit={limits.scriptLimit}
         planName={planName}
+        planId={planId}
         initialData={initialData}
         pensionData={pensionData}
       />

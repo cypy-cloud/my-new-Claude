@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { AlertTriangle, ArrowRight, X } from "lucide-react"
+import { AlertTriangle, ArrowRight, TrendingUp, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import type { PlanId } from "@/lib/subscription/plans"
 import { PLAN_LABELS } from "@/lib/subscription/plans"
@@ -12,6 +12,69 @@ interface Props {
   recommendedPlanId: PlanId | null
   // 기능 페이지 내 인라인 배너용 (업무 흐름 방해 최소화)
   inline?: boolean
+}
+
+interface UsageWarningBannerProps {
+  featureLabel: string
+  used: number
+  limit: number
+  recommendedPlanId?: PlanId | null
+  inline?: boolean
+}
+
+// 70% 이상 사용 시 표시되는 경고 배너
+export function UsageWarningBanner({ featureLabel, used, limit, recommendedPlanId, inline = false }: UsageWarningBannerProps) {
+  const router = useRouter()
+  const [dismissed, setDismissed] = useState(false)
+
+  if (dismissed || limit === 0) return null
+  const pct = Math.round((used / limit) * 100)
+  if (pct < 70) return null
+
+  const isNearLimit = pct >= 90
+
+  const barColor = isNearLimit ? "bg-red-500" : "bg-amber-400"
+  const bgColor = isNearLimit ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"
+  const textColor = isNearLimit ? "text-red-800" : "text-amber-800"
+  const subColor = isNearLimit ? "text-red-600" : "text-amber-700"
+  const iconColor = isNearLimit ? "text-red-500" : "text-amber-500"
+  const dismissColor = isNearLimit ? "text-red-300 hover:text-red-500" : "text-amber-300 hover:text-amber-500"
+
+  return (
+    <div className={`flex items-start gap-2.5 p-3 border rounded-xl text-sm ${bgColor} ${inline ? "" : "mb-2"}`}>
+      {isNearLimit
+        ? <AlertTriangle className={`h-4 w-4 shrink-0 mt-0.5 ${iconColor}`} />
+        : <TrendingUp className={`h-4 w-4 shrink-0 mt-0.5 ${iconColor}`} />
+      }
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <span className={`font-semibold ${textColor}`}>
+            {featureLabel} {pct}% 사용 중 ({used}/{limit}회)
+          </span>
+        </div>
+        <div className="w-full bg-white/60 rounded-full h-1.5 mb-1.5">
+          <div className={`h-1.5 rounded-full transition-all ${barColor}`} style={{ width: `${Math.min(pct, 100)}%` }} />
+        </div>
+        <span className={`text-xs ${subColor}`}>
+          {isNearLimit
+            ? `이번 달 한도가 거의 소진됩니다. `
+            : `이번 달 한도의 70%를 사용했습니다. `
+          }
+          {recommendedPlanId && (
+            <button
+              onClick={() => router.push('/billing')}
+              className="text-[#1e3a5f] font-semibold hover:underline inline-flex items-center gap-0.5"
+            >
+              업그레이드하면 더 여유있게 사용 가능합니다 <ArrowRight className="h-3 w-3" />
+            </button>
+          )}
+        </span>
+      </div>
+      <button onClick={() => setDismissed(true)} className={`shrink-0 ${dismissColor}`}>
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  )
 }
 
 export function UsageLimitBanner({ featureLabel, currentPlanId, recommendedPlanId, inline = false }: Props) {

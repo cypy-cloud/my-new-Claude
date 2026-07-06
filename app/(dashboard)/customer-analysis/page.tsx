@@ -30,7 +30,7 @@ export default async function CustomerAnalysisPage() {
         </p>
       </div>
       <PlanGate currentPlan={planId} requiredPlan="basic" featureName="고객 성향 분석">
-        <CustomerAnalysis planName={planName} limits={limits} usage={usage} />
+        <CustomerAnalysis planName={planName} planId={planId} limits={limits} usage={usage} />
       </PlanGate>
     </div>
   )
