@@ -29,7 +29,7 @@ export default async function CustomerAnalysisPage() {
           고객 정보를 입력하면 AI가 성향을 분석하고 맞춤 상품과 첫마디를 추천해드립니다
         </p>
       </div>
-      <PlanGate currentPlan={planId} requiredPlan="pro" featureName="고객 성향 분석">
+      <PlanGate currentPlan={planId} requiredPlan="basic" featureName="고객 성향 분석">
         <CustomerAnalysis planName={planName} limits={limits} usage={usage} />
       </PlanGate>
     </div>
