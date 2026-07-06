@@ -87,8 +87,10 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
   const [isCorrectingVoice, setIsCorrectingVoice] = useState(false)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null)
+  const transcriptRef = useRef<string>("")
 
   async function correctVoiceInput(rawText: string) {
+    if (!rawText.trim()) return
     setIsCorrectingVoice(true)
     try {
       const res = await fetch("/api/ai/voice-correct", {
@@ -106,10 +108,20 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
     }
   }
 
+  function stopRecording() {
+    try { recognitionRef.current?.stop() } catch { /* ignore */ }
+    recognitionRef.current = null
+    setIsRecording(false)
+    // iOS: onend may fire before onresult, so process transcript on stop too
+    if (transcriptRef.current) {
+      correctVoiceInput(transcriptRef.current)
+      transcriptRef.current = ""
+    }
+  }
+
   function toggleRecording() {
     if (isRecording) {
-      recognitionRef.current?.stop()
-      setIsRecording(false)
+      stopRecording()
       return
     }
 
@@ -120,26 +132,53 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
       return
     }
 
+    transcriptRef.current = ""
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const recognition: any = new SpeechRecognition()
     recognition.lang = "ko-KR"
-    recognition.continuous = false
-    recognition.interimResults = false
+    recognition.continuous = true   // iOS: continuous keeps session alive longer
+    recognition.interimResults = true
 
     recognition.onresult = (e: any) => {
-      const transcript = e.results[0][0].transcript
-      correctVoiceInput(transcript)
+      // Collect all final results
+      let finalText = ""
+      for (let i = 0; i < e.results.length; i++) {
+        if (e.results[i].isFinal) {
+          finalText += e.results[i][0].transcript
+        }
+      }
+      if (finalText) transcriptRef.current = finalText
     }
-    recognition.onerror = () => {
-      toast.error("음성 인식에 실패했습니다. 다시 시도해주세요.")
+
+    recognition.onerror = (e: any) => {
+      if (e.error === "no-speech") {
+        toast.error("음성이 감지되지 않았습니다. 다시 시도해주세요.")
+      } else if (e.error !== "aborted") {
+        toast.error("음성 인식 오류가 발생했습니다. 다시 시도해주세요.")
+      }
+      recognitionRef.current = null
       setIsRecording(false)
     }
-    recognition.onend = () => setIsRecording(false)
+
+    recognition.onend = () => {
+      recognitionRef.current = null
+      setIsRecording(false)
+      if (transcriptRef.current) {
+        correctVoiceInput(transcriptRef.current)
+        transcriptRef.current = ""
+      }
+    }
 
     recognitionRef.current = recognition
-    recognition.start()
-    setIsRecording(true)
-    toast.info("녹음 중... 말씀하세요")
+    try {
+      recognition.start()
+      setIsRecording(true)
+      toast.info("🎤 녹음 중... 말씀 후 [녹음 중지] 버튼을 눌러주세요")
+    } catch {
+      toast.error("음성 입력을 시작할 수 없습니다. 마이크 권한을 확인해주세요.")
+      recognitionRef.current = null
+    }
   }
 
   const { state, generate } = useAIGenerate(
