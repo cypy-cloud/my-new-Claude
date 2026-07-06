@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getPlanLimits, type PlanId, type PlanLimits } from './plans'
 
 export type UsageFeature = 'sms' | 'script' | 'followup' | 'pdf_upload' | 'pdf_analysis' | 'content' | 'newsletter'
@@ -114,6 +115,13 @@ export async function incrementUsage(
   const supabase = await createClient()
   const cost = estimateAiCost(opts.tokenInput ?? 0, opts.tokenOutput ?? 0)
 
+  // 한도 초과 여부 확인 후 크레딧 차감
+  const check = await checkUsageLimit(userId, feature)
+  if (!check.allowed) {
+    const creditFeature = feature === 'sms' ? 'sms' : feature === 'script' ? 'script' : feature === 'followup' ? 'followup' : 'all'
+    await consumeExtraCredit(userId, creditFeature as any)
+  }
+
   await (supabase as any).rpc('increment_usage_record', {
     p_user_id: userId,
     p_feature: feature,
@@ -137,8 +145,13 @@ export function estimateAiCost(inputTokens: number, outputTokens: number): numbe
 export async function blockIfLimitExceeded(userId: string, feature: UsageFeature): Promise<void> {
   const check = await checkUsageLimit(userId, feature)
   if (!check.allowed) {
+    // 추가 크레딧 확인
+    const creditFeature = feature === 'sms' ? 'sms' : feature === 'script' ? 'script' : feature === 'followup' ? 'followup' : 'all'
+    const credits = await getExtraCredits(userId, creditFeature as any)
+    if (credits.totalCredits > 0) return // 크레딧 있으면 통과 (incrementUsage 시 차감)
+
     throw new UsageLimitError(
-      `이번 달 사용 한도(${check.limit}회)를 초과했습니다. 플랜을 업그레이드해주세요.`,
+      `이번 달 사용 한도(${check.limit}회)를 초과했습니다. 추가 크레딧을 구매하거나 플랜을 업그레이드해주세요.`,
       check
     )
   }
@@ -149,6 +162,87 @@ export class UsageLimitError extends Error {
     super(message)
     this.name = 'UsageLimitError'
   }
+}
+
+// ── Extra Credits ─────────────────────────────────────────────────────────────
+
+export interface ExtraCreditsInfo {
+  totalCredits: number   // 유효한 총 잔여 크레딧
+  packs: Array<{ id: string; credits: number; expiresAt: string }>
+}
+
+/** 유효한 추가 크레딧 조회 (만료되지 않은 것만) */
+export async function getExtraCredits(userId: string, featureType: 'script' | 'sms' | 'followup' | 'all' = 'all'): Promise<ExtraCreditsInfo> {
+  const supabase = createAdminClient()
+  const { data } = await (supabase as any)
+    .from('user_extra_credits')
+    .select('id, credits, expires_at')
+    .eq('user_id', userId)
+    .in('feature_type', [featureType, 'all'])
+    .gt('credits', 0)
+    .gt('expires_at', new Date().toISOString())
+    .order('expires_at', { ascending: true })
+
+  const packs = (data ?? []).map((r: any) => ({
+    id: r.id,
+    credits: r.credits,
+    expiresAt: r.expires_at,
+  }))
+
+  return {
+    totalCredits: packs.reduce((sum: number, p: any) => sum + p.credits, 0),
+    packs,
+  }
+}
+
+/** 추가 크레딧에서 1건 차감 (만료 빠른 팩부터) */
+export async function consumeExtraCredit(userId: string, featureType: 'script' | 'sms' | 'followup' | 'all' = 'all'): Promise<boolean> {
+  const supabase = createAdminClient()
+  const { data } = await (supabase as any)
+    .from('user_extra_credits')
+    .select('id, credits')
+    .eq('user_id', userId)
+    .in('feature_type', [featureType, 'all'])
+    .gt('credits', 0)
+    .gt('expires_at', new Date().toISOString())
+    .order('expires_at', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  if (!data) return false
+
+  await (supabase as any)
+    .from('user_extra_credits')
+    .update({ credits: data.credits - 1 })
+    .eq('id', data.id)
+
+  return true
+}
+
+/** 크레딧 구매 후 DB에 추가 */
+export async function addExtraCredits(params: {
+  userId: string
+  featureType: 'script' | 'sms' | 'followup' | 'all'
+  packSize: number
+  amountPaid: number
+  orderId: string
+  paymentKey: string
+}): Promise<void> {
+  const supabase = createAdminClient()
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30일
+
+  await (supabase as any)
+    .from('user_extra_credits')
+    .insert({
+      user_id: params.userId,
+      feature_type: params.featureType,
+      credits: params.packSize,
+      pack_size: params.packSize,
+      amount_paid: params.amountPaid,
+      order_id: params.orderId,
+      payment_key: params.paymentKey,
+      expires_at: expiresAt,
+    })
 }
 
 function getFeatureCounts(
