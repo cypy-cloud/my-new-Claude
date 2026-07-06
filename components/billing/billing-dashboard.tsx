@@ -293,7 +293,7 @@ function PaymentFailedBanner({ status }: { status: string }) {
           결제가 계속 실패하면 서비스 이용이 제한될 수 있습니다.
         </p>
         <p className="text-xs text-gray-400 mt-2">
-          * 실제 카드 변경 기능은 Toss/Stripe 연동 후 활성화됩니다.
+          * 실제 카드 변경 기능은 포트원/Stripe 연동 후 활성화됩니다.
         </p>
       </div>
       <button onClick={() => setDismissed(true)} className="text-red-300 hover:text-red-500">

@@ -12,7 +12,7 @@
 - **AI 모델**: Anthropic Claude
   - 기본(대부분 기능): `claude-haiku-4-5-20251001`
   - 고품질(스크립트+성향분석 포함, SMS 5번째 초안): `claude-sonnet-5`
-- **결제**: Toss Payments (연동 예정, 현재 구조만 구현)
+- **결제**: 포트원(PortOne) + 한국결제네트웍스(KPN) — 일반결제/정기결제(빌링키) 코드 구현 완료, PG 계약 심사 중
 - **배포 브랜치**: `main` → Vercel 자동 배포
 
 ---
@@ -73,15 +73,18 @@
 
 ---
 
-## Toss 결제 연동 시 반드시 구현할 것 (TODO)
+## 포트원(PortOne) 결제 연동 현황
 
-`lib/billing/toss-provider.ts` 에 상세 주석 있음.
+`lib/billing/portone-provider.ts` 에 상세 주석 있음. PG는 한국결제네트웍스(KPN)로 신청,
+가입비/연회비 무료 + 빌링·수기 수수료 2.90%(부가세 별도, 계약 확정 전 잠정치).
 
-1. **빌링키 발급** (`issueBillingKey`) — 최초 카드 등록
-2. **빌링키 자동청구** (`chargeBillingKey`) — 구독 월정액 Cron + 크레딧 원클릭 결제
-3. **빌링키 삭제** — 카드 변경/삭제
-4. **profiles 테이블 컬럼 추가**: `toss_billing_key`, `toss_customer_key`, `billing_card_last4`, `billing_card_brand`
-5. **크레딧 원클릭 결제**: `components/billing/credits-purchase-modal.tsx` 내 TODO 주석 위치에 분기 추가
+- [x] 일반결제(요금제/크레딧 1회 결제) — `PortOne.requestPayment()`, 리다이렉트 없이 응답 즉시 확인
+- [x] 빌링키 발급/자동청구/삭제 — `verifyBillingKey`/`chargeBillingKey`/`deleteBillingKey`
+- [x] profiles 컬럼: `portone_billing_key`, `portone_customer_id`, `billing_card_last4`, `billing_card_brand`
+- [x] 구독 만료 크론에서 빌링키 자동 갱신 시도 (`app/api/cron/subscription-check/route.ts`)
+- [ ] **PG 계약 승인 후 남은 작업**: Vercel에 `PORTONE_API_SECRET`, `NEXT_PUBLIC_PORTONE_STORE_ID`,
+      `NEXT_PUBLIC_PORTONE_CHANNEL_KEY`, `PORTONE_WEBHOOK_SECRET` 실제 값 설정 → 실결제 테스트
+- [ ] 확정된 최종 수수료율을 이 문서 "수익률 계산 기준" 절의 3.6%와 대조해 필요 시 갱신
 
 ---
 
@@ -101,7 +104,7 @@
 
 ### 결제/구독
 - [x] 요금제 페이지 (기본/프로/프리미엄)
-- [x] Toss Payments 위젯 연동 구조 (실계정 연동 전)
+- [x] 포트원(PortOne) 일반결제/빌링키 연동 구조 (PG 계약 승인 전)
 - [x] 초과 크레딧 5개 팩 구매 플로우
 - [x] 70%/90% 사용량 경고 배너
 - [x] 한도 초과 배너 + 크레딧 구매 버튼
@@ -123,7 +126,7 @@
 ## 앞으로 할 것 (우선순위 순)
 
 1. **생애주기 알림 UI 완성** (Task #24 in_progress)
-2. **Toss 실계정 연동** — 빌링키 자동결제 포함
+2. **포트원 PG 계약 승인 후 실계정 연동** — 환경변수 설정 및 실결제 테스트
 3. **뉴스레터 생성 기능 고도화** (현재 기본 구현)
 4. **고객 DB 연동** — 고객 정보 저장/불러오기로 스크립트 자동완성
 5. **모바일 UX 개선** — 음성 입력, 결과 공유 등

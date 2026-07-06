@@ -68,9 +68,9 @@ export function CreditsPurchaseModal({ open, onClose, featureLabel = "AI 기능"
   }
 
   function goToCheckoutRedirect() {
-    const orderId = `credits-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    const paymentId = `credits${Date.now()}${Math.random().toString(36).slice(2, 8)}`
     const params = new URLSearchParams({
-      orderId,
+      paymentId,
       amount: String(selectedPack.price),
       packSize: String(selectedPack.packSize),
     })
@@ -206,7 +206,7 @@ export function CreditsPurchaseModal({ open, onClose, featureLabel = "AI 기능"
             </Button>
             <div className="flex items-center justify-center gap-1 mt-2.5 text-xs text-gray-400">
               <ShieldCheck className="h-3 w-3" />
-              Toss Payments 안전 결제
+              포트원 안전 결제
             </div>
           </>
         )}

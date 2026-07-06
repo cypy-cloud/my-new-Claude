@@ -25,7 +25,7 @@ export interface WebhookResult {
 // 공급자별 웹훅 이벤트를 처리하는 진입점
 export async function handleWebhookEvent(event: WebhookEvent): Promise<WebhookResult> {
   try {
-    if (event.provider === 'toss') return await handleTossEvent(event)
+    if (event.provider === 'portone') return await handlePortOneEvent(event)
     if (event.provider === 'stripe') return await handleStripeEvent(event)
     return { handled: false, error: `지원하지 않는 provider: ${event.provider}` }
   } catch (err) {
@@ -34,42 +34,22 @@ export async function handleWebhookEvent(event: WebhookEvent): Promise<WebhookRe
   }
 }
 
-// ── Toss Payments 웹훅 ────────────────────────────────────────────────────
-// 참고: https://docs.tosspayments.com/reference/webhooks
-async function handleTossEvent(event: WebhookEvent): Promise<WebhookResult> {
-  const d = event.data
-
+// ── 포트원(PortOne) 웹훅 ──────────────────────────────────────────────────
+// 참고: https://developers.portone.io/opi/ko/integration/webhook/readme-v2
+// 구독/크레딧 활성화는 체크아웃 페이지의 동기 확인 흐름(POST /api/billing/verify 등)에서
+// 이미 처리되므로, 이 웹훅은 결제 상태 변경을 놓치지 않기 위한 보조 확인 용도다.
+async function handlePortOneEvent(event: WebhookEvent): Promise<WebhookResult> {
   switch (event.eventType) {
-    case 'PAYMENT_STATUS_CHANGED': {
-      // placeholder: 실제 Toss 웹훅 페이로드 필드 맞춰 구현
-      const { userId, planId, amount, paymentKey, status } = d as {
-        userId: string; planId: PlanId; amount: number; paymentKey: string; status: string
-      }
+    case 'Transaction.Paid':
+      return { handled: true, action: 'transaction_paid_ack' }
 
-      if (status === 'DONE') {
-        const sub = await activateSubscription({ userId, planType: planId, provider: 'toss', providerSubscriptionId: paymentKey })
-        await recordPayment({
-          userId, subscriptionId: sub.id, amount, provider: 'toss',
-          providerTxId: paymentKey, status: 'succeeded', paidAt: new Date(),
-        })
-        return { handled: true, action: 'activated' }
-      }
-
-      if (status === 'CANCELED' || status === 'ABORTED') {
-        await recordPayment({ userId, amount, provider: 'toss', providerTxId: paymentKey, status: 'canceled' })
-        return { handled: true, action: 'payment_canceled' }
-      }
-
-      return { handled: false, action: `unknown toss status: ${status}` }
-    }
-
-    case 'BILLING_AUTH_STATUS_CHANGED': {
-      // 빌링키 상태 변경 — placeholder
-      return { handled: true, action: 'billing_auth_status_changed (placeholder)' }
-    }
+    case 'Transaction.Cancelled':
+    case 'Transaction.PartialCancelled':
+      // placeholder: 환불/부분취소 시 payments 레코드 상태 갱신 필요
+      return { handled: true, action: 'transaction_cancelled (placeholder)' }
 
     default:
-      return { handled: false, action: `unhandled toss event: ${event.eventType}` }
+      return { handled: false, action: `unhandled portone event: ${event.eventType}` }
   }
 }
 

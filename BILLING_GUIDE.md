@@ -62,32 +62,34 @@ API에서 `blockIfLimitExceeded()` 호출 → 한도 초과 시 HTTP 429 반환:
 
 ## 3. 결제 연동 예정 구조
 
-> **현재 상태**: 결제 미연동. Toss Payments 연동 예정.
+> **현재 상태**: 포트원(PortOne) + 한국결제네트웍스(KPN)로 연동 중 (PG 계약 심사 진행 중).
 
-### 연동 계획 (Phase 2)
+### 연동 구조
 
 ```
 사용자 → 업그레이드 버튼 클릭
-         → Toss Payments 결제 위젯 띄우기
+         → PortOne.requestPayment(...) 결제창 띄우기 (리다이렉트 없이 그 자리에서 응답)
          → 결제 완료
-         → POST /api/billing/webhook (결제 성공 콜백)
-              → profiles.plan_type 업데이트
+         → POST /api/billing/verify (동기 확인) → profiles.plan_type 업데이트
               → subscriptions 테이블 구독 정보 저장
-              → 사용자에게 업그레이드 완료 알림
+         → POST /api/billing/webhook?provider=portone (보조 확인용 웹훅)
 ```
 
 ### 준비된 코드
 
-- `app/api/billing/webhook/route.ts` — 웹훅 수신 엔드포인트 (서명 검증 TODO)
-- `app/api/billing/checkout/route.ts` — 결제 세션 생성 (TODO)
-- `lib/subscription/plans.ts` — 플랜 정의 (이미 구현)
-- `components/billing/upgrade-button.tsx` — 업그레이드 버튼 (UI만 구현)
+- `lib/billing/portone-provider.ts` — 결제/빌링키 전체 로직
+- `app/api/billing/webhook/route.ts` — 웹훅 수신 엔드포인트
+- `app/api/billing/checkout/route.ts` — 결제 세션(paymentId) 생성
+- `lib/subscription/plans.ts` — 플랜 정의
+- `components/billing/upgrade-button.tsx` — 업그레이드 버튼
 
 ### 필요한 환경변수
 
 ```bash
-NEXT_PUBLIC_TOSS_CLIENT_KEY=test_ck_...   # 클라이언트 측 위젯 초기화용
-TOSS_PAYMENTS_SECRET_KEY=test_sk_...      # 서버 측 결제 승인용
+NEXT_PUBLIC_PORTONE_STORE_ID=store-...       # 클라이언트 측 결제창 초기화용
+NEXT_PUBLIC_PORTONE_CHANNEL_KEY=channel-...  # 한국결제네트웍스(KPN) 채널 키
+PORTONE_API_SECRET=...                       # 서버 측 결제 승인/조회용 (V2 API Secret)
+PORTONE_WEBHOOK_SECRET=whsec_...             # 웹훅 서명 검증용
 ```
 
 ---
@@ -144,4 +146,4 @@ TOSS_PAYMENTS_SECRET_KEY=test_sk_...      # 서버 측 결제 승인용
 
 - AI 모델: Claude Sonnet 4.6 (Input $3/MTok, Output $15/MTok)
 - 환율 기준: ₩1,555.10/USD (2026-07-02)
-- Toss 수수료: 결제금액 × 3.3% + ₩110
+- PG 수수료: 한국결제네트웍스(KPN) 빌링·수기 기준 2.90% (부가세 별도, 최종 계약서 확정 전 잠정치)

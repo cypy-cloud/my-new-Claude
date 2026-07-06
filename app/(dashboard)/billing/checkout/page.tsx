@@ -55,7 +55,7 @@ function CheckoutContent() {
   }
 
   if (status === "idle" && !isMock) {
-    // 실제 결제 provider 화면 (Toss/Stripe로 리다이렉트 전 중간 화면)
+    // 실제 결제 provider 화면 (포트원/Stripe로 리다이렉트 전 중간 화면)
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
         <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
@@ -71,7 +71,7 @@ function CheckoutContent() {
         </div>
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 max-w-sm text-center">
           <p className="text-amber-700 text-sm font-medium">🔧 결제 시스템 준비 중</p>
-          <p className="text-amber-600 text-xs mt-1">토스페이먼츠 연동 예정입니다. 현재는 테스트 모드로 바로 적용됩니다.</p>
+          <p className="text-amber-600 text-xs mt-1">전자결제 대행사 연동 예정입니다. 현재는 테스트 모드로 바로 적용됩니다.</p>
         </div>
         <Button
           className="bg-[#1e3a5f] text-white hover:bg-[#162d4a]"

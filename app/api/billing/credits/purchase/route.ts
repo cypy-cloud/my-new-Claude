@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json(credits)
 }
 
-// POST: 크레딧 구매 확정 (Toss 결제 완료 후 호출)
+// POST: 크레딧 구매 확정 (PG 결제 완료 후 호출)
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
   }
   const finalPackSize = Number(resolvedPackSize)
 
-  // Toss 결제 검증
+  // PG 결제 검증
   const adapter = await getBillingAdapter()
   const result = await adapter.verifyPayment({ sessionId: orderId, paymentKey, orderId, amount })
 

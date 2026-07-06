@@ -1,6 +1,6 @@
 import type { PlanId } from '@/lib/subscription/plans'
 
-export type BillingProvider = 'mock' | 'toss' | 'portone' | 'stripe'
+export type BillingProvider = 'mock' | 'portone' | 'stripe'
 
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'expired'
 export type PaymentStatus = 'pending' | 'succeeded' | 'failed' | 'refunded' | 'canceled'
@@ -62,7 +62,7 @@ export interface BillingProviderAdapter {
 }
 
 export function getActiveProvider(): BillingProvider {
-  if (process.env.TOSS_SECRET_KEY) return 'toss'
+  if (process.env.PORTONE_API_SECRET) return 'portone'
   if (process.env.STRIPE_SECRET_KEY) return 'stripe'
   return 'mock'
 }
@@ -70,9 +70,9 @@ export function getActiveProvider(): BillingProvider {
 export async function getBillingAdapter(): Promise<BillingProviderAdapter> {
   const provider = getActiveProvider()
   switch (provider) {
-    case 'toss': {
-      const { TossProvider } = await import('./toss-provider')
-      return new TossProvider()
+    case 'portone': {
+      const { PortOneProvider } = await import('./portone-provider')
+      return new PortOneProvider()
     }
     case 'stripe': {
       const { StripeProvider } = await import('./stripe-provider')

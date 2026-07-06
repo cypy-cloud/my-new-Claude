@@ -104,14 +104,15 @@ user < manager < admin < super_admin
 | `ANTHROPIC_API_KEY` | `lib/ai/anthropic-provider.ts` (서버 전용) |
 | `OPENAI_API_KEY` | `lib/ai/openai-provider.ts` (서버 전용) |
 | `CRON_SECRET` | `app/api/cron/cleanup-files/route.ts` (서버 전용) |
-| `TOSS_PAYMENTS_SECRET_KEY` | `app/api/billing/` (서버 전용) |
+| `PORTONE_API_SECRET` | `app/api/billing/`, `lib/billing/portone-provider.ts` (서버 전용) |
+| `PORTONE_WEBHOOK_SECRET` | `app/api/billing/webhook/route.ts` (서버 전용) |
 
 ### 공개 가능한 키 (`NEXT_PUBLIC_*`)
 
 - `NEXT_PUBLIC_SUPABASE_URL`: 공개 가능
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: 공개 가능 (RLS로 보호됨)
 - `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_APP_NAME`: 공개 가능
-- `NEXT_PUBLIC_TOSS_CLIENT_KEY`: 공개 가능 (결제 위젯 초기화용)
+- `NEXT_PUBLIC_PORTONE_STORE_ID`, `NEXT_PUBLIC_PORTONE_CHANNEL_KEY`: 공개 가능 (결제창 초기화용)
 
 ### .gitignore 확인
 
@@ -147,17 +148,11 @@ git rm --cached .env.local
 
 ---
 
-## 8. 결제 웹훅 보안 (예정)
+## 8. 결제 웹훅 보안
 
-현재 `app/api/billing/webhook/route.ts`의 서명 검증이 placeholder 상태입니다.
-Toss Payments 실 연동 시 반드시 HMAC 서명 검증을 구현해야 합니다:
-
-```typescript
-// TODO: 결제 연동 시 구현 필요
-function verifyTossSignature(payload: string, signature: string): boolean {
-  // HMAC-SHA256 검증 로직
-}
-```
+`lib/billing/portone-provider.ts`의 `verifyWebhookSignature`가 포트원 웹훅(Svix 기반,
+webhook-id/webhook-timestamp/webhook-signature 헤더)의 HMAC-SHA256 서명을 검증합니다.
+`PORTONE_WEBHOOK_SECRET` 발급 후 실제 웹훅 페이로드로 한 번 검증해봐야 합니다.
 
 ---
 

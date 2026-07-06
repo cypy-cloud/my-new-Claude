@@ -4,15 +4,24 @@ import { handleWebhookEvent } from '@/lib/billing/payment-webhook'
 
 export async function POST(request: NextRequest) {
   const rawBody = await request.text()
-  const provider = request.nextUrl.searchParams.get('provider') as 'toss' | 'stripe' | null
+  const provider = request.nextUrl.searchParams.get('provider') as 'portone' | 'stripe' | null
 
-  if (!provider || (provider !== 'toss' && provider !== 'stripe')) {
-    return NextResponse.json({ error: 'provider=toss|stripe 필수' }, { status: 400 })
+  if (!provider || (provider !== 'portone' && provider !== 'stripe')) {
+    return NextResponse.json({ error: 'provider=portone|stripe 필수' }, { status: 400 })
   }
 
   // provider별 어댑터로 서명 검증
   const adapter = await getBillingAdapter()
-  const signature = request.headers.get('toss-signature') ?? request.headers.get('stripe-signature') ?? ''
+  let signature = ''
+  if (provider === 'portone') {
+    // 포트원 웹훅(Svix 기반)은 3개 헤더가 필요해 "id.timestamp.signature" 형식으로 조합한다.
+    const id = request.headers.get('webhook-id') ?? ''
+    const timestamp = request.headers.get('webhook-timestamp') ?? ''
+    const sig = request.headers.get('webhook-signature') ?? ''
+    signature = id && timestamp && sig ? `${id}.${timestamp}.${sig}` : ''
+  } else {
+    signature = request.headers.get('stripe-signature') ?? ''
+  }
 
   if (signature && !adapter.verifyWebhookSignature(rawBody, signature)) {
     return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 400 })

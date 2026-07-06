@@ -377,7 +377,7 @@ export function AdminBilling() {
       {tab === 'payments'      && <PaymentsTab />}
 
       <p className="text-xs text-gray-400 text-center pt-2">
-        실제 결제 연동 전: mock 데이터만 표시됩니다. Toss 또는 Stripe 키 설정 후 실데이터 반영.
+        실제 결제 연동 전: mock 데이터만 표시됩니다. 포트원 또는 Stripe 키 설정 후 실데이터 반영.
       </p>
     </div>
   )
