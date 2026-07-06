@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { toast } from "sonner"
-import { Brain, Copy, RefreshCw, Star, AlertTriangle, MessageSquare, Tag, TrendingUp } from "lucide-react"
+import { Brain, Copy, RefreshCw, Star, AlertTriangle, MessageSquare, Tag, TrendingUp, Mic, MicOff, Loader2, Save, BookmarkCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -47,6 +47,100 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [remaining, setRemaining] = useState(limits.scriptLimit - usage.scriptCount)
+  const [isSaving, setIsSaving] = useState(false)
+  const [savedId, setSavedId] = useState<string | null>(null)
+  const [isRecording, setIsRecording] = useState(false)
+  const [isCorrectingVoice, setIsCorrectingVoice] = useState(false)
+  const recognitionRef = useRef<any>(null)
+  const transcriptRef = useRef("")
+
+  async function correctVoiceInput(rawText: string) {
+    if (!rawText.trim()) return
+    setIsCorrectingVoice(true)
+    try {
+      const res = await fetch("/api/ai/voice-correct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rawText, context: { purpose: "고객메모", tone: "자연스러운" } }),
+      })
+      const data = await res.json()
+      setExtraNotes(prev => (prev ? prev + " " : "") + (data.corrected ?? rawText))
+    } catch {
+      setExtraNotes(prev => (prev ? prev + " " : "") + rawText)
+    } finally {
+      setIsCorrectingVoice(false)
+    }
+  }
+
+  function stopRecording() {
+    recognitionRef.current?.stop()
+    setIsRecording(false)
+    const transcript = transcriptRef.current.trim()
+    transcriptRef.current = ""
+    if (transcript) correctVoiceInput(transcript)
+  }
+
+  function toggleRecording() {
+    if (isRecording) { stopRecording(); return }
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) { toast.error("이 브라우저는 음성 입력을 지원하지 않습니다"); return }
+    const recognition = new SpeechRecognition()
+    recognition.lang = "ko-KR"
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognitionRef.current = recognition
+    transcriptRef.current = ""
+    recognition.onresult = (e: any) => {
+      let final = ""
+      for (let i = 0; i < e.results.length; i++) {
+        if (e.results[i].isFinal) final += e.results[i][0].transcript
+      }
+      if (final) transcriptRef.current = final
+    }
+    recognition.onend = () => { if (isRecording) stopRecording() }
+    recognition.onerror = () => { setIsRecording(false); toast.error("음성 인식 오류가 발생했습니다") }
+    recognition.start()
+    setIsRecording(true)
+    toast.info("녹음 중... 말씀하신 후 정지 버튼을 누르세요")
+  }
+
+  async function handleSave() {
+    if (!result) return
+    setIsSaving(true)
+    try {
+      const customerDesc = [ageGroup, gender, occupation, income, familyStatus].filter(Boolean).join(", ")
+      const outputText = [
+        `[고객 정보] ${customerDesc}`,
+        `[주요 관심사] ${mainConcern}`,
+        existingInsurance ? `[기존 보험] ${existingInsurance}` : null,
+        extraNotes ? `[메모] ${extraNotes}` : null,
+        `\n[성향 분석]\n${result.personality}`,
+        `\n[예측 니즈]\n${result.needs.map((n, i) => `${i + 1}. ${n}`).join('\n')}`,
+        result.products.length > 0 ? `\n[추천 상품]\n${result.products.map((p, i) => `${i + 1}순위: ${p.name} — ${p.reason}`).join('\n')}` : null,
+        result.firstLine ? `\n[추천 첫마디]\n"${result.firstLine}"` : null,
+        result.cautions ? `\n[주의사항]\n${result.cautions}` : null,
+      ].filter(Boolean).join('\n')
+
+      const res = await fetch('/api/outputs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'script',
+          title: `고객 성향 분석: ${[ageGroup, gender, occupation].filter(Boolean).join(' ')}`,
+          outputText,
+          inputData: { ageGroup, gender, occupation, income, familyStatus, mainConcern, existingInsurance, extraNotes, personality },
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setSavedId(data.id)
+      toast.success('내 결과물 보관함에 저장되었습니다!')
+    } catch {
+      toast.error('저장에 실패했습니다')
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   async function handleAnalyze() {
     if (!ageGroup) { toast.error("나이대를 선택해주세요"); return }
@@ -55,6 +149,7 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
 
     setLoading(true)
     setResult(null)
+    setSavedId(null)
 
     try {
       const res = await fetch("/api/ai/customer-analysis", {
@@ -178,8 +273,29 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
           </div>
 
           <div className="space-y-1.5">
-            <Label>추가 메모 <span className="text-gray-400 text-xs">(선택)</span></Label>
-            <Textarea placeholder="상담 시 파악한 특이사항, 고객의 말투, 반응 등..." value={extraNotes} onChange={e => setExtraNotes(e.target.value)} rows={2} />
+            <div className="flex items-center justify-between">
+              <Label>추가 메모 <span className="text-gray-400 text-xs">(선택)</span></Label>
+              <button
+                type="button"
+                onClick={toggleRecording}
+                disabled={isCorrectingVoice}
+                className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full border transition-colors ${
+                  isRecording
+                    ? "bg-red-50 border-red-300 text-red-600 animate-pulse"
+                    : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
+                }`}
+              >
+                {isCorrectingVoice ? (
+                  <><Loader2 className="h-3 w-3 animate-spin" />교정 중</>
+                ) : isRecording ? (
+                  <><MicOff className="h-3 w-3" />정지</>
+                ) : (
+                  <><Mic className="h-3 w-3" />음성 입력</>
+                )}
+              </button>
+            </div>
+            <Textarea placeholder="상담 시 파악한 특이사항, 고객의 말투, 반응 등..." value={extraNotes} onChange={e => setExtraNotes(e.target.value)} rows={2} className="resize-none text-sm" />
+            <p className="text-xs text-gray-400">마이크 버튼으로 음성 입력도 가능합니다. 어설픈 발음도 AI가 자동 교정합니다.</p>
           </div>
 
           <Button onClick={handleAnalyze} disabled={loading} className="w-full bg-orange-500 hover:bg-orange-600 text-white" size="lg">
@@ -296,9 +412,23 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
             </Card>
           )}
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 flex-wrap">
             <Button variant="outline" size="sm" onClick={handleAnalyze} disabled={loading}>
               <RefreshCw className="h-3.5 w-3.5 mr-1.5" />다시 분석
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={isSaving || !!savedId}
+              className={savedId ? "bg-green-600 hover:bg-green-600 text-white" : "bg-orange-500 hover:bg-orange-600 text-white"}
+            >
+              {isSaving ? (
+                <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />저장 중</>
+              ) : savedId ? (
+                <><BookmarkCheck className="h-3.5 w-3.5 mr-1.5" />저장 완료</>
+              ) : (
+                <><Save className="h-3.5 w-3.5 mr-1.5" />보관함에 저장</>
+              )}
             </Button>
           </div>
         </div>
