@@ -224,7 +224,14 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
   async function handleCopy(key: string) {
     const raw = sections[key] ?? ""
     if (!raw) return
-    const text = raw.replace(/\n*\[보험 관련 유의사항\][\s\S]*/i, "").trimEnd()
+    const text = raw
+      .replace(/\n*\[보험 관련 유의사항\][\s\S]*/i, "")  // 유의사항 제거
+      .replace(/^#{1,6}\s*/gm, "")   // ## 제목 마크다운 제거
+      .replace(/^---+\s*$/gm, "")    // --- 구분선 제거
+      .replace(/\*\*(.*?)\*\*/g, "$1") // **굵게** 제거
+      .replace(/\*(.*?)\*/g, "$1")     // *기울임* 제거
+      .replace(/\n{3,}/g, "\n\n")      // 3줄 이상 빈줄 → 2줄로
+      .trimEnd()
     await navigator.clipboard.writeText(text)
     setCopiedKey(key)
     toast.success("클립보드에 복사되었습니다")
