@@ -49,6 +49,7 @@ interface SidebarProps {
   profile: Profile | null
   planName?: string
   onNavigate?: () => void
+  mobile?: boolean
 }
 
 function NavLink({ href, label, icon: Icon, pathname, onClick }: {
@@ -72,7 +73,7 @@ function NavLink({ href, label, icon: Icon, pathname, onClick }: {
   )
 }
 
-export function Sidebar({ profile, planName, onNavigate }: SidebarProps) {
+export function Sidebar({ profile, planName, onNavigate, mobile }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -90,7 +91,12 @@ export function Sidebar({ profile, planName, onNavigate }: SidebarProps) {
   return (
     <>
     <style>{`.sidebar-nav::-webkit-scrollbar{display:none!important;width:0!important}`}</style>
-    <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 bg-[#1e3a5f] overflow-hidden h-full w-64">
+    <aside className={cn(
+      "bg-[#1e3a5f] overflow-hidden",
+      mobile
+        ? "flex flex-col w-64 h-full"
+        : "hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0"
+    )}>
       <div className="flex items-center h-16 px-5 border-b border-white/10">
         <Link href="/dashboard" className="flex items-center gap-2.5">
           <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
