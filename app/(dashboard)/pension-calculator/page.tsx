@@ -160,12 +160,57 @@ export default function PensionCalculatorPage() {
 
       {/* 인쇄 전용 CSS */}
       <style>{`
+        @page {
+          size: A4 portrait;
+          margin: 8mm;
+        }
         @media print {
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
+          /* 사이드바, 헤더, 하단 네비 숨기기 */
+          aside,
+          header,
+          nav,
+          [class*="bottom-nav"],
+          [class*="BottomNav"] {
+            display: none !important;
+          }
+          /* 사이드바 여백 제거 */
+          [class*="md:pl-64"],
+          .md\\:pl-64 {
+            padding-left: 0 !important;
+          }
           body * { visibility: hidden !important; }
-          #pension-print-area, #pension-print-area * { visibility: visible !important; }
-          #pension-print-area { position: fixed !important; inset: 0 !important; padding: 20px !important; background: white !important; }
+          #pension-print-area,
+          #pension-print-area * { visibility: visible !important; }
+          #pension-print-area {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            zoom: 0.68;
+          }
+          /* 2컬럼 그리드 강제 유지 */
+          #pension-grid {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 16px !important;
+          }
           .no-print { display: none !important; }
           .print-header { display: block !important; }
+          /* 배경색 보존 */
+          .bg-red-50 { background-color: #fef2f2 !important; }
+          .bg-blue-50 { background-color: #eff6ff !important; }
+          .bg-orange-50 { background-color: #fff7ed !important; }
+          .bg-green-50 { background-color: #f0fdf4 !important; }
+          .bg-gray-50 { background-color: #f9fafb !important; }
+          .bg-gray-100 { background-color: #f3f4f6 !important; }
         }
         .print-header { display: none; }
       `}</style>
@@ -210,7 +255,7 @@ export default function PensionCalculatorPage() {
         <p className="text-xs text-gray-400 mt-1">작성일: {new Date().toLocaleDateString("ko-KR")} | FP AI Assistant</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div id="pension-grid" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* 입력 패널 */}
         <div className="space-y-4">
