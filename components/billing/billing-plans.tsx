@@ -1,10 +1,20 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, XCircle, Zap, Shield, Star, Crown } from "lucide-react"
 import { PLANS, type PlanId } from "@/lib/subscription/plans"
 import { UpgradeButton } from "@/components/billing/upgrade-button"
+
+interface UsageStatus {
+  smsCount: number
+  scriptCount: number
+  followupCount: number
+  pdfUploadCount: number
+  pdfAnalysisCount: number
+  contentCount: number
+  newsletterCount: number
+}
 
 const PLAN_UI: Record<PlanId, {
   icon: React.ComponentType<{ className?: string }>
@@ -84,6 +94,24 @@ interface BillingPlansProps {
 
 export function BillingPlans({ currentPlanId }: BillingPlansProps) {
   const [annual, setAnnual] = useState(false)
+  const [usage, setUsage] = useState<UsageStatus | null>(null)
+
+  useEffect(() => {
+    fetch('/api/billing/usage-status')
+      .then(r => r.json())
+      .then(data => {
+        setUsage({
+          smsCount: data.features?.find((f: any) => f.key === 'sms')?.used ?? 0,
+          scriptCount: data.features?.find((f: any) => f.key === 'script')?.used ?? 0,
+          followupCount: data.features?.find((f: any) => f.key === 'followup')?.used ?? 0,
+          pdfUploadCount: data.features?.find((f: any) => f.key === 'pdf_upload')?.used ?? 0,
+          pdfAnalysisCount: data.features?.find((f: any) => f.key === 'pdf_analysis')?.used ?? 0,
+          contentCount: 0,
+          newsletterCount: 0,
+        })
+      })
+      .catch(() => null)
+  }, [])
 
   return (
     <div className="space-y-4">
@@ -181,6 +209,8 @@ export function BillingPlans({ currentPlanId }: BillingPlansProps) {
                 planId={planId}
                 isCurrent={isCurrent}
                 isDowngrade={isDowngrade}
+                currentPlanId={currentPlanId}
+                currentUsage={usage}
               />
             </div>
           )
