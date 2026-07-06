@@ -57,6 +57,7 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
   const [mbtiType, setMbtiType] = useState("")
   const [activeTab, setActiveTab] = useState<"form" | "qr">("form")
   const [loading, setLoading] = useState(false)
+  const [loadingStep, setLoadingStep] = useState(0)
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [remaining, setRemaining] = useState(limits.scriptLimit - usage.scriptCount)
   const [isSaving, setIsSaving] = useState(false)
@@ -65,6 +66,32 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
   const [isCorrectingVoice, setIsCorrectingVoice] = useState(false)
   const recognitionRef = useRef<any>(null)
   const transcriptRef = useRef("")
+  const loadingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const LOADING_STEPS = [
+    "고객 정보 분석 중...",
+    "MBTI 성향 파악 중...",
+    "보험 상담 전략 수립 중...",
+    "맞춤 분석 리포트 작성 중...",
+  ]
+
+  function startLoadingSteps() {
+    setLoadingStep(0)
+    let step = 0
+    loadingTimerRef.current = setInterval(() => {
+      step += 1
+      if (step < 4) setLoadingStep(step)
+      else if (loadingTimerRef.current) clearInterval(loadingTimerRef.current)
+    }, 3000)
+  }
+
+  function stopLoadingSteps() {
+    if (loadingTimerRef.current) {
+      clearInterval(loadingTimerRef.current)
+      loadingTimerRef.current = null
+    }
+    setLoadingStep(0)
+  }
 
   async function correctVoiceInput(rawText: string) {
     if (!rawText.trim()) return
@@ -162,6 +189,7 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
     setLoading(true)
     setResult(null)
     setSavedId(null)
+    startLoadingSteps()
 
     try {
       const res = await fetch("/api/ai/customer-analysis", {
@@ -186,6 +214,7 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
     } catch {
       toast.error("네트워크 오류가 발생했습니다")
     } finally {
+      stopLoadingSteps()
       setLoading(false)
     }
   }
@@ -387,10 +416,17 @@ export function CustomerAnalysis({ planName, limits, usage }: CustomerAnalysisPr
 
           <Button onClick={handleAnalyze} disabled={loading} className="w-full bg-orange-500 hover:bg-orange-600 text-white" size="lg">
             {loading
-              ? <><RefreshCw className="h-4 w-4 mr-2 animate-spin" />분석 중...</>
+              ? <><RefreshCw className="h-4 w-4 mr-2 animate-spin" />{LOADING_STEPS[loadingStep]}</>
               : <><Brain className="h-4 w-4 mr-2" />고객 성향 분석하기</>
             }
           </Button>
+          {loading && (
+            <div className="flex justify-center gap-1.5 pt-1">
+              {LOADING_STEPS.map((_, i) => (
+                <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i <= loadingStep ? 'w-8 bg-orange-400' : 'w-2 bg-gray-200'}`} />
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>}
 
