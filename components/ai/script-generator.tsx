@@ -7,7 +7,7 @@ import {
   Zap, Bookmark, BookmarkCheck, BookOpen,
   ClipboardList, Handshake, Coffee, HelpCircle, Lightbulb,
   Package, Users, ShieldAlert, CheckSquare, MessageSquare,
-  Mic, MicOff, Loader2, Calculator,
+  Mic, MicOff, Loader2, Calculator, Brain, ChevronDown, ChevronUp,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -112,6 +112,37 @@ export function ScriptGenerator({ initialUsage, limit, planName, initialData, pe
   const [agentStyle, setAgentStyle] = useState("친근하고 따뜻하게")
   const [extraNotes, setExtraNotes] = useState(initialData?.extraNotes ?? "")
   const [categoryId, setCategoryId] = useState("")
+
+  // 고객성향분석 결과 불러오기
+  const [analysisResults, setAnalysisResults] = useState<Array<{ id: string; title: string; output_text: string; created_at: string }>>([])
+  const [analysisLoading, setAnalysisLoading] = useState(false)
+  const [analysisOpen, setAnalysisOpen] = useState(false)
+  const [selectedAnalysis, setSelectedAnalysis] = useState<string | null>(null)
+  const [selectedAnalysisText, setSelectedAnalysisText] = useState("")
+
+  async function loadAnalysisResults() {
+    if (analysisResults.length > 0) { setAnalysisOpen(o => !o); return }
+    setAnalysisLoading(true)
+    try {
+      const res = await fetch('/api/outputs?type=script&limit=20')
+      const data = await res.json()
+      // 고객성향분석으로 저장된 것만 필터 (title에 "성향분석" 포함)
+      const filtered = (data.outputs ?? []).filter((o: any) => o.title?.includes('성향분석') || o.title?.includes('고객분석'))
+      setAnalysisResults(filtered)
+      setAnalysisOpen(true)
+    } catch {
+      toast.error('분석 결과를 불러오지 못했습니다')
+    } finally {
+      setAnalysisLoading(false)
+    }
+  }
+
+  function applyAnalysis(id: string, text: string, title: string) {
+    setSelectedAnalysis(id)
+    setSelectedAnalysisText(text)
+    setAnalysisOpen(false)
+    toast.success(`"${title}" 분석 결과가 반영되었습니다`)
+  }
 
   // pensionData는 별도 고정 표시 (extraNotes와 합쳐서 API로만 전달)
   const pensionNote = pensionData ? buildPensionNote(pensionData) : ""
@@ -220,7 +251,11 @@ export function ScriptGenerator({ initialUsage, limit, planName, initialData, pe
       customerName, gender, ageGroup, occupation, maritalStatus, hasChildren,
       incomeLevel, existingInsurance, productInterest, consultationPurpose,
       customerPersonality, expectedObjections, agentStyle,
-      extraNotes: [extraNotes, pensionNote].filter(Boolean).join("\n\n"),
+      extraNotes: [
+        selectedAnalysisText ? `[고객성향분석 결과]\n${selectedAnalysisText}` : '',
+        extraNotes,
+        pensionNote,
+      ].filter(Boolean).join("\n\n"),
       categoryId, forceRegenerate,
     }
   }
@@ -422,6 +457,60 @@ export function ScriptGenerator({ initialUsage, limit, planName, initialData, pe
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">상담 전략</p>
         <ChipSelect label="고객 성향" value={customerPersonality} onChange={setCustomerPersonality} options={PERSONALITIES} columns={1} />
         <ChipSelect label="설계사 스타일" value={agentStyle} onChange={setAgentStyle} options={AGENT_STYLES} columns={2} />
+
+        {/* 고객성향분석 결과 불러오기 */}
+        <div className="space-y-1.5">
+          <button
+            type="button"
+            onClick={loadAnalysisResults}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-purple-200 bg-purple-50 hover:bg-purple-100 transition-colors text-sm text-purple-700"
+          >
+            <div className="flex items-center gap-2">
+              <Brain className="h-4 w-4" />
+              <span className="font-medium">고객성향분석 결과 불러오기</span>
+              {selectedAnalysis && <span className="text-xs bg-purple-200 text-purple-800 px-1.5 py-0.5 rounded-full">반영됨</span>}
+            </div>
+            {analysisLoading
+              ? <Loader2 className="h-4 w-4 animate-spin" />
+              : analysisOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+            }
+          </button>
+
+          {analysisOpen && (
+            <div className="border border-purple-200 rounded-lg overflow-hidden">
+              {analysisResults.length === 0 ? (
+                <div className="px-3 py-4 text-xs text-gray-500 text-center">
+                  저장된 고객성향분석 결과가 없습니다.<br />
+                  고객성향분석 후 결과를 먼저 저장해주세요.
+                </div>
+              ) : (
+                <div className="max-h-48 overflow-y-auto divide-y divide-gray-100">
+                  {analysisResults.map(r => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => applyAnalysis(r.id, r.output_text, r.title)}
+                      className={`w-full text-left px-3 py-2.5 hover:bg-purple-50 transition-colors ${selectedAnalysis === r.id ? 'bg-purple-50' : ''}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-800 truncate">{r.title}</p>
+                        {selectedAnalysis === r.id && <CheckCircle className="h-3.5 w-3.5 text-purple-500 shrink-0 ml-1" />}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-0.5">{new Date(r.created_at).toLocaleDateString('ko-KR')}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {selectedAnalysisText && (
+            <div className="bg-purple-50 border border-purple-200 rounded-lg px-3 py-2 text-xs text-purple-800 leading-relaxed line-clamp-3">
+              {selectedAnalysisText.slice(0, 120)}...
+              <button type="button" onClick={() => { setSelectedAnalysis(null); setSelectedAnalysisText('') }} className="ml-2 text-purple-400 hover:text-purple-600 underline">해제</button>
+            </div>
+          )}
+        </div>
 
         {/* 연금계산기 분석 결과 고정 표시 */}
         {pensionNote && (
