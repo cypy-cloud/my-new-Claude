@@ -84,8 +84,21 @@ export default function TermsPage() {
           </ul>
         </section>
 
+        <section className="space-y-3 mb-8" id="refund">
+          <h2 className="text-lg font-semibold text-[#1e3a5f]">제6조 (환불 정책)</h2>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>유료 플랜 결제 후 서비스를 1회 이상 이용한 경우, 원칙적으로 환불이 불가합니다.</li>
+            <li>서비스를 전혀 이용하지 않은 경우, 결제일로부터 7일 이내에 고객센터(gocypy@gmail.com)로
+              문의하시면 환불이 가능합니다.</li>
+            <li>추가 크레딧은 구매 후 1건이라도 사용한 경우 환불이 불가하며, 미사용 크레딧에 한해
+              구매일로부터 7일 이내 환불 요청이 가능합니다.</li>
+            <li>회사의 귀책사유(서비스 장애 등)로 정상적인 이용이 불가능했던 기간에 대해서는 별도로
+              환불 또는 이용 기간 연장을 협의합니다.</li>
+          </ul>
+        </section>
+
         <section className="space-y-3 mb-8">
-          <h2 className="text-lg font-semibold text-[#1e3a5f]">제6조 (이용자의 의무)</h2>
+          <h2 className="text-lg font-semibold text-[#1e3a5f]">제7조 (이용자의 의무)</h2>
           <ul className="list-disc pl-5 space-y-1">
             <li>이용자는 서비스를 관계 법령, 이 약관, 이용 안내 및 회사가 통지하는 사항을 준수하여 이용해야 합니다.</li>
             <li>이용자는 서비스를 이용하여 생성한 콘텐츠를 허위·과장 광고, 불법적인 보험 모집 행위 등에
@@ -95,7 +108,7 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-3 mb-8">
-          <h2 className="text-lg font-semibold text-[#1e3a5f]">제7조 (계약 해지 및 서비스 이용 제한)</h2>
+          <h2 className="text-lg font-semibold text-[#1e3a5f]">제8조 (계약 해지 및 서비스 이용 제한)</h2>
           <p>
             이용자는 언제든지 설정 메뉴를 통해 회원 탈퇴(해지)를 요청할 수 있습니다. 회사는 이용자가 이 약관을
             위반하거나 서비스의 정상적인 운영을 방해한 경우, 사전 통지 후 서비스 이용을 제한하거나 계약을
@@ -104,7 +117,7 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-3 mb-8">
-          <h2 className="text-lg font-semibold text-[#1e3a5f]">제8조 (약관의 변경)</h2>
+          <h2 className="text-lg font-semibold text-[#1e3a5f]">제9조 (약관의 변경)</h2>
           <p>
             회사는 필요한 경우 관계 법령을 위반하지 않는 범위에서 이 약관을 변경할 수 있으며, 변경 시
             서비스 내 공지 또는 이메일을 통해 사전 안내합니다.
@@ -112,7 +125,7 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-3 mb-8">
-          <h2 className="text-lg font-semibold text-[#1e3a5f]">제9조 (분쟁 해결 및 관할)</h2>
+          <h2 className="text-lg font-semibold text-[#1e3a5f]">제10조 (분쟁 해결 및 관할)</h2>
           <p>
             이 약관과 관련하여 회사와 이용자 간 발생한 분쟁에 대해서는 대한민국 법을 적용하며,
             분쟁 발생 시 민사소송법상의 관할 법원에 소를 제기할 수 있습니다.
