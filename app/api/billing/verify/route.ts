@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getBillingAdapter } from '@/lib/billing/billing-provider'
 import { activateSubscription, changePlan, recordPayment } from '@/lib/billing/subscription-service'
-import type { PlanId } from '@/lib/subscription/plans'
+import { PLANS, type PlanId } from '@/lib/subscription/plans'
 
 const PLAN_RANK: Record<PlanId, number> = { free: 0, basic: 1, pro: 2, premium: 3 }
+const PAYABLE_PLANS: PlanId[] = ['basic', 'pro', 'premium']
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -22,6 +23,14 @@ export async function POST(request: NextRequest) {
 
   if (!sessionId || !planId) {
     return NextResponse.json({ error: 'sessionId, planId 필수' }, { status: 400 })
+  }
+
+  // amount는 클라이언트가 함께 보내는 값이라, 실제 결제 검증(adapter.verifyPayment)이
+  // "결제된 금액 == 요청 금액"만 확인하는 것과 별개로, "요청 금액 == 해당 플랜의 정가"인지도
+  // 반드시 서버에서 재검증해야 한다. 그렇지 않으면 싼 플랜을 결제해놓고 planId만
+  // 비싼 플랜으로 바꿔 보내는 방식으로 무단 업그레이드가 가능해진다.
+  if (!PAYABLE_PLANS.includes(planId) || amount === undefined || amount !== PLANS[planId].price) {
+    return NextResponse.json({ error: '결제 금액이 요청한 플랜과 일치하지 않습니다' }, { status: 400 })
   }
 
   // 현재 플랜 조회

@@ -77,7 +77,7 @@ export default async function DashboardPage() {
       limit: limits.contentLimit,
       icon: FileEdit,
       color: "green",
-      href: "/content-generator",
+      href: "/content-creator",
     },
     {
       label: "뉴스레터 생성",
@@ -124,7 +124,7 @@ export default async function DashboardPage() {
     { href: "/ai-script", label: "AI 스크립트", desc: "맞춤형 상담 스크립트", icon: BookOpen, color: "purple" },
     { href: "/ai-document", label: "AI PDF 분석", desc: "PDF 설명자료 자동화", icon: FileText, color: "orange" },
     ...(limits.contentLimit > 0
-      ? [{ href: "/content-generator", label: "SNS·블로그", desc: "콘텐츠 자동 생성", icon: FileEdit, color: "green" }]
+      ? [{ href: "/content-creator", label: "SNS·블로그", desc: "콘텐츠 자동 생성", icon: FileEdit, color: "green" }]
       : []),
     ...(limits.newsletterLimit > 0
       ? [{ href: "/newsletter", label: "뉴스레터", desc: "뉴스레터 자동 작성", icon: Newspaper, color: "teal" }]

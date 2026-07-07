@@ -33,7 +33,7 @@ function CheckoutContent() {
       const res = await fetch("/api/billing/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, planId: plan }),
+        body: JSON.stringify({ sessionId, planId: plan, orderId: sessionId, amount: PLANS[plan].price }),
       })
       const data = await res.json()
       if (!res.ok) {
