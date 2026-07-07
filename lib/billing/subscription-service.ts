@@ -10,6 +10,7 @@ export interface Subscription {
   provider: BillingProvider
   providerCustomerId: string | null
   providerSubscriptionId: string | null
+  billingInterval: 'month' | 'year'
   currentPeriodStart: string
   currentPeriodEnd: string
   cancelAtPeriodEnd: boolean
@@ -52,6 +53,7 @@ export async function activateSubscription(params: {
   provider: BillingProvider
   providerCustomerId?: string
   providerSubscriptionId?: string
+  billingInterval?: 'month' | 'year'
   periodStart?: Date
   periodEnd?: Date
 }): Promise<Subscription> {
@@ -70,6 +72,7 @@ export async function activateSubscription(params: {
       provider: params.provider,
       provider_customer_id: params.providerCustomerId ?? null,
       provider_subscription_id: params.providerSubscriptionId ?? null,
+      billing_interval: params.billingInterval ?? 'month',
       current_period_start: start.toISOString(),
       current_period_end: end.toISOString(),
       cancel_at_period_end: false,
@@ -367,6 +370,7 @@ function rowToSubscription(row: any): Subscription {
     provider: row.provider,
     providerCustomerId: row.provider_customer_id ?? null,
     providerSubscriptionId: row.provider_subscription_id ?? null,
+    billingInterval: row.billing_interval ?? 'month',
     currentPeriodStart: row.current_period_start,
     currentPeriodEnd: row.current_period_end,
     cancelAtPeriodEnd: row.cancel_at_period_end ?? false,

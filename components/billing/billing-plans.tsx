@@ -211,6 +211,7 @@ export function BillingPlans({ currentPlanId }: BillingPlansProps) {
                 isDowngrade={isDowngrade}
                 currentPlanId={currentPlanId}
                 currentUsage={usage}
+                annual={annual && plan.annualPrice > 0}
               />
             </div>
           )

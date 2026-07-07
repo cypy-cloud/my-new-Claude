@@ -27,7 +27,7 @@ async function handleCheck(request: NextRequest) {
   // 1. 이미 만료된 유료 구독 → 빌링키 자동 청구 시도, 실패/미등록 시 무료 플랜 전환
   const { data: expired } = await (admin as any)
     .from('subscriptions')
-    .select('user_id, plan_type, profiles!inner(portone_billing_key, portone_customer_id)')
+    .select('user_id, plan_type, billing_interval, profiles!inner(portone_billing_key, portone_customer_id)')
     .eq('status', 'active')
     .neq('plan_type', 'free')
     .lt('current_period_end', now.toISOString())
@@ -36,24 +36,39 @@ async function handleCheck(request: NextRequest) {
   let renewedCount = 0
   for (const row of expired ?? []) {
     const planId = row.plan_type as PlanId
+    const billingInterval: 'month' | 'year' = row.billing_interval === 'year' ? 'year' : 'month'
     const billingKey = row.profiles?.portone_billing_key
     const customerId = row.profiles?.portone_customer_id
 
     if (billingKey && customerId) {
+      const amount = billingInterval === 'year' && PLANS[planId].annualPrice > 0
+        ? PLANS[planId].annualPrice
+        : PLANS[planId].price
       const paymentId = `renew${row.user_id.replace(/-/g, '').slice(0, 10)}${Date.now()}`
       const result = await provider.chargeBillingKey({
         billingKey,
         customerId,
-        amount: PLANS[planId].price,
+        amount,
         paymentId,
-        orderName: `FP AI Assistant ${PLANS[planId].name} 플랜 정기결제`,
+        orderName: `FP AI Assistant ${PLANS[planId].name} 플랜 정기결제 (${billingInterval === 'year' ? '연간' : '월간'})`,
       })
 
       if (result.success) {
-        await activateSubscription({ userId: row.user_id, planType: planId, provider: 'portone', providerCustomerId: customerId })
+        const periodEnd = billingInterval === 'year'
+          ? new Date(now.getFullYear() + 1, now.getMonth(), now.getDate())
+          : new Date(now.getFullYear(), now.getMonth() + 1, now.getDate())
+
+        await activateSubscription({
+          userId: row.user_id,
+          planType: planId,
+          provider: 'portone',
+          providerCustomerId: customerId,
+          billingInterval,
+          periodEnd,
+        })
         await recordPayment({
           userId: row.user_id,
-          amount: PLANS[planId].price,
+          amount,
           provider: 'portone',
           providerTxId: result.paymentId ?? paymentId,
           status: 'succeeded',

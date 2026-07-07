@@ -9,13 +9,14 @@ export class MockProvider implements BillingProviderAdapter {
     userId: string
     planId: PlanId
     amount: number
+    interval: 'month' | 'year'
     returnUrl: string
     cancelUrl?: string
   }): Promise<CheckoutSession> {
     const sessionId = `mock_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
     // mock: returnUrl에 세션 ID와 플랜을 붙여서 바로 리다이렉트
-    const checkoutUrl = `${params.returnUrl}?session_id=${sessionId}&plan=${params.planId}&mock=1`
-    return { sessionId, checkoutUrl, provider: 'mock', planId: params.planId, amount: params.amount }
+    const checkoutUrl = `${params.returnUrl}?session_id=${sessionId}&plan=${params.planId}&interval=${params.interval}&mock=1`
+    return { sessionId, checkoutUrl, provider: 'mock', planId: params.planId, amount: params.amount, interval: params.interval }
   }
 
   async verifyPayment(params: { sessionId: string }): Promise<PaymentResult> {

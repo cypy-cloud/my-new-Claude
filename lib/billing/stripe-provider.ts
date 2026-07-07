@@ -25,6 +25,7 @@ export class StripeProvider implements BillingProviderAdapter {
     userId: string
     planId: PlanId
     amount: number
+    interval: 'month' | 'year'
     returnUrl: string
     cancelUrl?: string
   }): Promise<CheckoutSession> {
@@ -48,6 +49,7 @@ export class StripeProvider implements BillingProviderAdapter {
       provider: 'stripe',
       planId: params.planId,
       amount: params.amount,
+      interval: params.interval,
     }
   }
 

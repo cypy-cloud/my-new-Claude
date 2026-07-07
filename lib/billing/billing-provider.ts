@@ -11,6 +11,7 @@ export interface CheckoutSession {
   provider: BillingProvider
   planId: PlanId
   amount: number
+  interval: 'month' | 'year'
 }
 
 export interface PaymentResult {
@@ -39,6 +40,7 @@ export interface BillingProviderAdapter {
     userId: string
     planId: PlanId
     amount: number
+    interval: 'month' | 'year'
     returnUrl: string
     cancelUrl?: string
   }): Promise<CheckoutSession>

@@ -9,9 +9,10 @@ const VALID_PLANS: PlanId[] = ["basic", "pro", "premium"]
 export default async function PortOneCheckoutPage({
   searchParams,
 }: {
-  searchParams: Promise<{ planId?: string; paymentId?: string }>
+  searchParams: Promise<{ planId?: string; paymentId?: string; interval?: string }>
 }) {
-  const { planId, paymentId } = await searchParams
+  const { planId, paymentId, interval: rawInterval } = await searchParams
+  const interval: "month" | "year" = rawInterval === "year" ? "year" : "month"
 
   if (!planId || !VALID_PLANS.includes(planId as PlanId) || !paymentId) {
     redirect("/billing")
@@ -38,7 +39,7 @@ export default async function PortOneCheckoutPage({
     <div className="max-w-lg mx-auto py-8 px-4">
       <div className="mb-6">
         <h1 className="text-xl font-bold text-[#1e3a5f]">
-          {PLAN_LABELS[planId as PlanId]} 플랜 결제
+          {PLAN_LABELS[planId as PlanId]} 플랜 결제 {interval === "year" ? "(연간)" : "(월간)"}
         </h1>
         <p className="text-sm text-gray-500 mt-1">아래에서 결제를 진행해 주세요</p>
       </div>
@@ -46,6 +47,7 @@ export default async function PortOneCheckoutPage({
       <PortOneCheckout
         planId={planId as PlanId}
         paymentId={paymentId}
+        interval={interval}
         storeId={storeId}
         channelKey={channelKey}
         fullName={profile?.name ?? "이용자"}

@@ -24,6 +24,7 @@ interface Props {
   isDowngrade: boolean
   currentPlanId?: PlanId
   currentUsage?: UsageStatus | null
+  annual?: boolean
 }
 
 // 현재 플랜 대비 사용량 요약 (사용 중인 기능만)
@@ -54,7 +55,7 @@ function buildUsageSummary(
   return lines
 }
 
-export function UpgradeButton({ planId, isCurrent, isDowngrade, currentPlanId, currentUsage }: Props) {
+export function UpgradeButton({ planId, isCurrent, isDowngrade, currentPlanId, currentUsage, annual }: Props) {
   const [loading, setLoading] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const router = useRouter()
@@ -98,7 +99,7 @@ export function UpgradeButton({ planId, isCurrent, isDowngrade, currentPlanId, c
       const res = await fetch('/api/billing/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId }),
+        body: JSON.stringify({ planId, interval: annual ? 'year' : 'month' }),
       })
       const data = await res.json()
       if (!res.ok) {

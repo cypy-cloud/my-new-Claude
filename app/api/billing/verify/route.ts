@@ -13,23 +13,28 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
 
   const body = await request.json()
-  const { sessionId, planId, paymentKey, orderId, amount } = body as {
+  const { sessionId, planId, paymentKey, orderId, amount, interval: rawInterval } = body as {
     sessionId: string
     planId: PlanId
     paymentKey?: string
     orderId?: string
     amount?: number
+    interval?: 'month' | 'year'
   }
+  const interval: 'month' | 'year' = rawInterval === 'year' ? 'year' : 'month'
 
   if (!sessionId || !planId) {
     return NextResponse.json({ error: 'sessionId, planId 필수' }, { status: 400 })
   }
 
   // amount는 클라이언트가 함께 보내는 값이라, 실제 결제 검증(adapter.verifyPayment)이
-  // "결제된 금액 == 요청 금액"만 확인하는 것과 별개로, "요청 금액 == 해당 플랜의 정가"인지도
+  // "결제된 금액 == 요청 금액"만 확인하는 것과 별개로, "요청 금액 == 해당 플랜의 정가(월/연)"인지도
   // 반드시 서버에서 재검증해야 한다. 그렇지 않으면 싼 플랜을 결제해놓고 planId만
   // 비싼 플랜으로 바꿔 보내는 방식으로 무단 업그레이드가 가능해진다.
-  if (!PAYABLE_PLANS.includes(planId) || amount === undefined || amount !== PLANS[planId].price) {
+  const expectedAmount = interval === 'year' && PLANS[planId]?.annualPrice > 0
+    ? PLANS[planId].annualPrice
+    : PLANS[planId]?.price
+  if (!PAYABLE_PLANS.includes(planId) || amount === undefined || amount !== expectedAmount) {
     return NextResponse.json({ error: '결제 금액이 요청한 플랜과 일치하지 않습니다' }, { status: 400 })
   }
 
@@ -81,13 +86,20 @@ export async function POST(request: NextRequest) {
       .maybeSingle()
     subscriptionId = sub?.id ?? ''
   } else {
-    // 업그레이드 또는 동급: 즉시 적용
+    // 업그레이드 또는 동급: 즉시 적용. 연간 결제는 구독 기간을 1년으로 설정.
+    const now = new Date()
+    const periodEnd = interval === 'year'
+      ? new Date(now.getFullYear() + 1, now.getMonth(), now.getDate())
+      : new Date(now.getFullYear(), now.getMonth() + 1, now.getDate())
+
     const subscription = await activateSubscription({
       userId: user.id,
       planType: planId,
       provider: result.provider,
       providerCustomerId: result.customerId,
       providerSubscriptionId: result.subscriptionId ?? result.transactionId,
+      billingInterval: interval,
+      periodEnd,
     })
     subscriptionId = subscription.id
   }

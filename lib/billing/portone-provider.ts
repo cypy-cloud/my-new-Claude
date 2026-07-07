@@ -51,14 +51,15 @@ export class PortOneProvider implements BillingProviderAdapter {
     userId: string
     planId: PlanId
     amount: number
+    interval: 'month' | 'year'
     returnUrl: string
     cancelUrl?: string
   }): Promise<CheckoutSession> {
     const paymentId = `plan${params.userId.replace(/-/g, '').slice(0, 10)}${Date.now()}`
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-    const checkoutUrl = `${appUrl}/billing/checkout/portone?planId=${params.planId}&paymentId=${paymentId}`
+    const checkoutUrl = `${appUrl}/billing/checkout/portone?planId=${params.planId}&paymentId=${paymentId}&interval=${params.interval}`
 
-    return { sessionId: paymentId, checkoutUrl, provider: 'portone', planId: params.planId, amount: params.amount }
+    return { sessionId: paymentId, checkoutUrl, provider: 'portone', planId: params.planId, amount: params.amount, interval: params.interval }
   }
 
   // 클라이언트에서 결제 완료 응답을 받은 뒤, 서버에서 실제 결제 상태를 재조회해 확정한다.

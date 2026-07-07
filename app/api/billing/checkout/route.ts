@@ -12,7 +12,8 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
 
   const body = await request.json()
-  const { planId } = body as { planId: PlanId }
+  const { planId, interval: rawInterval } = body as { planId: PlanId; interval?: 'month' | 'year' }
+  const interval: 'month' | 'year' = rawInterval === 'year' ? 'year' : 'month'
 
   if (!VALID_PLANS.includes(planId)) {
     return NextResponse.json({ error: '유효하지 않은 요금제입니다' }, { status: 400 })
@@ -28,19 +29,21 @@ export async function POST(request: NextRequest) {
   }
 
   const plan = PLANS[planId]
+  const amount = interval === 'year' && plan.annualPrice > 0 ? plan.annualPrice : plan.price
   const returnUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/billing/checkout/complete`
 
   const adapter = await getBillingAdapter()
   const session = await adapter.createCheckoutSession({
     userId: user.id,
     planId,
-    amount: plan.price,
+    amount,
+    interval,
     returnUrl,
   })
 
   await trackEvent('upgrade_click', {
     userId: user.id,
-    metadata: { fromPlan: currentPlan, toPlan: planId, provider: session.provider, amount: plan.price },
+    metadata: { fromPlan: currentPlan, toPlan: planId, interval, provider: session.provider, amount },
   })
 
   await (supabase as any).from('subscription_events').insert({
@@ -48,7 +51,7 @@ export async function POST(request: NextRequest) {
     event_type: 'checkout_initiated',
     from_plan: currentPlan,
     to_plan: planId,
-    amount: plan.price,
+    amount,
     provider: session.provider,
     provider_tx_id: session.sessionId,
     status: 'pending',
