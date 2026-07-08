@@ -11,16 +11,16 @@ export const maxDuration = 60
 
 const DISCLAIMER = '\n\n【필수 고지문】\n본 자료는 업로드된 자료를 바탕으로 AI가 작성한 참고용 설명자료입니다. 실제 보장 여부, 보험금 지급 여부, 가입 가능 여부는 해당 보험회사의 약관, 인수기준, 심사결과에 따라 달라질 수 있습니다.'
 
-const SECTION_MARKERS = ['SUMMARY', 'COVERAGE', 'MISCONCEPTIONS', 'QNA', 'AGENT_SCRIPT', 'CAUTION']
+const SECTION_MARKERS = ['SUMMARY', 'COVERAGE', 'MISCONCEPTIONS', 'QNA', 'AGENT_SCRIPT']
 
 // 여러 섹션을 한 번에 생성하면 Vercel 서버리스 60초 제한을 넘기기 쉬워 타임아웃으로
 // 실패한다. 그룹으로 나눠 병렬 호출해 소요시간을 줄인다. 설계사가 이미 아는 내용인
-// 체크리스트/면책사항은 제외하고, 실제 상담에 쓰는 AGENT_SCRIPT는 다른 섹션과 예산을
-// 나눠 쓰지 않도록 단독 호출로 분리해 더 풍성하게 생성한다.
+// 체크리스트/면책사항/주의문구는 제외하고, 실제 상담에 쓰는 AGENT_SCRIPT는 다른 섹션과
+// 예산을 나눠 쓰지 않도록 단독 호출로 분리해 더 풍성하게 생성한다.
 const SECTION_GROUPS = [
-  { sections: ['SUMMARY', 'COVERAGE', 'MISCONCEPTIONS'] as const, maxTokens: 3500 },
-  { sections: ['QNA', 'CAUTION'] as const, maxTokens: 3500 },
-  { sections: ['AGENT_SCRIPT'] as const, maxTokens: 3000 },
+  { sections: ['SUMMARY', 'COVERAGE', 'MISCONCEPTIONS'] as const, maxTokens: 4000 },
+  { sections: ['QNA'] as const, maxTokens: 3000 },
+  { sections: ['AGENT_SCRIPT'] as const, maxTokens: 3500 },
 ]
 
 const PDF_CONTENT_LIMIT = 12_000

@@ -40,7 +40,6 @@ const OUTPUT_TABS = [
   { key: "MISCONCEPTIONS", icon: Eye,            label: "오해하기 쉬운 부분", color: "amber" },
   { key: "QNA",            icon: HelpCircle,     label: "예상 Q&A",         color: "teal" },
   { key: "AGENT_SCRIPT",   icon: MessageSquare,  label: "상담사 멘트",       color: "indigo" },
-  { key: "CAUTION",        icon: AlertCircle,    label: "주의 문구",         color: "orange" },
 ] as const
 
 type TabKey = typeof OUTPUT_TABS[number]["key"]
