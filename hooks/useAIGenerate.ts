@@ -70,7 +70,17 @@ export function useAIGenerate(
           body: JSON.stringify(params),
         })
 
-        const data = await res.json()
+        let data: any
+        try {
+          data = await res.json()
+        } catch {
+          // 서버 타임아웃 등으로 JSON이 아닌 응답(플랫폼 에러 페이지 등)이 온 경우
+          throw new Error(
+            res.ok
+              ? '응답을 처리하지 못했습니다. 다시 시도해주세요.'
+              : '요청 처리 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.'
+          )
+        }
 
         if (!res.ok) {
           // 409 duplicate — silent, don't retry

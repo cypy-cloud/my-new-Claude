@@ -13,6 +13,11 @@ const DISCLAIMER = '\n\n【필수 고지문】\n본 자료는 업로드된 자�
 
 const SECTION_MARKERS = ['SUMMARY', 'COVERAGE', 'MISCONCEPTIONS', 'CHECKLIST', 'EXCLUSIONS', 'QNA', 'AGENT_SCRIPT', 'CAUTION']
 
+// 8개 섹션을 한 번에 생성하면(9000 토큰) Vercel 서버리스 60초 제한을 넘기기 쉬워
+// 타임아웃으로 실패한다. 두 그룹으로 나눠 병렬 호출해 체감/실제 소요시간을 절반으로 줄인다.
+const SECTION_GROUP_A = ['SUMMARY', 'COVERAGE', 'MISCONCEPTIONS', 'CHECKLIST'] as const
+const SECTION_GROUP_B = ['EXCLUSIONS', 'QNA', 'AGENT_SCRIPT', 'CAUTION'] as const
+
 const PDF_CONTENT_LIMIT = 12_000
 
 function parseOutputSections(raw: string, disclaimer: string = DISCLAIMER): Record<string, string> {
@@ -86,7 +91,7 @@ export async function POST(request: NextRequest) {
 
   const category = await resolveProductCategory(categoryId)
 
-  let prompt = renderPrompt(template, {
+  let basePrompt = renderPrompt(template, {
     pdf_content: pdfContent,
     age_group: ageGroup || '정보 없음',
     occupation: occupation || '정보 없음',
@@ -97,10 +102,16 @@ export async function POST(request: NextRequest) {
     extra_requests: extraRequests || '없음',
   })
   const categoryAddendum = buildProductCategoryAddendum(category)
-  if (categoryAddendum) prompt = `${prompt}\n\n${categoryAddendum}`
+  if (categoryAddendum) basePrompt = `${basePrompt}\n\n${categoryAddendum}`
   const fullDisclaimer = category?.riskNotice ? `${DISCLAIMER}\n${category.riskNotice}` : DISCLAIMER
 
-  const cacheInput = {
+  const groupPrompt = (group: readonly string[]) =>
+    `${basePrompt}\n\n※ 위 섹션 중 아래 섹션만 작성하세요 (그 외 섹션은 작성하지 마세요): ${group.map(s => `[${s}]`).join(', ')}`
+
+  const promptA = groupPrompt(SECTION_GROUP_A)
+  const promptB = groupPrompt(SECTION_GROUP_B)
+
+  const baseCacheInput = {
     fileId,
     ageGroup, occupation, customerSituation, explanationPurpose,
     difficultyLevel, formatStyle, extraRequests, categoryId: category?.id ?? null,
@@ -108,32 +119,39 @@ export async function POST(request: NextRequest) {
     pdfPreview: fileRow.extracted_text.slice(0, 500),
   }
 
-  let result
+  const genOpts = (group: readonly string[], prompt: string, force: boolean) => ({
+    feature: 'ai_document' as const,
+    userId: user.id,
+    maxTokens: 5000,
+    temperature: 0.6,
+    cacheInput: { ...baseCacheInput, group: group.join(',') },
+    promptVersion: version,
+    forceRegenerate: force,
+  })
+
+  let resultA: Awaited<ReturnType<typeof generateWithAI>>
+  let resultB: Awaited<ReturnType<typeof generateWithAI>>
   let sections: Record<string, string>
   try {
-    result = await generateWithAI(prompt, {
-      feature: 'ai_document',
-      userId: user.id,
-      maxTokens: 9000,
-      temperature: 0.6,
-      cacheInput,
-      promptVersion: version,
-      forceRegenerate,
-    })
-    sections = parseOutputSections(result.text, fullDisclaimer)
+    ;[resultA, resultB] = await Promise.all([
+      generateWithAI(promptA, genOpts(SECTION_GROUP_A, promptA, forceRegenerate)),
+      generateWithAI(promptB, genOpts(SECTION_GROUP_B, promptB, forceRegenerate)),
+    ])
+    sections = {
+      ...parseOutputSections(resultA.text, fullDisclaimer),
+      ...parseOutputSections(resultB.text, fullDisclaimer),
+    }
 
     // Stale cache from before a prompt/format change may not contain valid markers — bypass it once
-    if (Object.keys(sections).length === 0 && result.cachedAt) {
-      result = await generateWithAI(prompt, {
-        feature: 'ai_document',
-        userId: user.id,
-        maxTokens: 9000,
-        temperature: 0.6,
-        cacheInput,
-        promptVersion: version,
-        forceRegenerate: true,
-      })
-      sections = parseOutputSections(result.text, fullDisclaimer)
+    if (Object.keys(sections).length === 0 && (resultA.cachedAt || resultB.cachedAt)) {
+      ;[resultA, resultB] = await Promise.all([
+        generateWithAI(promptA, genOpts(SECTION_GROUP_A, promptA, true)),
+        generateWithAI(promptB, genOpts(SECTION_GROUP_B, promptB, true)),
+      ])
+      sections = {
+        ...parseOutputSections(resultA.text, fullDisclaimer),
+        ...parseOutputSections(resultB.text, fullDisclaimer),
+      }
     }
   } catch (err) {
     if (err instanceof DuplicateRequestError) {
@@ -142,12 +160,12 @@ export async function POST(request: NextRequest) {
     return handleApiError(err, { userId: user.id, area: 'ai', metadata: { feature: 'ai_document' } })
   }
 
-  const wasCached = !!result.cachedAt
+  const wasCached = !!(resultA.cachedAt && resultB.cachedAt)
 
   if (!wasCached) {
     await incrementUsage(user.id, 'pdf_analysis', {
-      tokenInput: result.usage.inputTokens,
-      tokenOutput: result.usage.outputTokens,
+      tokenInput: resultA.usage.inputTokens + resultB.usage.inputTokens,
+      tokenOutput: resultA.usage.outputTokens + resultB.usage.outputTokens,
     })
     await trackFeatureComplete('ai_document', user.id, {
       fileId,
@@ -161,11 +179,11 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     sections,
-    rawText: result.text,
+    rawText: `${resultA.text}\n\n${resultB.text}`,
     cached: wasCached,
     remaining: afterCheck.remaining,
-    provider: result.provider,
-    model: result.model,
+    provider: resultA.provider,
+    model: resultA.model,
     promptVersion: version,
     fileName: fileRow.original_file_name,
   })
