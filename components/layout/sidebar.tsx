@@ -24,7 +24,6 @@ const mainNav = [
   { href: "/ai-script", label: "AI 상담 스크립트", icon: BookOpen },
   { href: "/customer-analysis", label: "고객 성향 분석", icon: UserSearch },
   { href: "/pension-calculator", label: "연금 계산기", icon: Calculator },
-  { href: "/review-writer", label: "AI 상담 후기 작성", icon: BookMarked },
   { href: "/ai-document", label: "AI PDF 분석", icon: FileText },
   { href: "/my-results", label: "내 결과물 보관함", icon: Archive },
   { href: "/templates", label: "템플릿 라이브러리", icon: LibraryBig },
