@@ -37,12 +37,19 @@ function parseOutputSections(raw: string): Record<string, string> {
   return result
 }
 
-const PERSONALITY_ADDENDUM = `
+function buildPersonalityAddendum(productField: string): string {
+  return `
 ※ 중요 — "특별 보장 내용" 안에 [고객성향분석 결과]가 포함되어 있다면, 그 안의 MBTI/성향 정보를
-반드시 반영하여 모든 버전의 문체·어조·설득 방식을 이 고객에게 맞게 조정하세요:
-- 분석에서 제시된 "추천 첫마디"나 "핵심키워드"가 있다면 자연스럽게 녹여서 활용
+반드시 반영하여 모든 버전의 문체·어조·설득 방식을 이 고객에게 맞게 조정하세요. 단, 이 정보는
+오직 "말투·접근 방식" 참고용이며 메시지의 주제/상품과는 무관합니다:
+- 분석에서 제시된 "추천 첫마디"가 있다면 자연스럽게 녹여서 활용
 - 이 고객 성향에 맞는 문장 길이·어투(예: 신중한 성향이면 근거와 수치 중심, 감성적 성향이면 공감과 스토리 중심)
-- 분석에서 "절대 금물"로 명시된 표현이나 접근법은 어떤 버전에도 사용하지 말 것`
+- 분석에서 "절대 금물"로 명시된 표현이나 접근법은 어떤 버전에도 사용하지 말 것
+- 매우 중요: [고객성향분석 결과] 안에 다른 보험 상품명이나 기존 가입 상품이 언급되어 있어도,
+  그 상품을 절대 이번 메시지의 주제로 삼지 마세요. 이번 메시지가 다뤄야 할 상품은
+  오직 "상품 분야: ${productField}" 하나뿐입니다. 성향분석 결과는 문체 참고용으로만 쓰고,
+  상품/보장 내용 설명은 반드시 "${productField}" 기준으로만 작성하세요.`
+}
 
 function buildHaikuPrompt(vars: Record<string, string>, categoryAddendum: string, hasAnalysis: boolean): string {
   return `당신은 보험설계사를 돕는 전문 메시지 작성 AI입니다.
@@ -56,7 +63,7 @@ function buildHaikuPrompt(vars: Record<string, string>, categoryAddendum: string
 - 상품 분야: ${vars.product_field}
 - 선호 말투: ${vars.tone}
 - 특별 보장 내용(후킹 포인트): ${vars.extra_notes}
-${hasAnalysis ? PERSONALITY_ADDENDUM : ''}
+${hasAnalysis ? buildPersonalityAddendum(vars.product_field) : ''}
 
 아래 4가지 버전의 메시지를 반드시 마커로 구분하여 작성하세요.
 모든 버전은 ① 관심 유도 → ② 공감 사례 스토리 → ③ 상품 핵심 설명 → ④ 차별화 포인트 → ⑤ 자연스러운 마무리 구조를 따를 것.
@@ -91,7 +98,7 @@ function buildSonnetPrompt(vars: Record<string, string>, categoryAddendum: strin
 - 상품 분야: ${vars.product_field}
 - 선호 말투: ${vars.tone}
 - 특별 보장 내용(후킹 포인트): ${vars.extra_notes}
-${hasAnalysis ? PERSONALITY_ADDENDUM : ''}
+${hasAnalysis ? buildPersonalityAddendum(vars.product_field) : ''}
 
 아래 1가지 버전의 메시지를 반드시 마커로 구분하여 작성하세요:
 

@@ -100,9 +100,41 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
     }
   }
 
+  // 저장된 성향분석 결과에는 원래 분석 세션의 상품/관심사 맥락([기존 보험], [추천 상품] 등)이
+  // 함께 들어있어, 이걸 통째로 넘기면 지금 생성창에서 고른 상품 분야를 밀어내고 엉뚱한 상품
+  // 얘기가 섞여 나온다. 문체·어조에만 쓰이는 성향 관련 섹션만 골라서 넘긴다.
+  function extractPersonalityOnly(raw: string): string {
+    const tagOrder = ['고객 정보', '주요 관심사', '기존 보험', '메모', '성향 분석', '예측 니즈', '추천 상품', '추천 첫마디', '주의사항']
+    const KEEP = new Set(['성향 분석', '추천 첫마디', '주의사항'])
+
+    const extract = (tag: string) => {
+      const idx = tagOrder.indexOf(tag)
+      const start = raw.indexOf(`[${tag}]`)
+      if (start === -1) return ''
+      const contentStart = start + tag.length + 2
+      let end = raw.length
+      for (let i = idx + 1; i < tagOrder.length; i++) {
+        const nextStart = raw.indexOf(`[${tagOrder[i]}]`)
+        if (nextStart !== -1) { end = nextStart; break }
+      }
+      return raw.slice(contentStart, end).trim()
+    }
+
+    const parts = tagOrder
+      .filter(t => KEEP.has(t))
+      .map(t => {
+        const v = extract(t)
+        return v ? `[${t}]\n${v}` : ''
+      })
+      .filter(Boolean)
+
+    // 형식이 다른 과거 데이터 등 태그를 하나도 못 찾으면 원본을 그대로 사용
+    return parts.length > 0 ? parts.join('\n\n') : raw
+  }
+
   function applyAnalysis(r: { id: string; title: string; output_text: string; input_data?: Record<string, string> }) {
     setSelectedAnalysis(r.id)
-    setSelectedAnalysisText(r.output_text)
+    setSelectedAnalysisText(extractPersonalityOnly(r.output_text))
     setAnalysisOpen(false)
 
     if (r.input_data?.ageGroup && !ageGroup) setAgeGroup(r.input_data.ageGroup.replace(/\s*(초반|후반)$/, ''))
