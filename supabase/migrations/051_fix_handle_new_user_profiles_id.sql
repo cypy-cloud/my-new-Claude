@@ -1,14 +1,15 @@
--- Fix handle_new_user(): production public.profiles no longer has a separate
--- user_id column (profiles.id IS the auth.users.id directly, per all app
--- queries using .eq('id', authUserId)). The trigger still referenced the
--- old user_id column from migration 001/047, causing every new signup to
--- fail with "column user_id of relation profiles does not exist".
+-- Fix handle_new_user(): production public.profiles no longer matches the
+-- shape from migration 001/047 — profiles.id IS the auth.users.id directly
+-- (no separate user_id column), and the name column is actually full_name
+-- (per all app queries using .eq('id', authUserId) and .select('full_name')).
+-- The trigger still referenced the old user_id/name columns, causing every
+-- new signup to fail with "column ... does not exist".
 
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
   insert into public.profiles (
-    id, email, name, phone, company_name, insurance_company,
+    id, email, full_name, phone, company_name, insurance_company,
     terms_agreed_at, terms_version, privacy_agreed_at, privacy_version, marketing_agreed_at
   )
   values (
