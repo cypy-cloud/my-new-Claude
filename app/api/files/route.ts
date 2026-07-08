@@ -10,7 +10,7 @@ export async function GET() {
 
   const { data, error } = await (supabase as any)
     .from('uploaded_files')
-    .select('id, original_file_name, file_size_mb, status, extracted_text, summary_text, delete_after, created_at')
+    .select('id, original_file_name, file_size_mb, status, summary_text, delete_after, created_at')
     .eq('user_id', user.id)
     .neq('status', 'deleted')
     .order('created_at', { ascending: false })

@@ -3,11 +3,10 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { toast } from "sonner"
 import {
-  Upload, FileText, Trash2, Download, AlertCircle, CheckCircle,
-  Clock, Loader2, Eye, EyeOff, ShieldAlert, RefreshCw,
+  Upload, FileText, Trash2, AlertCircle, CheckCircle,
+  Clock, Loader2, ShieldAlert, RefreshCw,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { clientTrackEvent } from "@/lib/analytics/client-track"
 import { ORIGINAL_DELETED_NOTICE } from "@/lib/files/constants"
@@ -17,7 +16,6 @@ interface UploadedFile {
   original_file_name: string
   file_size_mb: number
   status: "uploaded" | "processing" | "completed" | "failed" | "deleted" | "original_expired"
-  extracted_text: string | null
   summary_text: string | null
   delete_after: string | null
   created_at: string
@@ -55,7 +53,6 @@ export function PdfUploader({ initialUploadCount, uploadLimit, maxFileSizeMb, st
   const [isUploading, setIsUploading] = useState(false)
   const [privacyChecked, setPrivacyChecked] = useState(false)
   const [uploadCount, setUploadCount] = useState(initialUploadCount)
-  const [previewId, setPreviewId] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -146,20 +143,9 @@ export function PdfUploader({ initialUploadCount, uploadLimit, maxFileSizeMb, st
       if (!res.ok) { toast.error("삭제에 실패했습니다"); return }
       toast.success("삭제되었습니다")
       setFiles(prev => prev.filter(f => f.id !== id))
-      if (previewId === id) setPreviewId(null)
     } catch {
       toast.error("삭제 중 오류가 발생했습니다")
     }
-  }
-
-  function handleDownload(id: string) {
-    const a = document.createElement("a")
-    a.href = `/api/files/${id}/download`
-    a.rel = "noopener"
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    clientTrackEvent("result_download", { metadata: { fileId: id, feature: "pdf" } })
   }
 
   function statusBadge(status: UploadedFile["status"]) {
@@ -171,8 +157,6 @@ export function PdfUploader({ initialUploadCount, uploadLimit, maxFileSizeMb, st
       default:           return <Badge variant="secondary" className="text-xs">업로드됨</Badge>
     }
   }
-
-  const previewFile = files.find(f => f.id === previewId)
 
   return (
     <div className="space-y-6">
@@ -202,8 +186,7 @@ export function PdfUploader({ initialUploadCount, uploadLimit, maxFileSizeMb, st
       </div>
 
       {/* ── 업로드 + 한도 ─────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 드래그앤드롭 업로드 */}
+      <div className="max-w-xl">
         <div className="space-y-3">
           <div className={`flex items-center justify-between p-3 rounded-lg border text-sm ${
             isLimitReached ? "bg-red-50 border-red-200 text-red-700" :
@@ -268,55 +251,6 @@ export function PdfUploader({ initialUploadCount, uploadLimit, maxFileSizeMb, st
             )}
           </Button>
         </div>
-
-        {/* 텍스트 미리보기 */}
-        <Card className="min-h-[280px]">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center justify-between">
-              <span>추출된 텍스트 미리보기</span>
-              {previewFile && (
-                <Button variant="ghost" size="sm" onClick={() => setPreviewId(null)} className="h-7 px-2 text-xs">
-                  <EyeOff className="h-3.5 w-3.5 mr-1" />닫기
-                </Button>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {previewFile ? (
-              <div className="space-y-2">
-                <p className="text-xs text-gray-500 font-medium truncate">{previewFile.original_file_name}</p>
-                {previewFile.status === "original_expired" && (
-                  <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg text-xs text-gray-500">
-                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                    <span>{ORIGINAL_DELETED_NOTICE}</span>
-                  </div>
-                )}
-                {(previewFile.status === "completed" || previewFile.status === "original_expired") && previewFile.extracted_text ? (
-                  <div className="whitespace-pre-wrap text-xs leading-relaxed text-gray-700 bg-gray-50 rounded-lg p-3 max-h-[220px] overflow-y-auto border">
-                    {previewFile.extracted_text.slice(0, 2000)}
-                    {previewFile.extracted_text.length > 2000 && (
-                      <span className="text-gray-400"> ...(이하 생략)</span>
-                    )}
-                  </div>
-                ) : previewFile.status === "failed" ? (
-                  <div className="flex items-start gap-2 p-3 bg-red-50 rounded-lg text-xs text-red-700">
-                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                    <span>{previewFile.summary_text ?? "텍스트를 추출할 수 없습니다. 스캔 이미지 PDF는 지원되지 않습니다."}</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />처리 중...
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center min-h-[200px] text-gray-400 space-y-2">
-                <Eye className="h-8 w-8 text-gray-200" />
-                <p className="text-xs">파일 목록에서 &ldquo;미리보기&rdquo;를 클릭하세요</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
 
       {/* ── 파일 목록 ─────────────────────────────────────────── */}
@@ -344,14 +278,11 @@ export function PdfUploader({ initialUploadCount, uploadLimit, maxFileSizeMb, st
             {files.map(file => {
               const days = daysUntil(file.delete_after)
               const isExpiringSoon = days !== null && days <= 3
-              const isPreview = previewId === file.id
 
               return (
                 <div
                   key={file.id}
-                  className={`flex items-start gap-3 p-4 rounded-xl border transition-all ${
-                    isPreview ? "border-orange-300 bg-orange-50" : "border-gray-100 bg-white hover:border-gray-200"
-                  }`}
+                  className="flex items-start gap-3 p-4 rounded-xl border border-gray-100 bg-white hover:border-gray-200 transition-all"
                 >
                   {/* File icon */}
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
@@ -397,24 +328,6 @@ export function PdfUploader({ initialUploadCount, uploadLimit, maxFileSizeMb, st
 
                   {/* Actions */}
                   <div className="flex items-center gap-1 shrink-0">
-                    {(file.status === "completed" || file.status === "original_expired") && (
-                      <>
-                        <Button
-                          variant="ghost" size="sm"
-                          onClick={() => setPreviewId(isPreview ? null : file.id)}
-                          className="h-8 px-2 text-xs text-gray-500 hover:text-gray-700"
-                        >
-                          <Eye className="h-3.5 w-3.5 mr-1" />{isPreview ? "닫기" : "미리보기"}
-                        </Button>
-                        <Button
-                          variant="ghost" size="sm"
-                          onClick={() => handleDownload(file.id)}
-                          className="h-8 px-2 text-xs text-gray-500 hover:text-gray-700"
-                        >
-                          <Download className="h-3.5 w-3.5 mr-1" />다운로드
-                        </Button>
-                      </>
-                    )}
                     <Button
                       variant="ghost" size="sm"
                       onClick={() => handleDelete(file.id, file.original_file_name)}
