@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PUBLIC_PATHS = ['/', '/login', '/signup', '/forgot-password', '/reset-password', '/auth/callback', '/manifest.webmanifest', '/manifest.json', '/sw.js', '/offline']
+const PUBLIC_PATHS = ['/', '/login', '/signup', '/forgot-password', '/reset-password', '/auth/callback', '/terms', '/privacy', '/manifest.webmanifest', '/manifest.json', '/sw.js', '/offline']
 const ADMIN_PATHS = ['/admin']
 
 export async function proxy(request: NextRequest) {
