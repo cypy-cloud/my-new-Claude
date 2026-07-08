@@ -153,7 +153,12 @@ export function PdfUploader({ initialUploadCount, uploadLimit, maxFileSizeMb, st
   }
 
   function handleDownload(id: string) {
-    window.open(`/api/files/${id}/download`, "_blank")
+    const a = document.createElement("a")
+    a.href = `/api/files/${id}/download`
+    a.rel = "noopener"
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
     clientTrackEvent("result_download", { metadata: { fileId: id, feature: "pdf" } })
   }
 
