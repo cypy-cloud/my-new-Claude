@@ -83,8 +83,12 @@ export default function PrivacyPage() {
                   <td className="border px-3 py-2">서비스 호스팅 및 배포 인프라 운영</td>
                 </tr>
                 <tr>
-                  <td className="border px-3 py-2">토스페이먼츠(주)</td>
-                  <td className="border px-3 py-2">결제 처리</td>
+                  <td className="border px-3 py-2">포트원(주)</td>
+                  <td className="border px-3 py-2">결제 처리 대행(PG 연동)</td>
+                </tr>
+                <tr>
+                  <td className="border px-3 py-2">한국결제네트웍스(주)</td>
+                  <td className="border px-3 py-2">카드 결제 승인 및 정산(PG사)</td>
                 </tr>
               </tbody>
             </table>
