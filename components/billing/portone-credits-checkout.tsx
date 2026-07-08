@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Loader2, ShieldCheck, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
@@ -29,8 +30,13 @@ export function PortOneCreditsCheckout({
 }: PortOneCreditsCheckoutProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [refundAgreed, setRefundAgreed] = useState(false)
 
   async function handlePay() {
+    if (!refundAgreed) {
+      toast.error("서비스 즉시 이용 및 청약철회 제한 안내에 동의해주세요")
+      return
+    }
     setLoading(true)
     try {
       const PortOne = await import("@portone/browser-sdk/v2")
@@ -91,10 +97,24 @@ export function PortOneCreditsCheckout({
         <p className="text-xs text-gray-400 mt-1">구매 후 30일간 유효 · 스크립트·성향분석·SMS 공통 사용</p>
       </div>
 
+      <label className="flex items-start gap-2 text-xs text-gray-500 px-1">
+        <input
+          type="checkbox"
+          checked={refundAgreed}
+          onChange={(e) => setRefundAgreed(e.target.checked)}
+          className="mt-0.5"
+        />
+        <span>
+          결제 완료 즉시 크레딧이 충전되며, 1건이라도 사용한 경우 원칙적으로
+          청약철회(환불)가 제한됨을 확인했습니다. 자세한 내용은{" "}
+          <Link href="/terms#refund" target="_blank" className="underline text-[#1e3a5f]">환불정책</Link>을 참고하세요.
+        </span>
+      </label>
+
       <div className="space-y-3 pt-2">
         <Button
           onClick={handlePay}
-          disabled={loading}
+          disabled={loading || !refundAgreed}
           className="w-full h-12 bg-purple-600 hover:bg-purple-700 text-white text-base font-semibold"
         >
           {loading

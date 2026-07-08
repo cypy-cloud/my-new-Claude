@@ -22,7 +22,7 @@ export default function PrivacyPage() {
 
       <main className="max-w-3xl mx-auto px-4 py-10 text-gray-800 leading-relaxed">
         <h1 className="text-2xl font-bold text-[#1e3a5f] mb-1">개인정보처리방침</h1>
-        <p className="text-sm text-gray-400 mb-8">시행일: 2026년 7월 6일 · 버전 v1.0</p>
+        <p className="text-sm text-gray-400 mb-8">시행일: 2026년 7월 8일 · 버전 v1.1</p>
 
         <p className="mb-8">
           열린교육컨설팅（사업자등록번호 259-98-01495, 이하 &ldquo;회사&rdquo;）은 「개인정보보호법」 등 관계 법령을 준수하며,
@@ -96,7 +96,55 @@ export default function PrivacyPage() {
         </section>
 
         <section className="space-y-3 mb-8">
-          <h2 className="text-lg font-semibold text-[#1e3a5f]">4. 개인정보의 보유 및 이용 기간</h2>
+          <h2 className="text-lg font-semibold text-[#1e3a5f]">4. 개인정보의 국외 이전</h2>
+          <p>
+            회사는 서비스 제공을 위해 아래와 같이 개인정보를 국외로 이전하고 있습니다. AI 콘텐츠 생성,
+            데이터베이스·인증, 호스팅은 각각 해외 사업자의 서버를 통해 처리되며, 이 정보는 서비스 제공
+            목적으로만 사용되고 별도로 보관되지 않습니다（AI 응답 생성 등 처리 완료 즉시 파기 또는
+            회사의 자체 데이터베이스로만 저장）.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border mt-2">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="border px-3 py-2 text-left">이전받는 자</th>
+                  <th className="border px-3 py-2 text-left">이전 국가</th>
+                  <th className="border px-3 py-2 text-left">이전 항목</th>
+                  <th className="border px-3 py-2 text-left">이전 목적 및 방법</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="border px-3 py-2">Anthropic, PBC</td>
+                  <td className="border px-3 py-2">미국</td>
+                  <td className="border px-3 py-2">이용자가 AI 기능 실행 시 입력한 텍스트（고객 정보 등 포함 가능）</td>
+                  <td className="border px-3 py-2">AI 응답 생성을 위해 네트워크를 통해 실시간 전송, 응답 생성 목적 외 보관하지 않음</td>
+                </tr>
+                <tr>
+                  <td className="border px-3 py-2">Supabase, Inc.</td>
+                  <td className="border px-3 py-2">미국（서비스 리전: 싱가포르 등 아시아 소재 데이터센터 이용 가능）</td>
+                  <td className="border px-3 py-2">회원 정보, 이용자가 입력한 고객 정보 등 서비스 이용 데이터 전체</td>
+                  <td className="border px-3 py-2">데이터베이스·인증 인프라 운영을 위해 네트워크를 통해 상시 저장·처리</td>
+                </tr>
+                <tr>
+                  <td className="border px-3 py-2">Vercel Inc.</td>
+                  <td className="border px-3 py-2">미국</td>
+                  <td className="border px-3 py-2">서비스 접속·이용 과정에서 발생하는 통신 데이터</td>
+                  <td className="border px-3 py-2">서비스 호스팅 및 배포 인프라 운영을 위해 네트워크를 통해 상시 처리</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            위 수탁업체의 개인정보 보유·이용 기간은 본 방침 제3조·제4조에 따른 회사의 위탁 목적 및
+            보유기간과 동일합니다. 이용자는 국외 이전에 동의하지 않을 권리가 있으나, AI 콘텐츠 생성 등
+            서비스의 핵심 기능은 위 이전 없이는 제공이 불가능하므로 동의하지 않을 경우 서비스 이용이
+            제한될 수 있습니다.
+          </p>
+        </section>
+
+        <section className="space-y-3 mb-8">
+          <h2 className="text-lg font-semibold text-[#1e3a5f]">5. 개인정보의 보유 및 이용 기간</h2>
           <ul className="list-disc pl-5 space-y-1">
             <li>회원 정보: 회원 탈퇴 시까지 (단, 관계 법령에 따라 보존이 필요한 경우 해당 기간 동안 보관)</li>
             <li>이용자가 업로드한 PDF 원본 파일: 서비스 내 안내된 보관 기간 경과 후 자동 삭제</li>
@@ -106,7 +154,7 @@ export default function PrivacyPage() {
         </section>
 
         <section className="space-y-3 mb-8">
-          <h2 className="text-lg font-semibold text-[#1e3a5f]">5. 이용자의 권리와 행사 방법</h2>
+          <h2 className="text-lg font-semibold text-[#1e3a5f]">6. 이용자의 권리와 행사 방법</h2>
           <p>
             이용자는 언제든지 자신의 개인정보에 대한 열람, 정정, 삭제, 처리정지를 요구할 수 있으며,
             설정 메뉴 또는 아래 문의처를 통해 요청할 수 있습니다. 회원 탈퇴를 통해 언제든 동의를 철회할 수 있습니다.
@@ -114,7 +162,7 @@ export default function PrivacyPage() {
         </section>
 
         <section className="space-y-3 mb-8">
-          <h2 className="text-lg font-semibold text-[#1e3a5f]">6. 개인정보의 파기</h2>
+          <h2 className="text-lg font-semibold text-[#1e3a5f]">7. 개인정보의 파기</h2>
           <p>
             회사는 개인정보 보유기간이 경과하거나 처리 목적이 달성된 경우 지체 없이 해당 개인정보를 파기합니다.
             전자적 파일 형태의 정보는 복구 불가능한 방법으로 영구 삭제합니다.
@@ -122,7 +170,16 @@ export default function PrivacyPage() {
         </section>
 
         <section className="space-y-3 mb-8">
-          <h2 className="text-lg font-semibold text-[#1e3a5f]">7. 개인정보보호책임자</h2>
+          <h2 className="text-lg font-semibold text-[#1e3a5f]">8. 쿠키의 설치·운영 및 거부</h2>
+          <p>
+            회사는 이용자에게 맞춤화된 서비스를 제공하기 위해 쿠키를 사용할 수 있습니다. 이용자는 웹브라우저
+            설정에서 쿠키 저장을 거부할 수 있으며, 이 경우 로그인 유지 등 서비스 일부 이용에 어려움이
+            있을 수 있습니다.
+          </p>
+        </section>
+
+        <section className="space-y-3 mb-8">
+          <h2 className="text-lg font-semibold text-[#1e3a5f]">9. 개인정보보호책임자</h2>
           <ul className="list-disc pl-5 space-y-1">
             <li>성명: 임현수</li>
             <li>이메일: gocypy@gmail.com</li>
@@ -131,7 +188,7 @@ export default function PrivacyPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold text-[#1e3a5f]">8. 고지의 의무</h2>
+          <h2 className="text-lg font-semibold text-[#1e3a5f]">10. 고지의 의무</h2>
           <p>
             이 개인정보처리방침의 내용이 추가·삭제 및 수정이 있을 시에는 시행 최소 7일 전에
             서비스 내 공지사항 또는 이메일을 통해 고지합니다.

@@ -22,7 +22,7 @@ export default function TermsPage() {
 
       <main className="max-w-3xl mx-auto px-4 py-10 text-gray-800 leading-relaxed">
         <h1 className="text-2xl font-bold text-[#1e3a5f] mb-1">이용약관</h1>
-        <p className="text-sm text-gray-400 mb-8">시행일: 2026년 7월 6일 · 버전 v1.0</p>
+        <p className="text-sm text-gray-400 mb-8">시행일: 2026년 7월 8일 · 버전 v1.1</p>
 
         <section className="space-y-3 mb-8">
           <h2 className="text-lg font-semibold text-[#1e3a5f]">제1조 (목적)</h2>
