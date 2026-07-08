@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import {
   MessageSquare, BookOpen, FileText, ArrowRight, TrendingUp,
   Zap, CreditCard, AlertCircle, MessageCircle, UserSearch,
-  FileEdit, Newspaper, ShieldOff
+  FileEdit, Newspaper
 } from "lucide-react"
 import { getPlanLimits, PLAN_LABELS, type PlanId } from "@/lib/subscription/plans"
 import { getMonthlyUsage } from "@/lib/subscription/usage"
@@ -53,15 +53,6 @@ export default async function DashboardPage() {
       icon: UserSearch,
       color: "indigo",
       href: "/customer-analysis",
-      sharedWith: "AI 상담 스크립트와 한도 공유",
-    },
-    {
-      label: "거절극복 스크립트",
-      used: usage.scriptCount,   // 거절극복도 scriptCount 공유
-      limit: limits.scriptLimit,
-      icon: ShieldOff,
-      color: "rose",
-      href: "/objection-handler",
       sharedWith: "AI 상담 스크립트와 한도 공유",
     },
     {

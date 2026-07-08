@@ -22,7 +22,7 @@ export default function TermsPage() {
 
       <main className="max-w-3xl mx-auto px-4 py-10 text-gray-800 leading-relaxed">
         <h1 className="text-2xl font-bold text-[#1e3a5f] mb-1">이용약관</h1>
-        <p className="text-sm text-gray-400 mb-8">시행일: 2026년 7월 8일 · 버전 v1.1</p>
+        <p className="text-sm text-gray-400 mb-8">시행일: 2026년 7월 8일 · 버전 v1.2</p>
 
         <section className="space-y-3 mb-8">
           <h2 className="text-lg font-semibold text-[#1e3a5f]">제1조 (목적)</h2>
@@ -38,7 +38,7 @@ export default function TermsPage() {
           <p>회사는 다음과 같은 서비스를 제공합니다.</p>
           <ul className="list-disc pl-5 space-y-1">
             <li>AI 기반 고객 문자·카카오톡 메시지 생성</li>
-            <li>AI 기반 상담 스크립트, 거절 극복 스크립트, 고객 성향 분석 생성</li>
+            <li>AI 기반 상담 스크립트, 고객 성향 분석 생성</li>
             <li>AI 기반 보험 약관 PDF 설명자료, 블로그·SNS 콘텐츠, 뉴스레터 생성</li>
             <li>고객 관리, 업무 캘린더 등 부가 업무 지원 도구</li>
             <li>기타 회사가 추가로 개발하거나 제휴를 통해 제공하는 서비스</li>
