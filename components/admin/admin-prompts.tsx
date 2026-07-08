@@ -20,7 +20,7 @@ interface PromptVersionRow {
   updated_at: string
 }
 
-const FEATURE_TYPES: PromptFeatureType[] = ['sms', 'script', 'pdf_explanation', 'crm_followup']
+const FEATURE_TYPES: PromptFeatureType[] = ['sms', 'script', 'pdf_explanation']
 
 const emptyForm = { version: "", title: "", systemPrompt: "", userPromptTemplate: "", activate: false }
 

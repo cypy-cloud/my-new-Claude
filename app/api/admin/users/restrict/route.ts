@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { adminGuard, isGuardError } from '@/lib/auth/middleware-guard'
 
-const VALID_FEATURES = ['all', 'ai_message', 'ai_script', 'ai_document', 'ai_followup']
+const VALID_FEATURES = ['all', 'ai_message', 'ai_script', 'ai_document']
 
 // GET /api/admin/users/restrict?userId=xxx
 export async function GET(request: NextRequest) {

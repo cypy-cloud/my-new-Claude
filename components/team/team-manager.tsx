@@ -14,8 +14,8 @@ const ROLE_ICON: Record<TeamRole, React.ElementType> = { owner: Crown, manager: 
 
 interface UsageSummary {
   month: string
-  members: { userId: string; name: string | null; email: string; role: string; smsCount: number; scriptCount: number; followupCount: number; pdfUploadCount: number; pdfAnalysisCount: number; costEstimate: number }[]
-  totals: { smsCount: number; scriptCount: number; followupCount: number; pdfUploadCount: number; pdfAnalysisCount: number; costEstimate: number }
+  members: { userId: string; name: string | null; email: string; role: string; smsCount: number; scriptCount: number; pdfUploadCount: number; pdfAnalysisCount: number; costEstimate: number }[]
+  totals: { smsCount: number; scriptCount: number; pdfUploadCount: number; pdfAnalysisCount: number; costEstimate: number }
 }
 
 export function TeamManager() {
@@ -346,7 +346,6 @@ function TeamUsageCard() {
                   <th className="py-2 pr-4">멤버</th>
                   <th className="py-2 pr-4">문자/카톡</th>
                   <th className="py-2 pr-4">스크립트</th>
-                  <th className="py-2 pr-4">후속연락</th>
                   <th className="py-2 pr-4">PDF업로드</th>
                   <th className="py-2 pr-4">PDF분석</th>
                 </tr>
@@ -360,7 +359,6 @@ function TeamUsageCard() {
                     </td>
                     <td className="py-2 pr-4">{m.smsCount}</td>
                     <td className="py-2 pr-4">{m.scriptCount}</td>
-                    <td className="py-2 pr-4">{m.followupCount}</td>
                     <td className="py-2 pr-4">{m.pdfUploadCount}</td>
                     <td className="py-2 pr-4">{m.pdfAnalysisCount}</td>
                   </tr>
@@ -369,7 +367,6 @@ function TeamUsageCard() {
                   <td className="py-2 pr-4">합계</td>
                   <td className="py-2 pr-4">{usage.totals.smsCount}</td>
                   <td className="py-2 pr-4">{usage.totals.scriptCount}</td>
-                  <td className="py-2 pr-4">{usage.totals.followupCount}</td>
                   <td className="py-2 pr-4">{usage.totals.pdfUploadCount}</td>
                   <td className="py-2 pr-4">{usage.totals.pdfAnalysisCount}</td>
                 </tr>

@@ -10,8 +10,6 @@ export type EventName =
   | 'message_complete'
   | 'script_start'
   | 'script_complete'
-  | 'followup_start'
-  | 'followup_complete'
   | 'document_upload_start'
   | 'document_upload_complete'
   | 'document_analysis_complete'
@@ -24,7 +22,7 @@ export type EventName =
   | 'tutorial_complete'
   | 'pension_calculator_visit'
 
-export type FeatureType = 'ai_message' | 'ai_script' | 'ai_document' | 'ai_followup'
+export type FeatureType = 'ai_message' | 'ai_script' | 'ai_document'
 
 export interface TrackEventOptions {
   userId?: string
@@ -60,7 +58,6 @@ export async function trackFeatureStart(
     ai_message: 'message_start',
     ai_script: 'script_start',
     ai_document: 'document_upload_start',
-    ai_followup: 'followup_start',
   }
   await trackEvent(eventMap[feature], { userId, featureType: feature, metadata })
 }
@@ -74,7 +71,6 @@ export async function trackFeatureComplete(
     ai_message: 'message_complete',
     ai_script: 'script_complete',
     ai_document: 'document_analysis_complete',
-    ai_followup: 'followup_complete',
   }
   await trackEvent(eventMap[feature], { userId, featureType: feature, metadata })
 }

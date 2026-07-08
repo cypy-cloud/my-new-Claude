@@ -55,7 +55,6 @@ export async function clientTrackFeatureStart(
     ai_message: 'message_start',
     ai_script: 'script_start',
     ai_document: 'document_upload_start',
-    ai_followup: 'followup_start',
   }
   await clientTrackEvent(eventMap[feature], { featureType: feature, metadata })
 }
@@ -68,7 +67,6 @@ export async function clientTrackFeatureComplete(
     ai_message: 'message_complete',
     ai_script: 'script_complete',
     ai_document: 'document_analysis_complete',
-    ai_followup: 'followup_complete',
   }
   await clientTrackEvent(eventMap[feature], { featureType: feature, metadata })
 }

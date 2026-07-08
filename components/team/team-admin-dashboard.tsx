@@ -19,7 +19,6 @@ interface MemberStat {
   joinedAt: string | null
   smsCount: number
   scriptCount: number
-  followupCount: number
   pdfCount: number
   total: number
   costEstimate: number
@@ -30,7 +29,6 @@ interface TrendPoint {
   total: number
   sms: number
   script: number
-  followup: number
   pdf: number
   cost: number
 }
@@ -38,7 +36,7 @@ interface TrendPoint {
 interface DashboardData {
   memberCount: number
   currentMonth: string
-  totals: { sms: number; script: number; followup: number; pdf: number; total: number; cost: number }
+  totals: { sms: number; script: number; pdf: number; total: number; cost: number }
   topFeature: { key: string; label: string; count: number } | null
   monthlyStats: MemberStat[]
   trendData: TrendPoint[]
@@ -151,9 +149,6 @@ function MemberStatsTable({ stats }: { stats: MemberStat[] }) {
                   <span className="flex items-center gap-1 justify-center"><BookOpen className="h-3 w-3" />스크립트</span>
                 </th>
                 <th className="text-center px-3 py-2.5 font-medium">
-                  <span className="flex items-center gap-1 justify-center"><MessageSquare className="h-3 w-3 rotate-180" />후속</span>
-                </th>
-                <th className="text-center px-3 py-2.5 font-medium">
                   <span className="flex items-center gap-1 justify-center"><FileText className="h-3 w-3" />PDF</span>
                 </th>
                 <th className="text-center px-3 py-2.5 font-medium">합계</th>
@@ -184,11 +179,6 @@ function MemberStatsTable({ stats }: { stats: MemberStat[] }) {
                   <td className="text-center px-3 py-3">
                     <span className={m.scriptCount > 0 ? 'font-semibold text-purple-600' : 'text-gray-300'}>
                       {m.scriptCount}
-                    </span>
-                  </td>
-                  <td className="text-center px-3 py-3">
-                    <span className={m.followupCount > 0 ? 'font-semibold text-green-600' : 'text-gray-300'}>
-                      {m.followupCount}
                     </span>
                   </td>
                   <td className="text-center px-3 py-3">
@@ -245,7 +235,6 @@ const FEATURE_COLOR: Record<string, string> = {
   ai_message: 'bg-blue-100 text-blue-700',
   ai_script: 'bg-purple-100 text-purple-700',
   ai_document: 'bg-orange-100 text-orange-700',
-  ai_followup: 'bg-green-100 text-green-700',
 }
 
 function RecentActivityCard({ activity }: { activity: DashboardData['recentActivity'] }) {

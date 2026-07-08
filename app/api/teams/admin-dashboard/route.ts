@@ -6,7 +6,6 @@ const FEATURE_LABELS: Record<string, string> = {
   ai_message: 'AI 문자/카톡',
   ai_script: 'AI 상담 스크립트',
   ai_document: 'AI PDF 분석',
-  ai_followup: '후속 연락',
 }
 
 // GET: 팀 관리자 대시보드 통계
@@ -51,28 +50,27 @@ export async function GET() {
   // 6개월 usage_records
   const { data: usageRows } = await (admin as any)
     .from('usage_records')
-    .select('user_id, usage_month, sms_count, script_count, followup_count, pdf_upload_count, pdf_analysis_count, ai_cost_estimate')
+    .select('user_id, usage_month, sms_count, script_count, pdf_upload_count, pdf_analysis_count, ai_cost_estimate')
     .in('user_id', userIds)
     .in('usage_month', recentMonths)
 
   // 월별 팀 합계 (추이 데이터)
-  const trendMap = new Map<string, { sms: number; script: number; followup: number; pdf: number; cost: number }>()
+  const trendMap = new Map<string, { sms: number; script: number; pdf: number; cost: number }>()
   for (const m of recentMonths) {
-    trendMap.set(m, { sms: 0, script: 0, followup: 0, pdf: 0, cost: 0 })
+    trendMap.set(m, { sms: 0, script: 0, pdf: 0, cost: 0 })
   }
   for (const row of (usageRows ?? [])) {
     const t = trendMap.get(row.usage_month)
     if (t) {
-      t.sms      += row.sms_count ?? 0
-      t.script   += row.script_count ?? 0
-      t.followup += row.followup_count ?? 0
-      t.pdf      += (row.pdf_analysis_count ?? 0)
-      t.cost     += row.ai_cost_estimate ?? 0
+      t.sms    += row.sms_count ?? 0
+      t.script += row.script_count ?? 0
+      t.pdf    += (row.pdf_analysis_count ?? 0)
+      t.cost   += row.ai_cost_estimate ?? 0
     }
   }
   const trendData = recentMonths.map(m => {
     const t = trendMap.get(m)!
-    return { month: m, total: t.sms + t.script + t.followup + t.pdf, sms: t.sms, script: t.script, followup: t.followup, pdf: t.pdf, cost: t.cost }
+    return { month: m, total: t.sms + t.script + t.pdf, sms: t.sms, script: t.script, pdf: t.pdf, cost: t.cost }
   })
 
   // 이번 달 멤버별 통계
@@ -90,12 +88,11 @@ export async function GET() {
       email: p?.email ?? '',
       role: roleMap.get(uid) ?? 'member',
       joinedAt: joinedMap.get(uid) ?? null,
-      smsCount:      u?.sms_count ?? 0,
-      scriptCount:   u?.script_count ?? 0,
-      followupCount: u?.followup_count ?? 0,
-      pdfCount:      u?.pdf_analysis_count ?? 0,
-      total:         (u?.sms_count ?? 0) + (u?.script_count ?? 0) + (u?.followup_count ?? 0) + (u?.pdf_analysis_count ?? 0),
-      costEstimate:  u?.ai_cost_estimate ?? 0,
+      smsCount:     u?.sms_count ?? 0,
+      scriptCount:  u?.script_count ?? 0,
+      pdfCount:     u?.pdf_analysis_count ?? 0,
+      total:        (u?.sms_count ?? 0) + (u?.script_count ?? 0) + (u?.pdf_analysis_count ?? 0),
+      costEstimate: u?.ai_cost_estimate ?? 0,
     }
   }).sort((a: any, b: any) => b.total - a.total)
 
@@ -104,19 +101,17 @@ export async function GET() {
     (acc: any, m: any) => ({
       sms: acc.sms + m.smsCount,
       script: acc.script + m.scriptCount,
-      followup: acc.followup + m.followupCount,
       pdf: acc.pdf + m.pdfCount,
       total: acc.total + m.total,
       cost: acc.cost + m.costEstimate,
     }),
-    { sms: 0, script: 0, followup: 0, pdf: 0, total: 0, cost: 0 }
+    { sms: 0, script: 0, pdf: 0, total: 0, cost: 0 }
   )
 
   // 가장 많이 쓰는 기능
   const featureCounts = [
     { key: 'ai_message', count: totals.sms },
     { key: 'ai_script', count: totals.script },
-    { key: 'ai_followup', count: totals.followup },
     { key: 'ai_document', count: totals.pdf },
   ]
   featureCounts.sort((a, b) => b.count - a.count)

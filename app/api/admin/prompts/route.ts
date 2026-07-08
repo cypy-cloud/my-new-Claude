@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { adminGuard, isGuardError } from '@/lib/auth/middleware-guard'
 import type { PromptFeatureType } from '@/types'
 
-const FEATURE_TYPES: PromptFeatureType[] = ['sms', 'script', 'pdf_explanation', 'crm_followup']
+const FEATURE_TYPES: PromptFeatureType[] = ['sms', 'script', 'pdf_explanation']
 
 // GET: 전체 프롬프트 버전 목록 (admin 이상 조회 가능)
 export async function GET(request: NextRequest) {

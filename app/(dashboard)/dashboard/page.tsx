@@ -57,11 +57,12 @@ export default async function DashboardPage() {
     },
     {
       label: "거절극복 스크립트",
-      used: usage.followupCount,
-      limit: limits.followupLimit,
+      used: usage.scriptCount,   // 거절극복도 scriptCount 공유
+      limit: limits.scriptLimit,
       icon: ShieldOff,
       color: "rose",
       href: "/objection-handler",
+      sharedWith: "AI 상담 스크립트와 한도 공유",
     },
     {
       label: "AI PDF 분석",

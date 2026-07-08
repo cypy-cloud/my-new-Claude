@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
   const { data } = await (admin as any)
     .from('usage_records')
-    .select('usage_month, sms_count, script_count, followup_count, pdf_upload_count, pdf_analysis_count, ai_cost_estimate')
+    .select('usage_month, sms_count, script_count, pdf_upload_count, pdf_analysis_count, ai_cost_estimate')
     .eq('user_id', userId)
     .order('usage_month', { ascending: false })
     .limit(6)
@@ -31,12 +31,12 @@ export async function PATCH(request: NextRequest) {
   const body = await request.json()
   const { targetUserId, feature, delta, reason } = body as {
     targetUserId: string
-    feature: 'sms_count' | 'script_count' | 'followup_count' | 'pdf_upload_count' | 'pdf_analysis_count'
+    feature: 'sms_count' | 'script_count' | 'pdf_upload_count' | 'pdf_analysis_count'
     delta: number   // 양수: 증가, 음수: 감소
     reason?: string
   }
 
-  const VALID_FEATURES = ['sms_count', 'script_count', 'followup_count', 'pdf_upload_count', 'pdf_analysis_count']
+  const VALID_FEATURES = ['sms_count', 'script_count', 'pdf_upload_count', 'pdf_analysis_count']
   if (!targetUserId || !VALID_FEATURES.includes(feature) || typeof delta !== 'number') {
     return NextResponse.json({ error: '유효하지 않은 요청' }, { status: 400 })
   }

@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   if (!user) return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
 
   const url = new URL(request.url)
-  const featureType = (url.searchParams.get('feature') ?? 'all') as 'script' | 'sms' | 'followup' | 'all'
+  const featureType = (url.searchParams.get('feature') ?? 'all') as 'script' | 'sms' | 'all'
 
   const credits = await getExtraCredits(user.id, featureType)
   return NextResponse.json(credits)
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     orderId: string
     amount: number
     packSize?: number
-    featureType?: 'script' | 'sms' | 'followup' | 'all'
+    featureType?: 'script' | 'sms' | 'all'
   }
 
   if (!paymentKey || !orderId || !amount) {

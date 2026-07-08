@@ -9,7 +9,6 @@ import { UpgradeButton } from "@/components/billing/upgrade-button"
 interface UsageStatus {
   smsCount: number
   scriptCount: number
-  followupCount: number
   pdfUploadCount: number
   pdfAnalysisCount: number
   contentCount: number
@@ -103,7 +102,6 @@ export function BillingPlans({ currentPlanId }: BillingPlansProps) {
         setUsage({
           smsCount: data.features?.find((f: any) => f.key === 'sms')?.used ?? 0,
           scriptCount: data.features?.find((f: any) => f.key === 'script')?.used ?? 0,
-          followupCount: data.features?.find((f: any) => f.key === 'followup')?.used ?? 0,
           pdfUploadCount: data.features?.find((f: any) => f.key === 'pdf_upload')?.used ?? 0,
           pdfAnalysisCount: data.features?.find((f: any) => f.key === 'pdf_analysis')?.used ?? 0,
           contentCount: 0,

@@ -169,7 +169,6 @@ export function getPlanSummary(planType: string) {
     limits: {
       sms: plan.smsLimit,
       script: plan.scriptLimit,
-      followup: plan.followupLimit,
       pdf: plan.pdfAnalysisLimit,
     },
   }

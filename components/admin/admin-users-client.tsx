@@ -29,7 +29,6 @@ interface UsageRow {
   usage_month: string
   sms_count: number
   script_count: number
-  followup_count: number
   pdf_upload_count: number
   pdf_analysis_count: number
   ai_cost_estimate: number
@@ -67,7 +66,7 @@ const ALL_PLANS: PlanId[] = ['free', 'basic', 'pro', 'premium']
 const ALL_STATUSES = ['active', 'suspended', 'deleted']
 const FEATURE_LABELS: Record<string, string> = {
   all: '전체 기능', ai_message: 'AI 문자', ai_script: 'AI 스크립트',
-  ai_document: 'AI 문서', ai_followup: 'AI 팔로업',
+  ai_document: 'AI 문서',
 }
 
 interface Props { callerRole: UserRole }
@@ -343,7 +342,6 @@ export function AdminUsersClient({ callerRole }: Props) {
 const USAGE_FEATURES = [
   { key: 'sms_count', label: 'AI 문자' },
   { key: 'script_count', label: 'AI 스크립트' },
-  { key: 'followup_count', label: '팔로업' },
   { key: 'pdf_upload_count', label: 'PDF 업로드' },
   { key: 'pdf_analysis_count', label: 'PDF 분석' },
 ]

@@ -20,7 +20,6 @@ const FEATURE_LABELS: Record<string, string> = {
   ai_message:  'AI 문자',
   ai_script:   'AI 스크립트',
   ai_document: 'AI 문서',
-  ai_followup: '팔로업',
 }
 
 interface Props {

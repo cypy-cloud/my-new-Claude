@@ -49,14 +49,6 @@ export async function GET() {
       exceeded: usage.scriptCount >= limits.scriptLimit,
     },
     {
-      key: 'followup',
-      label: '후속 연락',
-      used: usage.followupCount,
-      limit: limits.followupLimit,
-      remaining: Math.max(0, limits.followupLimit - usage.followupCount),
-      exceeded: usage.followupCount >= limits.followupLimit,
-    },
-    {
       key: 'pdf_upload',
       label: 'PDF 업로드',
       used: usage.pdfUploadCount,

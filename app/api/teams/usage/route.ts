@@ -22,7 +22,7 @@ export async function GET() {
     (admin as any).from('profiles').select('id, full_name, email').in('id', userIds),
     (admin as any)
       .from('usage_records')
-      .select('user_id, sms_count, script_count, followup_count, pdf_upload_count, pdf_analysis_count, ai_cost_estimate')
+      .select('user_id, sms_count, script_count, pdf_upload_count, pdf_analysis_count, ai_cost_estimate')
       .eq('usage_month', month)
       .in('user_id', userIds),
   ])
@@ -40,7 +40,6 @@ export async function GET() {
       role: roleMap.get(userId),
       smsCount: u?.sms_count ?? 0,
       scriptCount: u?.script_count ?? 0,
-      followupCount: u?.followup_count ?? 0,
       pdfUploadCount: u?.pdf_upload_count ?? 0,
       pdfAnalysisCount: u?.pdf_analysis_count ?? 0,
       costEstimate: u?.ai_cost_estimate ?? 0,
@@ -50,7 +49,6 @@ export async function GET() {
   const totals = memberUsage.reduce((acc: any, m: any) => ({
     smsCount: acc.smsCount + m.smsCount,
     scriptCount: acc.scriptCount + m.scriptCount,
-    followupCount: acc.followupCount + m.followupCount,
     pdfUploadCount: acc.pdfUploadCount + m.pdfUploadCount,
     pdfAnalysisCount: acc.pdfAnalysisCount + m.pdfAnalysisCount,
     costEstimate: acc.costEstimate + m.costEstimate,
@@ -60,5 +58,5 @@ export async function GET() {
 }
 
 function emptyTotals() {
-  return { smsCount: 0, scriptCount: 0, followupCount: 0, pdfUploadCount: 0, pdfAnalysisCount: 0, costEstimate: 0 }
+  return { smsCount: 0, scriptCount: 0, pdfUploadCount: 0, pdfAnalysisCount: 0, costEstimate: 0 }
 }

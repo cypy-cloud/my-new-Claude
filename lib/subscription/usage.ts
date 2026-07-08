@@ -2,12 +2,11 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getPlanLimits, type PlanId, type PlanLimits } from './plans'
 
-export type UsageFeature = 'sms' | 'script' | 'followup' | 'pdf_upload' | 'pdf_analysis' | 'content' | 'newsletter'
+export type UsageFeature = 'sms' | 'script' | 'pdf_upload' | 'pdf_analysis' | 'content' | 'newsletter'
 
 export interface MonthlyUsageData {
   smsCount: number
   scriptCount: number
-  followupCount: number
   pdfUploadCount: number
   pdfAnalysisCount: number
   contentCount: number
@@ -76,7 +75,7 @@ export async function getMonthlyUsage(userId: string): Promise<MonthlyUsageData>
 
   const { data } = await (supabase as any)
     .from('usage_records')
-    .select('sms_count, script_count, followup_count, pdf_upload_count, pdf_analysis_count, content_count, newsletter_count, storage_used_mb, ai_token_input, ai_token_output, ai_cost_estimate')
+    .select('sms_count, script_count, pdf_upload_count, pdf_analysis_count, content_count, newsletter_count, storage_used_mb, ai_token_input, ai_token_output, ai_cost_estimate')
     .eq('user_id', userId)
     .eq('usage_month', month)
     .maybeSingle()
@@ -84,7 +83,6 @@ export async function getMonthlyUsage(userId: string): Promise<MonthlyUsageData>
   return {
     smsCount: data?.sms_count ?? 0,
     scriptCount: data?.script_count ?? 0,
-    followupCount: data?.followup_count ?? 0,
     pdfUploadCount: data?.pdf_upload_count ?? 0,
     pdfAnalysisCount: data?.pdf_analysis_count ?? 0,
     contentCount: data?.content_count ?? 0,
@@ -118,7 +116,7 @@ export async function incrementUsage(
   // 한도 초과 여부 확인 후 크레딧 차감
   const check = await checkUsageLimit(userId, feature)
   if (!check.allowed) {
-    const creditFeature = feature === 'sms' ? 'sms' : feature === 'script' ? 'script' : feature === 'followup' ? 'followup' : 'all'
+    const creditFeature = feature === 'sms' ? 'sms' : feature === 'script' ? 'script' : 'all'
     await consumeExtraCredit(userId, creditFeature as any)
   }
 
@@ -146,7 +144,7 @@ export async function blockIfLimitExceeded(userId: string, feature: UsageFeature
   const check = await checkUsageLimit(userId, feature)
   if (!check.allowed) {
     // 추가 크레딧 확인
-    const creditFeature = feature === 'sms' ? 'sms' : feature === 'script' ? 'script' : feature === 'followup' ? 'followup' : 'all'
+    const creditFeature = feature === 'sms' ? 'sms' : feature === 'script' ? 'script' : 'all'
     const credits = await getExtraCredits(userId, creditFeature as any)
     if (credits.totalCredits > 0) return // 크레딧 있으면 통과 (incrementUsage 시 차감)
 
@@ -172,7 +170,7 @@ export interface ExtraCreditsInfo {
 }
 
 /** 유효한 추가 크레딧 조회 (만료되지 않은 것만) */
-export async function getExtraCredits(userId: string, featureType: 'script' | 'sms' | 'followup' | 'all' = 'all'): Promise<ExtraCreditsInfo> {
+export async function getExtraCredits(userId: string, featureType: 'script' | 'sms' | 'all' = 'all'): Promise<ExtraCreditsInfo> {
   const supabase = createAdminClient()
   const { data } = await (supabase as any)
     .from('user_extra_credits')
@@ -196,7 +194,7 @@ export async function getExtraCredits(userId: string, featureType: 'script' | 's
 }
 
 /** 추가 크레딧에서 1건 차감 (만료 빠른 팩부터) */
-export async function consumeExtraCredit(userId: string, featureType: 'script' | 'sms' | 'followup' | 'all' = 'all'): Promise<boolean> {
+export async function consumeExtraCredit(userId: string, featureType: 'script' | 'sms' | 'all' = 'all'): Promise<boolean> {
   const supabase = createAdminClient()
   const { data } = await (supabase as any)
     .from('user_extra_credits')
@@ -222,7 +220,7 @@ export async function consumeExtraCredit(userId: string, featureType: 'script' |
 /** 크레딧 구매 후 DB에 추가 */
 export async function addExtraCredits(params: {
   userId: string
-  featureType: 'script' | 'sms' | 'followup' | 'all'
+  featureType: 'script' | 'sms' | 'all'
   packSize: number
   amountPaid: number
   orderId: string
@@ -253,7 +251,6 @@ function getFeatureCounts(
   switch (feature) {
     case 'sms':          return { used: usage.smsCount,         limit: limits.smsLimit }
     case 'script':       return { used: usage.scriptCount,      limit: limits.scriptLimit }
-    case 'followup':     return { used: usage.followupCount,    limit: limits.followupLimit }
     case 'pdf_upload':   return { used: usage.pdfUploadCount,   limit: limits.pdfUploadLimit }
     case 'pdf_analysis': return { used: usage.pdfAnalysisCount, limit: limits.pdfAnalysisLimit }
     case 'content':      return { used: usage.contentCount,     limit: limits.contentLimit }

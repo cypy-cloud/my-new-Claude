@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
   const body = await request.json()
   const { packSize, featureType = 'all' } = body as {
     packSize?: number
-    featureType?: 'script' | 'sms' | 'followup' | 'all'
+    featureType?: 'script' | 'sms' | 'all'
   }
 
   const amount = packSize ? VALID_PACK_MAP[packSize] : undefined

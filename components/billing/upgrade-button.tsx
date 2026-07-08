@@ -11,7 +11,6 @@ import { PLANS, type PlanId } from "@/lib/subscription/plans"
 interface UsageStatus {
   smsCount: number
   scriptCount: number
-  followupCount: number
   pdfUploadCount: number
   pdfAnalysisCount: number
   contentCount: number
@@ -40,7 +39,6 @@ function buildUsageSummary(
   const checks: Array<{ label: string; used: number; currentLimit: number; targetLimit: number }> = [
     { label: 'AI 문자/카톡', used: usage.smsCount, currentLimit: current.smsLimit, targetLimit: target.smsLimit },
     { label: 'AI 스크립트', used: usage.scriptCount, currentLimit: current.scriptLimit, targetLimit: target.scriptLimit },
-    { label: '후속 연락', used: usage.followupCount, currentLimit: current.followupLimit, targetLimit: target.followupLimit },
     { label: 'PDF 업로드', used: usage.pdfUploadCount, currentLimit: current.pdfUploadLimit, targetLimit: target.pdfUploadLimit },
     { label: 'PDF 분석', used: usage.pdfAnalysisCount, currentLimit: current.pdfAnalysisLimit, targetLimit: target.pdfAnalysisLimit },
   ]
@@ -65,7 +63,6 @@ export function UpgradeButton({ planId, isCurrent, isDowngrade, currentPlanId, c
   const hasUsage = currentUsage && (
     currentUsage.smsCount > 0 ||
     currentUsage.scriptCount > 0 ||
-    currentUsage.followupCount > 0 ||
     currentUsage.pdfUploadCount > 0 ||
     currentUsage.pdfAnalysisCount > 0
   )
