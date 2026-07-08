@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { toast } from "sonner"
 import {
   Sparkles, Copy, Download, RefreshCw, CheckCircle, AlertCircle,
   Zap, Bookmark, BookmarkCheck, FileText, Loader2,
   BookOpen, Eye, ShieldCheck, HelpCircle,
-  MessageSquare, ChevronDown,
+  MessageSquare, ChevronDown, Mic, MicOff,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -76,6 +76,76 @@ export function DocumentGenerator({ initialAnalysisCount, analysisLimit, planNam
   const [extraRequests, setExtraRequests] = useState("")
   const [categoryId, setCategoryId] = useState("")
   const [showAdvanced, setShowAdvanced] = useState(false)
+
+  // Voice input state
+  const [voiceTarget, setVoiceTarget] = useState<"situation" | "requests" | null>(null)
+  const [isCorrectingVoice, setIsCorrectingVoice] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null)
+  const transcriptRef = useRef<string>("")
+
+  async function correctVoiceInput(rawText: string, target: "situation" | "requests") {
+    if (!rawText.trim()) return
+    setIsCorrectingVoice(true)
+    try {
+      const res = await fetch("/api/ai/voice-correct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rawText, context: { purpose: explanationPurpose } }),
+      })
+      const data = await res.json()
+      const corrected = res.ok ? data.corrected : rawText
+      if (target === "situation") setCustomerSituation(prev => prev ? prev + " " + corrected : corrected)
+      else setExtraRequests(prev => prev ? prev + " " + corrected : corrected)
+    } catch {
+      if (target === "situation") setCustomerSituation(prev => prev ? prev + " " + rawText : rawText)
+      else setExtraRequests(prev => prev ? prev + " " + rawText : rawText)
+    } finally {
+      setIsCorrectingVoice(false)
+    }
+  }
+
+  function stopVoiceRecording(target: "situation" | "requests") {
+    try { recognitionRef.current?.stop() } catch { /* ignore */ }
+    recognitionRef.current = null
+    setVoiceTarget(null)
+    if (transcriptRef.current) {
+      correctVoiceInput(transcriptRef.current, target)
+      transcriptRef.current = ""
+    }
+  }
+
+  function toggleVoice(target: "situation" | "requests") {
+    if (voiceTarget === target) { stopVoiceRecording(target); return }
+    if (voiceTarget) { stopVoiceRecording(voiceTarget) }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SR) { toast.error("이 브라우저는 음성 입력을 지원하지 않습니다."); return }
+
+    transcriptRef.current = ""
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rec: any = new SR()
+    rec.lang = "ko-KR"; rec.continuous = true; rec.interimResults = true
+    rec.onresult = (e: any) => {
+      let final = ""
+      for (let i = 0; i < e.results.length; i++) { if (e.results[i].isFinal) final += e.results[i][0].transcript }
+      if (final) transcriptRef.current = final
+    }
+    rec.onerror = (e: any) => {
+      if (e.error !== "aborted") toast.error("음성 인식 오류가 발생했습니다.")
+      recognitionRef.current = null; setVoiceTarget(null)
+    }
+    rec.onend = () => {
+      recognitionRef.current = null; setVoiceTarget(null)
+      if (transcriptRef.current) { correctVoiceInput(transcriptRef.current, target); transcriptRef.current = "" }
+    }
+    recognitionRef.current = rec
+    try {
+      rec.start(); setVoiceTarget(target)
+      toast.info("🎤 녹음 중... 말씀 후 [녹음 중지] 버튼을 눌러주세요")
+    } catch { toast.error("마이크 권한을 확인해주세요."); recognitionRef.current = null }
+  }
 
   // Result state
   const [activeTab, setActiveTab] = useState<TabKey>("SUMMARY")
@@ -368,7 +438,23 @@ export function DocumentGenerator({ initialAnalysisCount, analysisLimit, planNam
             <ChipSelect label="고객 연령대" value={ageGroup} onChange={setAgeGroup} options={AGE_GROUPS} columns={5} />
             <ChipSelect label="고객 직업" value={occupation} onChange={setOccupation} options={OCCUPATIONS} columns={4} />
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">고객 상황</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-medium">고객 상황</Label>
+                <button
+                  type="button"
+                  onClick={() => toggleVoice("situation")}
+                  disabled={isLoading || isCorrectingVoice}
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium transition-all disabled:opacity-50 ${
+                    voiceTarget === "situation" ? "bg-red-500 text-white animate-pulse" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {isCorrectingVoice && voiceTarget === "situation"
+                    ? <><Loader2 className="h-3 w-3 animate-spin" />보정 중</>
+                    : voiceTarget === "situation"
+                    ? <><MicOff className="h-3 w-3" />녹음 중지</>
+                    : <><Mic className="h-3 w-3" />음성 입력</>}
+                </button>
+              </div>
               <Textarea
                 placeholder="예: 최근 부모님이 암 진단을 받으셨고, 본인도 건강 걱정이 많음"
                 value={customerSituation}
@@ -378,7 +464,23 @@ export function DocumentGenerator({ initialAnalysisCount, analysisLimit, planNam
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">추가 요청사항</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-medium">추가 요청사항</Label>
+                <button
+                  type="button"
+                  onClick={() => toggleVoice("requests")}
+                  disabled={isLoading || isCorrectingVoice}
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium transition-all disabled:opacity-50 ${
+                    voiceTarget === "requests" ? "bg-red-500 text-white animate-pulse" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {isCorrectingVoice && voiceTarget === "requests"
+                    ? <><Loader2 className="h-3 w-3 animate-spin" />보정 중</>
+                    : voiceTarget === "requests"
+                    ? <><MicOff className="h-3 w-3" />녹음 중지</>
+                    : <><Mic className="h-3 w-3" />음성 입력</>}
+                </button>
+              </div>
               <Textarea
                 placeholder="예: 자녀 관련 보장 내용을 특히 강조해주세요"
                 value={extraRequests}
