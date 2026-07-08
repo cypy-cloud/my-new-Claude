@@ -165,6 +165,8 @@ export function ScriptGenerator({ initialUsage, limit, planName, planId, initial
     setSelectedAnalysisText(r.output_text)
     setAnalysisOpen(false)
 
+    if (r.input_data?.customerName && !customerName) setCustomerName(r.input_data.customerName)
+
     if (r.input_data) {
       const mapped = mapAnalysisInputToScriptFields(r.input_data)
       if (mapped.gender) setGender(mapped.gender)

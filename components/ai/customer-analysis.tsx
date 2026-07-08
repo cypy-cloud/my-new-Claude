@@ -46,6 +46,7 @@ interface CustomerAnalysisProps {
 }
 
 export function CustomerAnalysis({ planName, planId, limits, usage }: CustomerAnalysisProps) {
+  const [customerName, setCustomerName] = useState("")
   const [ageGroup, setAgeGroup] = useState("")
   const [gender, setGender] = useState("")
   const [occupation, setOccupation] = useState("")
@@ -167,9 +168,9 @@ export function CustomerAnalysis({ planName, planId, limits, usage }: CustomerAn
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'script',
-          title: `고객 성향 분석: ${[ageGroup, gender, occupation].filter(Boolean).join(' ')}`,
+          title: `고객 성향 분석: ${[customerName, ageGroup, gender, occupation].filter(Boolean).join(' ')}`,
           outputText,
-          inputData: { ageGroup, gender, occupation, income, familyStatus, mainConcern, existingInsurance, extraNotes, personality, mbtiType },
+          inputData: { customerName, ageGroup, gender, occupation, income, familyStatus, mainConcern, existingInsurance, extraNotes, personality, mbtiType },
         }),
       })
       const data = await res.json()
@@ -307,6 +308,12 @@ export function CustomerAnalysis({ planName, planId, limits, usage }: CustomerAn
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>고객 이름 (선택)</Label>
+            <Input placeholder="예: 홍길동" value={customerName} onChange={e => setCustomerName(e.target.value)} />
+            <p className="text-xs text-gray-400">입력해두면 이 분석 결과를 문자·스크립트 생성 시 불러올 때 고객 이름도 함께 채워집니다</p>
+          </div>
+
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-1.5">
               <Label>나이대 <span className="text-red-500">*</span></Label>

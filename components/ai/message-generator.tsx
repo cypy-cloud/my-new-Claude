@@ -137,6 +137,7 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
     setSelectedAnalysisText(extractPersonalityOnly(r.output_text))
     setAnalysisOpen(false)
 
+    if (r.input_data?.customerName && !customerName) setCustomerName(r.input_data.customerName)
     if (r.input_data?.ageGroup && !ageGroup) setAgeGroup(r.input_data.ageGroup.replace(/\s*(초반|후반)$/, ''))
     if (r.input_data?.occupation && !occupation) setOccupation(r.input_data.occupation)
 
