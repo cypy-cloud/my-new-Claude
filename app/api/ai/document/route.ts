@@ -11,12 +11,17 @@ export const maxDuration = 60
 
 const DISCLAIMER = '\n\n【필수 고지문】\n본 자료는 업로드된 자료를 바탕으로 AI가 작성한 참고용 설명자료입니다. 실제 보장 여부, 보험금 지급 여부, 가입 가능 여부는 해당 보험회사의 약관, 인수기준, 심사결과에 따라 달라질 수 있습니다.'
 
-const SECTION_MARKERS = ['SUMMARY', 'COVERAGE', 'MISCONCEPTIONS', 'CHECKLIST', 'EXCLUSIONS', 'QNA', 'AGENT_SCRIPT', 'CAUTION']
+const SECTION_MARKERS = ['SUMMARY', 'COVERAGE', 'MISCONCEPTIONS', 'QNA', 'AGENT_SCRIPT', 'CAUTION']
 
-// 8개 섹션을 한 번에 생성하면(9000 토큰) Vercel 서버리스 60초 제한을 넘기기 쉬워
-// 타임아웃으로 실패한다. 두 그룹으로 나눠 병렬 호출해 체감/실제 소요시간을 절반으로 줄인다.
-const SECTION_GROUP_A = ['SUMMARY', 'COVERAGE', 'MISCONCEPTIONS', 'CHECKLIST'] as const
-const SECTION_GROUP_B = ['EXCLUSIONS', 'QNA', 'AGENT_SCRIPT', 'CAUTION'] as const
+// 여러 섹션을 한 번에 생성하면 Vercel 서버리스 60초 제한을 넘기기 쉬워 타임아웃으로
+// 실패한다. 그룹으로 나눠 병렬 호출해 소요시간을 줄인다. 설계사가 이미 아는 내용인
+// 체크리스트/면책사항은 제외하고, 실제 상담에 쓰는 AGENT_SCRIPT는 다른 섹션과 예산을
+// 나눠 쓰지 않도록 단독 호출로 분리해 더 풍성하게 생성한다.
+const SECTION_GROUPS = [
+  { sections: ['SUMMARY', 'COVERAGE', 'MISCONCEPTIONS'] as const, maxTokens: 3500 },
+  { sections: ['QNA', 'CAUTION'] as const, maxTokens: 3500 },
+  { sections: ['AGENT_SCRIPT'] as const, maxTokens: 3000 },
+]
 
 const PDF_CONTENT_LIMIT = 12_000
 
@@ -39,6 +44,7 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
+  const userId = user.id
 
   const body = await request.json()
   const {
@@ -108,9 +114,6 @@ export async function POST(request: NextRequest) {
   const groupPrompt = (group: readonly string[]) =>
     `${basePrompt}\n\n※ 위 섹션 중 아래 섹션만 작성하세요 (그 외 섹션은 작성하지 마세요): ${group.map(s => `[${s}]`).join(', ')}`
 
-  const promptA = groupPrompt(SECTION_GROUP_A)
-  const promptB = groupPrompt(SECTION_GROUP_B)
-
   const baseCacheInput = {
     fileId,
     ageGroup, occupation, customerSituation, explanationPurpose,
@@ -119,39 +122,33 @@ export async function POST(request: NextRequest) {
     pdfPreview: fileRow.extracted_text.slice(0, 500),
   }
 
-  const genOpts = (group: readonly string[], prompt: string, force: boolean) => ({
-    feature: 'ai_document' as const,
-    userId: user.id,
-    maxTokens: 5000,
-    temperature: 0.6,
-    cacheInput: { ...baseCacheInput, group: group.join(',') },
-    promptVersion: version,
-    forceRegenerate: force,
-  })
+  async function runGroups(force: boolean) {
+    return Promise.all(
+      SECTION_GROUPS.map(({ sections, maxTokens }) => {
+        const prompt = groupPrompt(sections)
+        return generateWithAI(prompt, {
+          feature: 'ai_document',
+          userId,
+          maxTokens,
+          temperature: 0.6,
+          cacheInput: { ...baseCacheInput, group: sections.join(',') },
+          promptVersion: version,
+          forceRegenerate: force,
+        })
+      })
+    )
+  }
 
-  let resultA: Awaited<ReturnType<typeof generateWithAI>>
-  let resultB: Awaited<ReturnType<typeof generateWithAI>>
+  let results: Awaited<ReturnType<typeof generateWithAI>>[]
   let sections: Record<string, string>
   try {
-    ;[resultA, resultB] = await Promise.all([
-      generateWithAI(promptA, genOpts(SECTION_GROUP_A, promptA, forceRegenerate)),
-      generateWithAI(promptB, genOpts(SECTION_GROUP_B, promptB, forceRegenerate)),
-    ])
-    sections = {
-      ...parseOutputSections(resultA.text, fullDisclaimer),
-      ...parseOutputSections(resultB.text, fullDisclaimer),
-    }
+    results = await runGroups(forceRegenerate)
+    sections = Object.assign({}, ...results.map(r => parseOutputSections(r.text, fullDisclaimer)))
 
     // Stale cache from before a prompt/format change may not contain valid markers — bypass it once
-    if (Object.keys(sections).length === 0 && (resultA.cachedAt || resultB.cachedAt)) {
-      ;[resultA, resultB] = await Promise.all([
-        generateWithAI(promptA, genOpts(SECTION_GROUP_A, promptA, true)),
-        generateWithAI(promptB, genOpts(SECTION_GROUP_B, promptB, true)),
-      ])
-      sections = {
-        ...parseOutputSections(resultA.text, fullDisclaimer),
-        ...parseOutputSections(resultB.text, fullDisclaimer),
-      }
+    if (Object.keys(sections).length === 0 && results.some(r => r.cachedAt)) {
+      results = await runGroups(true)
+      sections = Object.assign({}, ...results.map(r => parseOutputSections(r.text, fullDisclaimer)))
     }
   } catch (err) {
     if (err instanceof DuplicateRequestError) {
@@ -160,12 +157,12 @@ export async function POST(request: NextRequest) {
     return handleApiError(err, { userId: user.id, area: 'ai', metadata: { feature: 'ai_document' } })
   }
 
-  const wasCached = !!(resultA.cachedAt && resultB.cachedAt)
+  const wasCached = results.every(r => !!r.cachedAt)
 
   if (!wasCached) {
     await incrementUsage(user.id, 'pdf_analysis', {
-      tokenInput: resultA.usage.inputTokens + resultB.usage.inputTokens,
-      tokenOutput: resultA.usage.outputTokens + resultB.usage.outputTokens,
+      tokenInput: results.reduce((sum, r) => sum + r.usage.inputTokens, 0),
+      tokenOutput: results.reduce((sum, r) => sum + r.usage.outputTokens, 0),
     })
     await trackFeatureComplete('ai_document', user.id, {
       fileId,
@@ -179,11 +176,11 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     sections,
-    rawText: `${resultA.text}\n\n${resultB.text}`,
+    rawText: results.map(r => r.text).join('\n\n'),
     cached: wasCached,
     remaining: afterCheck.remaining,
-    provider: resultA.provider,
-    model: resultA.model,
+    provider: results[0].provider,
+    model: results[0].model,
     promptVersion: version,
     fileName: fileRow.original_file_name,
   })

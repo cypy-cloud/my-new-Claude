@@ -5,8 +5,8 @@ import { toast } from "sonner"
 import {
   Sparkles, Copy, Download, RefreshCw, CheckCircle, AlertCircle,
   Zap, Bookmark, BookmarkCheck, FileText, Loader2,
-  BookOpen, Eye, ShieldCheck, List, HelpCircle,
-  MessageSquare, AlertTriangle, ChevronDown,
+  BookOpen, Eye, ShieldCheck, HelpCircle,
+  MessageSquare, ChevronDown,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -38,8 +38,6 @@ const OUTPUT_TABS = [
   { key: "SUMMARY",        icon: BookOpen,       label: "쉬운 요약",        color: "blue" },
   { key: "COVERAGE",       icon: ShieldCheck,    label: "핵심 보장",        color: "green" },
   { key: "MISCONCEPTIONS", icon: Eye,            label: "오해하기 쉬운 부분", color: "amber" },
-  { key: "CHECKLIST",      icon: List,           label: "확인 체크리스트",   color: "purple" },
-  { key: "EXCLUSIONS",     icon: AlertTriangle,  label: "면책/제외사항",     color: "red" },
   { key: "QNA",            icon: HelpCircle,     label: "예상 Q&A",         color: "teal" },
   { key: "AGENT_SCRIPT",   icon: MessageSquare,  label: "상담사 멘트",       color: "indigo" },
   { key: "CAUTION",        icon: AlertCircle,    label: "주의 문구",         color: "orange" },
