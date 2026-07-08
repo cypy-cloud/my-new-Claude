@@ -37,7 +37,14 @@ function parseOutputSections(raw: string): Record<string, string> {
   return result
 }
 
-function buildHaikuPrompt(vars: Record<string, string>, categoryAddendum: string): string {
+const PERSONALITY_ADDENDUM = `
+※ 중요 — "특별 보장 내용" 안에 [고객성향분석 결과]가 포함되어 있다면, 그 안의 MBTI/성향 정보를
+반드시 반영하여 모든 버전의 문체·어조·설득 방식을 이 고객에게 맞게 조정하세요:
+- 분석에서 제시된 "추천 첫마디"나 "핵심키워드"가 있다면 자연스럽게 녹여서 활용
+- 이 고객 성향에 맞는 문장 길이·어투(예: 신중한 성향이면 근거와 수치 중심, 감성적 성향이면 공감과 스토리 중심)
+- 분석에서 "절대 금물"로 명시된 표현이나 접근법은 어떤 버전에도 사용하지 말 것`
+
+function buildHaikuPrompt(vars: Record<string, string>, categoryAddendum: string, hasAnalysis: boolean): string {
   return `당신은 보험설계사를 돕는 전문 메시지 작성 AI입니다.
 
 고객 정보:
@@ -49,6 +56,7 @@ function buildHaikuPrompt(vars: Record<string, string>, categoryAddendum: string
 - 상품 분야: ${vars.product_field}
 - 선호 말투: ${vars.tone}
 - 특별 보장 내용(후킹 포인트): ${vars.extra_notes}
+${hasAnalysis ? PERSONALITY_ADDENDUM : ''}
 
 아래 4가지 버전의 메시지를 반드시 마커로 구분하여 작성하세요.
 모든 버전은 ① 관심 유도 → ② 공감 사례 스토리 → ③ 상품 핵심 설명 → ④ 차별화 포인트 → ⑤ 자연스러운 마무리 구조를 따를 것.
@@ -71,7 +79,7 @@ function buildHaikuPrompt(vars: Record<string, string>, categoryAddendum: string
 - 고지문은 시스템이 자동 추가하므로 포함하지 말 것${categoryAddendum ? `\n\n${categoryAddendum}` : ''}`
 }
 
-function buildSonnetPrompt(vars: Record<string, string>, categoryAddendum: string): string {
+function buildSonnetPrompt(vars: Record<string, string>, categoryAddendum: string, hasAnalysis: boolean): string {
   return `당신은 보험설계사를 돕는 전문 메시지 작성 AI입니다.
 
 고객 정보:
@@ -83,6 +91,7 @@ function buildSonnetPrompt(vars: Record<string, string>, categoryAddendum: strin
 - 상품 분야: ${vars.product_field}
 - 선호 말투: ${vars.tone}
 - 특별 보장 내용(후킹 포인트): ${vars.extra_notes}
+${hasAnalysis ? PERSONALITY_ADDENDUM : ''}
 
 아래 1가지 버전의 메시지를 반드시 마커로 구분하여 작성하세요:
 
@@ -152,8 +161,9 @@ export async function POST(request: NextRequest) {
     extra_notes: extraNotes || '없음',
   }
 
-  const haikuPrompt = buildHaikuPrompt(vars, categoryAddendum)
-  const sonnetPrompt = buildSonnetPrompt(vars, categoryAddendum)
+  const hasAnalysis = typeof extraNotes === 'string' && extraNotes.includes('[고객성향분석 결과]')
+  const haikuPrompt = buildHaikuPrompt(vars, categoryAddendum, hasAnalysis)
+  const sonnetPrompt = buildSonnetPrompt(vars, categoryAddendum, hasAnalysis)
 
   const baseCacheInput = {
     customerName: customerName || '',

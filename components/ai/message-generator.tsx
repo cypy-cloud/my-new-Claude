@@ -5,7 +5,7 @@ import { toast } from "sonner"
 import {
   Sparkles, Copy, Download, RefreshCw, CheckCircle, AlertCircle,
   Zap, Bookmark, BookmarkCheck, MessageSquare, MessageCircle,
-  Heart, TrendingUp, Send, ChevronDown, ChevronUp, Mic, MicOff, Loader2,
+  Heart, TrendingUp, Send, ChevronDown, ChevronUp, Mic, MicOff, Loader2, Brain,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -74,6 +74,42 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
   const [length, setLength] = useState("보통 (100자 이내)")
   const [extraNotes, setExtraNotes] = useState(initialData?.extraNotes ?? "")
   const [showAdvanced, setShowAdvanced] = useState(!!(initialData?.occupation || initialData?.relationship))
+
+  // 고객성향분석 결과 불러오기 (선택 — 불러오면 MBTI/성향에 맞춰 문체가 조정됨)
+  const [analysisResults, setAnalysisResults] = useState<Array<{ id: string; title: string; output_text: string; created_at: string; input_data?: Record<string, string> }>>([])
+  const [analysisLoading, setAnalysisLoading] = useState(false)
+  const [analysisOpen, setAnalysisOpen] = useState(false)
+  const [selectedAnalysis, setSelectedAnalysis] = useState<string | null>(null)
+  const [selectedAnalysisText, setSelectedAnalysisText] = useState("")
+
+  async function loadAnalysisResults() {
+    if (analysisResults.length > 0) { setAnalysisOpen(o => !o); return }
+    setAnalysisLoading(true)
+    try {
+      const res = await fetch('/api/outputs?type=script&limit=20')
+      const data = await res.json()
+      const filtered = (data.outputs ?? []).filter((o: any) =>
+        o.title?.includes('성향 분석') || o.title?.includes('성향분석') || o.title?.includes('고객분석')
+      )
+      setAnalysisResults(filtered)
+      setAnalysisOpen(true)
+    } catch {
+      toast.error('분석 결과를 불러오지 못했습니다')
+    } finally {
+      setAnalysisLoading(false)
+    }
+  }
+
+  function applyAnalysis(r: { id: string; title: string; output_text: string; input_data?: Record<string, string> }) {
+    setSelectedAnalysis(r.id)
+    setSelectedAnalysisText(r.output_text)
+    setAnalysisOpen(false)
+
+    if (r.input_data?.ageGroup && !ageGroup) setAgeGroup(r.input_data.ageGroup.replace(/\s*(초반|후반)$/, ''))
+    if (r.input_data?.occupation && !occupation) setOccupation(r.input_data.occupation)
+
+    toast.success(`"${r.title}" 성향이 문체에 반영됩니다`)
+  }
 
   // Result state
   const [activeTab, setActiveTab] = useState<TabKey>("SMS")
@@ -204,7 +240,14 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
   }, [state.status, state.cached, state.error, hasResult])
 
   function buildParams(forceRegenerate = false) {
-    return { customerName, ageGroup, occupation, relationship, purpose, productField, categoryId, tone, length, extraNotes, forceRegenerate }
+    return {
+      customerName, ageGroup, occupation, relationship, purpose, productField, categoryId, tone, length,
+      extraNotes: [
+        selectedAnalysisText ? `[고객성향분석 결과]\n${selectedAnalysisText}` : '',
+        extraNotes,
+      ].filter(Boolean).join("\n\n"),
+      forceRegenerate,
+    }
   }
 
   function handleGenerate() {
@@ -327,6 +370,60 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
             <span>고객 정보 &ldquo;{initialData.customerName}&rdquo;가 자동으로 입력되었습니다</span>
           </div>
         )}
+
+        {/* 고객성향분석 결과 불러오기 — 불러오면 MBTI/성향에 맞춰 문체가 조정됨 (선택) */}
+        <div className="space-y-1.5">
+          <button
+            type="button"
+            onClick={loadAnalysisResults}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-purple-200 bg-purple-50 hover:bg-purple-100 transition-colors text-sm text-purple-700"
+          >
+            <div className="flex items-center gap-2">
+              <Brain className="h-4 w-4" />
+              <span className="font-medium">고객성향분석 결과 불러오기 <span className="text-purple-400 font-normal">(선택 — 성향에 맞춰 문체 조정)</span></span>
+              {selectedAnalysis && <span className="text-xs bg-purple-200 text-purple-800 px-1.5 py-0.5 rounded-full">반영됨</span>}
+            </div>
+            {analysisLoading
+              ? <Loader2 className="h-4 w-4 animate-spin" />
+              : analysisOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+            }
+          </button>
+
+          {analysisOpen && (
+            <div className="border border-purple-200 rounded-lg overflow-hidden">
+              {analysisResults.length === 0 ? (
+                <div className="px-3 py-4 text-xs text-gray-500 text-center">
+                  저장된 고객성향분석 결과가 없습니다.<br />
+                  고객성향분석 후 결과를 먼저 저장해주세요.
+                </div>
+              ) : (
+                <div className="max-h-48 overflow-y-auto divide-y divide-gray-100">
+                  {analysisResults.map(r => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => applyAnalysis(r)}
+                      className={`w-full text-left px-3 py-2.5 hover:bg-purple-50 transition-colors ${selectedAnalysis === r.id ? 'bg-purple-50' : ''}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-800 truncate">{r.title}</p>
+                        {selectedAnalysis === r.id && <CheckCircle className="h-3.5 w-3.5 text-purple-500 shrink-0 ml-1" />}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-0.5">{new Date(r.created_at).toLocaleDateString('ko-KR')}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {selectedAnalysisText && (
+            <div className="bg-purple-50 border border-purple-200 rounded-lg px-3 py-2 text-xs text-purple-800 leading-relaxed line-clamp-3">
+              {selectedAnalysisText.slice(0, 120)}...
+              <button type="button" onClick={() => { setSelectedAnalysis(null); setSelectedAnalysisText('') }} className="ml-2 text-purple-400 hover:text-purple-600 underline">해제</button>
+            </div>
+          )}
+        </div>
 
         {/* 필수 항목 */}
         <div className="grid grid-cols-2 gap-3">
