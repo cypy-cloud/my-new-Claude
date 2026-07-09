@@ -26,6 +26,11 @@ export default async function BillingPage() {
   const scheduledPlanDate = profile?.scheduled_plan_date ?? null
   const storeId = process.env.NEXT_PUBLIC_PORTONE_STORE_ID
   const channelKey = process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY
+  // PG사에 따라 일반결제와 빌링키(정기결제) 발급이 서로 다른 채널(MID)로
+  // 분리되어 있을 수 있다 (예: KPN 테스트 환경). 전용 채널키가 설정되어
+  // 있으면 그걸 쓰고, 없으면 기존 채널키로 폴백해 단일 채널 PG에서도
+  // 그대로 동작한다.
+  const billingChannelKey = process.env.NEXT_PUBLIC_PORTONE_BILLING_CHANNEL_KEY
 
   return (
     <div className="space-y-8 max-w-5xl">
@@ -70,7 +75,7 @@ export default async function BillingPage() {
           <PortOneCardRegister
             userId={user!.id}
             storeId={storeId}
-            channelKey={channelKey}
+            channelKey={billingChannelKey || channelKey}
             fullName={profile?.full_name ?? "이용자"}
             phoneNumber={profile?.phone}
             email={profile?.email}
