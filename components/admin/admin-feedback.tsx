@@ -22,7 +22,7 @@ interface AdminFeedbackRow {
   admin_memo: string | null
   created_at: string
   updated_at: string
-  profile: { name: string | null; email: string } | null
+  profile: { full_name: string | null; email: string } | null
 }
 
 const STATUSES: FeedbackStatus[] = ['open', 'reviewing', 'planned', 'resolved', 'closed']
@@ -163,7 +163,7 @@ export function AdminFeedback() {
                           {f.title || f.content.slice(0, 40)}
                         </p>
                         <p className="text-xs text-gray-400 mt-0.5">
-                          {f.profile?.name ?? f.profile?.email ?? '알 수 없음'} · {new Date(f.created_at).toLocaleString('ko-KR')}
+                          {f.profile?.full_name ?? f.profile?.email ?? '알 수 없음'} · {new Date(f.created_at).toLocaleString('ko-KR')}
                         </p>
                       </div>
                       <button onClick={() => setExpandedId(isOpen ? null : f.id)} className="p-1.5 text-gray-400 hover:text-gray-600 shrink-0">

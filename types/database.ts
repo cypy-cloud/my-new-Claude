@@ -6,33 +6,63 @@ export type Database = {
       profiles: {
         Row: {
           id: string
-          user_id: string
-          name: string | null
           email: string
+          full_name: string | null
+          avatar_url: string | null
           phone: string | null
           company_name: string | null
-          insurance_company: string | null
-          plan_type: 'free' | 'basic' | 'pro' | 'premium'
+          branch_name: string | null
           role: 'user' | 'manager' | 'admin' | 'super_admin'
-          team_id: string | null
-          status: 'active' | 'suspended' | 'deleted'
+          is_active: boolean
           created_at: string
           updated_at: string
+          team_id: string | null
+          plan_type: 'free' | 'basic' | 'pro' | 'premium'
+          status: 'active' | 'suspended' | 'deleted'
+          company: string | null
+          branch: string | null
+          scheduled_plan_type: string | null
+          scheduled_plan_date: string | null
+          terms_agreed_at: string | null
+          terms_version: string | null
+          privacy_agreed_at: string | null
+          privacy_version: string | null
+          marketing_agreed_at: string | null
+          portone_billing_key: string | null
+          portone_customer_id: string | null
+          billing_card_last4: string | null
+          billing_card_brand: string | null
+          billing_key_registered_at: string | null
         }
         Insert: {
-          id?: string
-          user_id: string
-          name?: string | null
+          id: string
           email: string
+          full_name?: string | null
+          avatar_url?: string | null
           phone?: string | null
           company_name?: string | null
-          insurance_company?: string | null
-          plan_type?: 'free' | 'basic' | 'pro' | 'premium'
+          branch_name?: string | null
           role?: 'user' | 'manager' | 'admin' | 'super_admin'
-          team_id?: string | null
-          status?: 'active' | 'suspended' | 'deleted'
+          is_active?: boolean
           created_at?: string
           updated_at?: string
+          team_id?: string | null
+          plan_type?: 'free' | 'basic' | 'pro' | 'premium'
+          status?: 'active' | 'suspended' | 'deleted'
+          company?: string | null
+          branch?: string | null
+          scheduled_plan_type?: string | null
+          scheduled_plan_date?: string | null
+          terms_agreed_at?: string | null
+          terms_version?: string | null
+          privacy_agreed_at?: string | null
+          privacy_version?: string | null
+          marketing_agreed_at?: string | null
+          portone_billing_key?: string | null
+          portone_customer_id?: string | null
+          billing_card_last4?: string | null
+          billing_card_brand?: string | null
+          billing_key_registered_at?: string | null
         }
         Update: Partial<Database['public']['Tables']['profiles']['Insert']>
       }

@@ -134,12 +134,12 @@ export function Sidebar({ profile, planName, onNavigate, mobile }: SidebarProps)
         <div className="flex items-center gap-3 px-3 py-2 mb-2">
           <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
             <span className="text-white text-xs font-bold">
-              {(profile?.name ?? profile?.email ?? "?")[0].toUpperCase()}
+              {(profile?.full_name ?? profile?.email ?? "?")[0].toUpperCase()}
             </span>
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-white truncate">
-              {profile?.name ?? profile?.email ?? "사용자"}
+              {profile?.full_name ?? profile?.email ?? "사용자"}
             </p>
             <Badge className="text-xs bg-orange-500/20 text-orange-300 border-orange-500/30 mt-0.5 hover:bg-orange-500/20">
               {displayPlanName}

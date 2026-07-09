@@ -34,7 +34,7 @@ export default async function CreditsCheckoutPage({
   const adminSupabase = createAdminClient()
   const { data: profile } = await (adminSupabase as any)
     .from("profiles")
-    .select("plan_type, name, phone, email")
+    .select("plan_type, full_name, phone, email")
     .eq("id", user.id)
     .single()
 
@@ -56,7 +56,7 @@ export default async function CreditsCheckoutPage({
         amount={amount}
         storeId={storeId}
         channelKey={channelKey}
-        fullName={profile?.name ?? "이용자"}
+        fullName={profile?.full_name ?? "이용자"}
         phoneNumber={profile?.phone}
         email={profile?.email}
       />

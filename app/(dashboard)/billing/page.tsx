@@ -17,7 +17,7 @@ export default async function BillingPage() {
 
   const { data: profile } = await (supabase as any)
     .from("profiles")
-    .select("plan_type, scheduled_plan_type, scheduled_plan_date, billing_card_last4, billing_card_brand, name, phone, email")
+    .select("plan_type, scheduled_plan_type, scheduled_plan_date, billing_card_last4, billing_card_brand, full_name, phone, email")
     .eq("id", user!.id)
     .single()
 
@@ -71,7 +71,7 @@ export default async function BillingPage() {
             userId={user!.id}
             storeId={storeId}
             channelKey={channelKey}
-            fullName={profile?.name ?? "이용자"}
+            fullName={profile?.full_name ?? "이용자"}
             phoneNumber={profile?.phone}
             email={profile?.email}
             cardLast4={profile?.billing_card_last4}

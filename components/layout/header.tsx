@@ -31,7 +31,7 @@ export function Header({ profile, planName, onMenuToggle, title }: HeaderProps) 
   }
 
   const displayPlanName = planName ?? PLAN_LABELS[profile?.plan_type ?? 'free'] ?? '무료'
-  const displayName = profile?.name ?? profile?.email ?? "사용자"
+  const displayName = profile?.full_name ?? profile?.email ?? "사용자"
   const initials = displayName.slice(0, 2).toUpperCase()
 
   return (
