@@ -14,7 +14,6 @@ function CheckoutContent() {
   const sessionId = sp.get("session_id")
   const isMock = sp.get("mock") === "1"
   const action = sp.get("action")
-  const interval: "month" | "year" = sp.get("interval") === "year" ? "year" : "month"
 
   const [status, setStatus] = useState<"idle" | "verifying" | "success" | "error">("idle")
   const [errorMsg, setErrorMsg] = useState("")
@@ -31,11 +30,11 @@ function CheckoutContent() {
     if (!sessionId || !plan) return
     setStatus("verifying")
     try {
-      const amount = interval === "year" && PLANS[plan].annualPrice > 0 ? PLANS[plan].annualPrice : PLANS[plan].price
+      const amount = PLANS[plan].price
       const res = await fetch("/api/billing/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, planId: plan, orderId: sessionId, amount, interval }),
+        body: JSON.stringify({ sessionId, planId: plan, orderId: sessionId, amount }),
       })
       const data = await res.json()
       if (!res.ok) {

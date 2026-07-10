@@ -28,7 +28,7 @@ const PLAN_UI: Record<PlanId, {
   premium: { icon: Crown,  border: "border-orange-400",  iconBg: "bg-orange-100 text-orange-500",  badge: "최고 혜택" },
 }
 
-function getPlanFeatures(planId: PlanId, annual: boolean) {
+function getPlanFeatures(planId: PlanId) {
   const plan = PLANS[planId]
   const features: { label: string; included: boolean }[] = []
 
@@ -92,7 +92,6 @@ interface BillingPlansProps {
 }
 
 export function BillingPlans({ currentPlanId }: BillingPlansProps) {
-  const [annual, setAnnual] = useState(false)
   const [usage, setUsage] = useState<UsageStatus | null>(null)
 
   useEffect(() => {
@@ -113,47 +112,18 @@ export function BillingPlans({ currentPlanId }: BillingPlansProps) {
 
   return (
     <div className="space-y-4">
-      {/* 월간/연간 토글 */}
-      <div className="flex flex-col items-center gap-2">
-        <div className="inline-flex items-center bg-gray-100 rounded-xl p-1 gap-1">
-          <button
-            onClick={() => setAnnual(false)}
-            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-150 ${
-              !annual
-                ? "bg-white text-[#1e3a5f] shadow"
-                : "text-gray-400 hover:text-gray-600"
-            }`}
-          >
-            월간 결제
-          </button>
-          <button
-            onClick={() => setAnnual(true)}
-            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-150 flex items-center gap-2 ${
-              annual
-                ? "bg-white text-[#1e3a5f] shadow"
-                : "text-gray-400 hover:text-gray-600"
-            }`}
-          >
-            연간 결제
-            <span className="bg-green-100 text-green-700 text-xs font-semibold px-2 py-0.5 rounded-full">
-              2개월 무료
-            </span>
-          </button>
-        </div>
-      </div>
-
       {/* 플랜 카드 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {PLAN_ORDER.map((planId) => {
           const plan = PLANS[planId]
           const ui = PLAN_UI[planId]
-          const features = getPlanFeatures(planId, annual)
+          const features = getPlanFeatures(planId)
           const Icon = ui.icon
           const isCurrent = planId === currentPlanId
           const isDowngrade = PLAN_ORDER.indexOf(planId) < PLAN_ORDER.indexOf(currentPlanId)
 
-          const displayPrice = annual && plan.annualPrice > 0 ? plan.annualPrice : plan.price
-          const priceLabel = annual && plan.annualPrice > 0 ? "/년" : plan.price > 0 ? "/월" : null
+          const displayPrice = plan.price
+          const priceLabel = plan.price > 0 ? "/월" : null
 
           return (
             <div
@@ -185,12 +155,6 @@ export function BillingPlans({ currentPlanId }: BillingPlansProps) {
                 </span>
                 {priceLabel && <span className="text-gray-400 text-xs mb-0.5">{priceLabel}</span>}
               </div>
-              {annual && plan.annualPrice > 0 && (
-                <p className="text-xs text-green-600 font-medium -mt-1 mb-1">
-                  월 ₩{Math.round(plan.annualPrice / 12).toLocaleString()} (2개월 무료)
-                </p>
-              )}
-
               <ul className="space-y-2 mb-5 flex-1">
                 {features.map((f) => (
                   <li key={f.label} className="flex items-start gap-1.5 text-xs text-gray-600">
@@ -209,7 +173,6 @@ export function BillingPlans({ currentPlanId }: BillingPlansProps) {
                 isDowngrade={isDowngrade}
                 currentPlanId={currentPlanId}
                 currentUsage={usage}
-                annual={annual && plan.annualPrice > 0}
               />
             </div>
           )

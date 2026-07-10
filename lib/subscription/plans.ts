@@ -17,7 +17,6 @@ export interface Plan extends PlanLimits {
   id: PlanId
   name: string
   price: number
-  annualPrice: number
   currency: string
   interval: string
 }
@@ -27,7 +26,6 @@ export const PLANS: Record<PlanId, Plan> = {
     id: 'free',
     name: '무료',
     price: 0,
-    annualPrice: 0,
     currency: 'KRW',
     interval: 'month',
     smsLimit: 3,
@@ -45,7 +43,6 @@ export const PLANS: Record<PlanId, Plan> = {
     id: 'basic',
     name: '기본',
     price: 5900,
-    annualPrice: 59000,
     currency: 'KRW',
     interval: 'month',
     smsLimit: 15,
@@ -63,7 +60,6 @@ export const PLANS: Record<PlanId, Plan> = {
     id: 'pro',
     name: '프로',
     price: 9900,
-    annualPrice: 99000,
     currency: 'KRW',
     interval: 'month',
     smsLimit: 30,
@@ -81,7 +77,6 @@ export const PLANS: Record<PlanId, Plan> = {
     id: 'premium',
     name: '프리미엄',
     price: 16900,
-    annualPrice: 169000,
     currency: 'KRW',
     interval: 'month',
     smsLimit: 70,

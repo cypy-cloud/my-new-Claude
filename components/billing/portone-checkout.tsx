@@ -11,7 +11,6 @@ import { toast } from "sonner"
 interface PortOneCheckoutProps {
   planId: PlanId
   paymentId: string
-  interval: "month" | "year"
   storeId: string
   channelKey: string
   fullName: string
@@ -22,7 +21,6 @@ interface PortOneCheckoutProps {
 export function PortOneCheckout({
   planId,
   paymentId,
-  interval,
   storeId,
   channelKey,
   fullName,
@@ -33,7 +31,7 @@ export function PortOneCheckout({
   const [loading, setLoading] = useState(false)
   const [refundAgreed, setRefundAgreed] = useState(false)
   const plan = PLANS[planId]
-  const amount = interval === "year" && plan.annualPrice > 0 ? plan.annualPrice : plan.price
+  const amount = plan.price
 
   async function handlePay() {
     if (!refundAgreed) {
@@ -47,7 +45,7 @@ export function PortOneCheckout({
         storeId,
         channelKey,
         paymentId,
-        orderName: `FP AI Assistant ${PLAN_LABELS[planId]} 플랜 (${interval === "year" ? "연간" : "월간"})`,
+        orderName: `FP AI Assistant ${PLAN_LABELS[planId]} 플랜 (월간)`,
         totalAmount: amount,
         currency: "CURRENCY_KRW",
         payMethod: "CARD",
@@ -68,7 +66,7 @@ export function PortOneCheckout({
       const res = await fetch("/api/billing/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: paymentId, planId, orderId: paymentId, amount, interval }),
+        body: JSON.stringify({ sessionId: paymentId, planId, orderId: paymentId, amount }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -89,10 +87,10 @@ export function PortOneCheckout({
     <div className="space-y-4">
       <div className="bg-gray-50 rounded-xl p-4 border">
         <p className="text-xs text-gray-500 mb-1">결제 상품</p>
-        <p className="font-semibold text-[#1e3a5f]">FP AI Assistant {PLAN_LABELS[planId]} 플랜 ({interval === "year" ? "연간" : "월간"})</p>
+        <p className="font-semibold text-[#1e3a5f]">FP AI Assistant {PLAN_LABELS[planId]} 플랜 (월간)</p>
         <div className="flex items-end gap-1 mt-1">
           <span className="text-2xl font-bold text-[#1e3a5f]">₩{amount.toLocaleString()}</span>
-          <span className="text-gray-400 text-sm mb-0.5">{interval === "year" ? "/년" : "/월"}</span>
+          <span className="text-gray-400 text-sm mb-0.5">/월</span>
         </div>
       </div>
 

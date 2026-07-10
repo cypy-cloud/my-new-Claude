@@ -12,8 +12,9 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
 
   const body = await request.json()
-  const { planId, interval: rawInterval } = body as { planId: PlanId; interval?: 'month' | 'year' }
-  const interval: 'month' | 'year' = rawInterval === 'year' ? 'year' : 'month'
+  const { planId } = body as { planId: PlanId }
+  // 연간결제는 KPN 정책상 지원하지 않음 — 항상 월간으로 고정
+  const interval: 'month' = 'month'
 
   if (!VALID_PLANS.includes(planId)) {
     return NextResponse.json({ error: '유효하지 않은 요금제입니다' }, { status: 400 })
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
   }
 
   const plan = PLANS[planId]
-  const amount = interval === 'year' && plan.annualPrice > 0 ? plan.annualPrice : plan.price
+  const amount = plan.price
   const returnUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/billing/checkout/complete`
 
   const adapter = await getBillingAdapter()
