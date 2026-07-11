@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/server"
+import { getAuthUser, getFullProfile } from "@/lib/auth/session"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,16 +12,11 @@ import { getPlanLimits, PLAN_LABELS, type PlanId } from "@/lib/subscription/plan
 import { getMonthlyUsage } from "@/lib/subscription/usage"
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
 
   const yearMonth = new Date().toISOString().slice(0, 7)
 
-  const { data: profile } = await (supabase as any)
-    .from("profiles")
-    .select("full_name, email, plan_type")
-    .eq("id", user!.id)
-    .single()
+  const profile = await getFullProfile(user!.id)
 
   const planId = (profile?.plan_type as PlanId) ?? "free"
   const planName = PLAN_LABELS[planId]

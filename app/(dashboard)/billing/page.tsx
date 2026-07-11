@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/server"
+import { getAuthUser, getFullProfile } from "@/lib/auth/session"
 import { PageTracker } from "@/components/analytics/page-tracker"
 import { SubscriptionHistory } from "@/components/billing/subscription-history"
 import { AdminPlanSwitcher } from "@/components/billing/admin-plan-switcher"
@@ -12,14 +12,8 @@ import { type PlanId } from "@/lib/subscription/plans"
 const PAID_PLANS: PlanId[] = ["basic", "pro", "premium"]
 
 export default async function BillingPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  const { data: profile } = await (supabase as any)
-    .from("profiles")
-    .select("plan_type, scheduled_plan_type, scheduled_plan_date, billing_card_last4, billing_card_brand, full_name, phone, email")
-    .eq("id", user!.id)
-    .single()
+  const user = await getAuthUser()
+  const profile = await getFullProfile(user!.id)
 
   const currentPlanId = (profile?.plan_type as PlanId) ?? "free"
   const scheduledPlanId = (profile?.scheduled_plan_type as PlanId) ?? null

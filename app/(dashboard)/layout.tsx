@@ -1,23 +1,15 @@
 import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { getAuthUser, getFullProfile } from "@/lib/auth/session"
 import { Sidebar } from "@/components/layout/sidebar"
 import { DashboardShell } from "@/components/layout/dashboard-shell"
 import { PLAN_LABELS } from "@/types"
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
 
   if (!user) redirect("/login")
 
-  const adminSupabase = createAdminClient()
-
-  const { data: profile } = await (adminSupabase as any)
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single()
+  const profile = await getFullProfile(user.id)
 
   // Force super_admin for known admin email regardless of DB state
   const isKnownAdmin = user.email === "gocypy@gmail.com"
