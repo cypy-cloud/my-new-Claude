@@ -34,6 +34,7 @@ export function SignupForm() {
     if (password !== confirmPassword) { toast.error("비밀번호가 일치하지 않습니다."); return }
     if (password.length < 8) { toast.error("비밀번호는 8자 이상이어야 합니다."); return }
     if (!termsAgreed || !privacyAgreed) { toast.error("이용약관과 개인정보처리방침에 동의해야 가입할 수 있습니다."); return }
+    if (!phone.trim()) { toast.error("연락처를 입력해주세요."); return }
 
     setIsLoading(true)
     try {
@@ -113,6 +114,13 @@ export function SignupForm() {
             </div>
           </div>
           <div className="space-y-2">
+            <Label htmlFor="phone" className="text-sm font-medium text-gray-700">연락처 <span className="text-red-500">*</span></Label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input id="phone" type="tel" placeholder="010-0000-0000" value={phone} onChange={(e) => setPhone(e.target.value)} required disabled={isLoading} className="pl-10 h-12" />
+            </div>
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="password" className="text-sm font-medium text-gray-700">비밀번호 <span className="text-red-500">*</span></Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -139,13 +147,6 @@ export function SignupForm() {
 
           {showExtra && (
             <div className="space-y-4 pt-1 border-t border-gray-100">
-              <div className="space-y-2">
-                <Label htmlFor="phone" className="text-sm font-medium text-gray-700">연락처</Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input id="phone" type="tel" placeholder="010-0000-0000" value={phone} onChange={(e) => setPhone(e.target.value)} disabled={isLoading} className="pl-10 h-12" />
-                </div>
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="companyName" className="text-sm font-medium text-gray-700">소속 (법인/GA명)</Label>
                 <div className="relative">

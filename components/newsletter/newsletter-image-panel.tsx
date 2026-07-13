@@ -3,11 +3,13 @@
 import { useEffect, useRef, useState } from "react"
 import { toPng, toJpeg } from "html-to-image"
 import { toast } from "sonner"
-import { ImageIcon, Download, X, Loader2 } from "lucide-react"
+import { ImageIcon, Download, X, Loader2, ShieldCheck, AlertTriangle } from "lucide-react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { createClient } from "@/lib/supabase/client"
 import { NEWSLETTER_TEMPLATES, type NewsletterTemplateId } from "@/components/newsletter/templates"
 import { NEWSLETTER_FONTS, getNewsletterFontClassName, type NewsletterFontId } from "@/components/newsletter/fonts"
 
@@ -28,11 +30,37 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
   const [downloading, setDownloading] = useState<'png' | 'jpeg' | null>(null)
   const previewRef = useRef<HTMLDivElement>(null)
 
+  // 이미지에 찍히는 발행인 이름·연락처는 계정에 등록된 실명·연락처로 고정한다.
+  // 매번 자유 입력을 허용하면 계정 하나로 여러 사람이 각자 다른 이름으로
+  // 뉴스레터를 찍어낼 수 있어 이를 막기 위한 조치다 (프로필에서만 수정 가능).
+  const [profile, setProfile] = useState<{ name: string; phone: string; email: string } | null>(null)
+  const [profileLoading, setProfileLoading] = useState(true)
+  const profileComplete = !!(profile?.name && profile?.phone)
+
+  useEffect(() => {
+    if (!open || profile) return
+    setProfileLoading(true)
+    const supabase = createClient()
+    ;(async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setProfileLoading(false); return }
+      const { data } = await (supabase as any)
+        .from('profiles')
+        .select('full_name, phone')
+        .eq('id', user.id)
+        .single()
+      setProfile({
+        name: data?.full_name ?? '',
+        phone: data?.phone ?? '',
+        email: user.email ?? '',
+      })
+      setProfileLoading(false)
+    })()
+  }, [open, profile])
+
   const [fields, setFields] = useState({
     issueLabel: defaultIssueLabel(),
     title: '',
-    agentName: '',
-    agentContact: '',
     greeting: '',
     issue1: '',
     issue2: '',
@@ -74,8 +102,8 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
   const templateData = {
     issueLabel: fields.issueLabel,
     title: fields.title,
-    agentName: fields.agentName || '담당 FP',
-    agentContact: fields.agentContact || '연락처를 입력해주세요',
+    agentName: profile?.name || '담당 FP',
+    agentContact: profile?.phone || '연락처를 등록해주세요',
     greeting: fields.greeting,
     issues: [fields.issue1, fields.issue2, fields.issue3].filter(Boolean),
     checkPoints: fields.checkPoints,
@@ -86,6 +114,10 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
 
   const handleDownload = async (format: 'png' | 'jpeg') => {
     if (!previewRef.current) return
+    if (!profileComplete) {
+      toast.error("이미지를 만들려면 먼저 설정에서 실명과 연락처를 등록해주세요")
+      return
+    }
     setDownloading(format)
     try {
       const fn = format === 'png' ? toPng : toJpeg
@@ -130,6 +162,31 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
             <div className="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-[360px_1fr]">
               {/* 왼쪽: 옵션 + 편집 */}
               <div className="border-r p-5 space-y-5 overflow-y-auto">
+                {!profileLoading && !profileComplete && (
+                  <div className="flex gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                    <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-amber-600" />
+                    <p>
+                      이미지에 표시할 발행인 이름·연락처가 프로필에 등록되어 있지 않아요.
+                      <Link href="/settings" className="underline font-semibold ml-1">설정에서 등록하기</Link>
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <Label className="mb-2 block">발행인 정보 (계정에 등록된 정보로 자동 표시)</Label>
+                  <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm">
+                    <ShieldCheck className="h-4 w-4 text-gray-400 shrink-0" />
+                    {profileLoading ? (
+                      <span className="text-gray-400">불러오는 중...</span>
+                    ) : (
+                      <span className="text-gray-700">
+                        {profile?.name || '이름 미등록'} · {profile?.phone || '연락처 미등록'}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-gray-400 mt-1">계정 공유 방지를 위해 발행인 정보는 여기서 수정할 수 없어요.</p>
+                </div>
+
                 <div>
                   <Label className="mb-2 block">레이아웃 선택</Label>
                   <div className="grid grid-cols-2 gap-2">
@@ -169,19 +226,9 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">호수</Label>
-                    <Input value={fields.issueLabel} onChange={e => set('issueLabel', e.target.value)} className="h-9 text-sm" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">담당 FP 이름</Label>
-                    <Input value={fields.agentName} onChange={e => set('agentName', e.target.value)} placeholder="예: 임현수" className="h-9 text-sm" />
-                  </div>
-                </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">연락처</Label>
-                  <Input value={fields.agentContact} onChange={e => set('agentContact', e.target.value)} placeholder="예: 010-1234-5678" className="h-9 text-sm" />
+                  <Label className="text-xs">호수</Label>
+                  <Input value={fields.issueLabel} onChange={e => set('issueLabel', e.target.value)} className="h-9 text-sm" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">제목</Label>
@@ -226,7 +273,7 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
               <Button
                 variant="outline"
                 className="gap-2"
-                disabled={downloading !== null}
+                disabled={downloading !== null || !profileComplete}
                 onClick={() => handleDownload('jpeg')}
               >
                 {downloading === 'jpeg' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
@@ -234,7 +281,7 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
               </Button>
               <Button
                 className="gap-2 bg-orange-500 hover:bg-orange-600 text-white"
-                disabled={downloading !== null}
+                disabled={downloading !== null || !profileComplete}
                 onClick={() => handleDownload('png')}
               >
                 {downloading === 'png' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
