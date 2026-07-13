@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import { NewsletterImagePanel } from "@/components/newsletter/newsletter-image-panel"
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -389,6 +390,8 @@ export default function NewsletterPage() {
                 </Button>
                 <CopyButton text={buildFullText(sections, form.topic)} />
               </div>
+
+              <NewsletterImagePanel sections={sections} topic={form.topic} />
 
               {/* Compliance Warning */}
               <div className="flex gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
