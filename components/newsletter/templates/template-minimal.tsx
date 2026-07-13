@@ -2,7 +2,8 @@ import type { NewsletterTemplateProps } from './types'
 
 // 템플릿 1 — 미니멀 화이트: 여백을 넉넉히 두고 얇은 라인으로만 구분하는 정갈한 스타일
 export function TemplateMinimal({ data }: NewsletterTemplateProps) {
-  const { issueLabel, title, agentName, agentContact, greeting, issues, checkPoints, cta, fontClassName } = data
+  const { issueLabel, title, agentName, agentContact, greeting, issues, checkPoints, cta, fontClassName, bodyFontSize } = data
+  const bodyStyle = { fontSize: bodyFontSize }
 
   return (
     <div className={`${fontClassName} w-[800px] bg-white text-[#1c1f27]`} style={{ padding: '56px 64px' }}>
@@ -18,7 +19,7 @@ export function TemplateMinimal({ data }: NewsletterTemplateProps) {
         </div>
       </div>
 
-      <div className="mt-10 text-[15px] leading-relaxed text-gray-700 whitespace-pre-wrap">{greeting}</div>
+      <div className="mt-10 leading-relaxed text-gray-700 whitespace-pre-wrap" style={bodyStyle}>{greeting}</div>
 
       <div className="mt-10 space-y-8">
         {issues.map((issue, i) => (
@@ -26,7 +27,7 @@ export function TemplateMinimal({ data }: NewsletterTemplateProps) {
             <span className="text-4xl font-bold text-gray-200 leading-none shrink-0" style={{ minWidth: 44 }}>
               {String(i + 1).padStart(2, '0')}
             </span>
-            <p className="text-[15px] leading-relaxed text-gray-800 whitespace-pre-wrap pt-1">{issue}</p>
+            <p className="leading-relaxed text-gray-800 whitespace-pre-wrap pt-1" style={bodyStyle}>{issue}</p>
           </div>
         ))}
       </div>
@@ -34,13 +35,13 @@ export function TemplateMinimal({ data }: NewsletterTemplateProps) {
       {checkPoints && (
         <div className="mt-10 border-t border-gray-200 pt-6">
           <p className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-2">Check Point</p>
-          <p className="text-[15px] leading-relaxed text-gray-800 whitespace-pre-wrap">{checkPoints}</p>
+          <p className="leading-relaxed text-gray-800 whitespace-pre-wrap" style={bodyStyle}>{checkPoints}</p>
         </div>
       )}
 
       {cta && (
         <div className="mt-10 bg-[#f7f5f1] rounded-xl p-6 text-center">
-          <p className="text-[15px] leading-relaxed text-[#1e3a5f] font-semibold whitespace-pre-wrap">{cta}</p>
+          <p className="leading-relaxed text-[#1e3a5f] font-semibold whitespace-pre-wrap" style={bodyStyle}>{cta}</p>
         </div>
       )}
 

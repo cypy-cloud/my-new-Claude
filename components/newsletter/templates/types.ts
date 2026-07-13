@@ -8,6 +8,7 @@ export interface NewsletterTemplateData {
   checkPoints: string
   cta: string
   fontClassName: string
+  bodyFontSize: string  // 내용량에 따라 자동 계산되는 본문 글자 크기 (예: '15px')
 }
 
 export interface NewsletterTemplateProps {

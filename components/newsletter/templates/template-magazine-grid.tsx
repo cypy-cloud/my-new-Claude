@@ -2,8 +2,9 @@ import type { NewsletterTemplateProps } from './types'
 
 // 템플릿 4 — 매거진 그리드형: 기관 뉴스레터처럼 헤더 배너 + 2단 그리드 구조의 정식 레이아웃
 export function TemplateMagazineGrid({ data }: NewsletterTemplateProps) {
-  const { issueLabel, title, agentName, agentContact, greeting, issues, checkPoints, cta, fontClassName } = data
+  const { issueLabel, title, agentName, agentContact, greeting, issues, checkPoints, cta, fontClassName, bodyFontSize } = data
   const [issue1, issue2, issue3] = issues
+  const bodyStyle = { fontSize: bodyFontSize }
 
   return (
     <div className={`${fontClassName} w-[800px] bg-white text-[#1c1f27]`}>
@@ -31,7 +32,7 @@ export function TemplateMagazineGrid({ data }: NewsletterTemplateProps) {
       {/* 메인 기사 */}
       <div className="px-12 py-8 border-b border-gray-200">
         <h2 className="text-xl font-bold leading-snug mb-3">{title}</h2>
-        <p className="text-sm leading-relaxed text-gray-600 whitespace-pre-wrap">{greeting}</p>
+        <p className="leading-relaxed text-gray-600 whitespace-pre-wrap" style={bodyStyle}>{greeting}</p>
       </div>
 
       {/* 2단 그리드 */}
@@ -39,13 +40,13 @@ export function TemplateMagazineGrid({ data }: NewsletterTemplateProps) {
         {issue1 && (
           <div>
             <p className="text-xs font-bold text-[#d97a3f] mb-2">이슈 01</p>
-            <p className="text-[13px] leading-relaxed text-gray-700 whitespace-pre-wrap">{issue1}</p>
+            <p className="leading-relaxed text-gray-700 whitespace-pre-wrap" style={bodyStyle}>{issue1}</p>
           </div>
         )}
         {issue2 && (
           <div>
             <p className="text-xs font-bold text-[#d97a3f] mb-2">이슈 02</p>
-            <p className="text-[13px] leading-relaxed text-gray-700 whitespace-pre-wrap">{issue2}</p>
+            <p className="leading-relaxed text-gray-700 whitespace-pre-wrap" style={bodyStyle}>{issue2}</p>
           </div>
         )}
       </div>
@@ -54,7 +55,7 @@ export function TemplateMagazineGrid({ data }: NewsletterTemplateProps) {
         <div className="px-12 pb-8">
           <div className="border-t border-gray-200 pt-6">
             <p className="text-xs font-bold text-[#d97a3f] mb-2">이슈 03</p>
-            <p className="text-[13px] leading-relaxed text-gray-700 whitespace-pre-wrap">{issue3}</p>
+            <p className="leading-relaxed text-gray-700 whitespace-pre-wrap" style={bodyStyle}>{issue3}</p>
           </div>
         </div>
       )}
@@ -62,13 +63,13 @@ export function TemplateMagazineGrid({ data }: NewsletterTemplateProps) {
       {checkPoints && (
         <div className="mx-12 mb-6 bg-[#f7f5f1] rounded-lg p-6">
           <p className="text-xs font-bold tracking-widest text-[#1e3a5f] uppercase mb-2">보험 점검 포인트</p>
-          <p className="text-[13px] leading-relaxed text-gray-700 whitespace-pre-wrap">{checkPoints}</p>
+          <p className="leading-relaxed text-gray-700 whitespace-pre-wrap" style={bodyStyle}>{checkPoints}</p>
         </div>
       )}
 
       {cta && (
         <div className="mx-12 mb-10 bg-[#1e3a5f] rounded-lg p-5 text-center">
-          <p className="text-[13px] leading-relaxed text-white font-semibold whitespace-pre-wrap">{cta}</p>
+          <p className="leading-relaxed text-white font-semibold whitespace-pre-wrap" style={bodyStyle}>{cta}</p>
         </div>
       )}
 

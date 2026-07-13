@@ -61,6 +61,16 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
   const template = NEWSLETTER_TEMPLATES.find(t => t.id === templateId) ?? NEWSLETTER_TEMPLATES[0]
   const TemplateComponent = template.component
 
+  // 내용이 많을수록 본문 글자 크기를 단계적으로 줄여서, 한 장 안에 잘리지 않고
+  // 자연스러운 비율로 다 들어가도록 한다 (제목 크기는 템플릿 정체성 유지를 위해 고정).
+  const totalChars = [fields.greeting, fields.issue1, fields.issue2, fields.issue3, fields.checkPoints, fields.cta]
+    .join('').length
+  const bodyFontSize =
+    totalChars > 2200 ? '11.5px' :
+    totalChars > 1500 ? '12.5px' :
+    totalChars > 900 ? '13.5px' :
+    '15px'
+
   const templateData = {
     issueLabel: fields.issueLabel,
     title: fields.title,
@@ -71,6 +81,7 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
     checkPoints: fields.checkPoints,
     cta: fields.cta,
     fontClassName: getNewsletterFontClassName(fontId),
+    bodyFontSize,
   }
 
   const handleDownload = async (format: 'png' | 'jpeg') => {

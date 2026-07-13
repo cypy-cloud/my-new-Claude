@@ -2,7 +2,8 @@ import type { NewsletterTemplateProps } from './types'
 
 // 템플릿 3 — 웜 코럴: 친근하고 따뜻한 느낌의 라운드 카드 스타일
 export function TemplateWarm({ data }: NewsletterTemplateProps) {
-  const { issueLabel, title, agentName, agentContact, greeting, issues, checkPoints, cta, fontClassName } = data
+  const { issueLabel, title, agentName, agentContact, greeting, issues, checkPoints, cta, fontClassName, bodyFontSize } = data
+  const bodyStyle = { fontSize: bodyFontSize }
 
   return (
     <div className={`${fontClassName} w-[800px] bg-[#fdf6ee] text-[#3a2e1f]`} style={{ padding: '56px 60px' }}>
@@ -18,7 +19,7 @@ export function TemplateWarm({ data }: NewsletterTemplateProps) {
 
       <h1 className="text-3xl font-bold leading-snug mt-6 mb-8">{title}</h1>
 
-      <div className="bg-white rounded-2xl p-6 shadow-sm text-[15px] leading-relaxed text-[#5a4a35] whitespace-pre-wrap">
+      <div className="bg-white rounded-2xl p-6 shadow-sm leading-relaxed text-[#5a4a35] whitespace-pre-wrap" style={bodyStyle}>
         {greeting}
       </div>
 
@@ -30,7 +31,7 @@ export function TemplateWarm({ data }: NewsletterTemplateProps) {
             >
               {i + 1}
             </span>
-            <p className="text-[15px] leading-relaxed text-[#5a4a35] whitespace-pre-wrap pt-1">{issue}</p>
+            <p className="leading-relaxed text-[#5a4a35] whitespace-pre-wrap pt-1" style={bodyStyle}>{issue}</p>
           </div>
         ))}
       </div>
@@ -38,13 +39,13 @@ export function TemplateWarm({ data }: NewsletterTemplateProps) {
       {checkPoints && (
         <div className="mt-6 bg-white rounded-2xl p-6 shadow-sm">
           <p className="text-sm font-bold text-[#d97a3f] mb-2">✓ 보험 점검 포인트</p>
-          <p className="text-[15px] leading-relaxed text-[#5a4a35] whitespace-pre-wrap">{checkPoints}</p>
+          <p className="leading-relaxed text-[#5a4a35] whitespace-pre-wrap" style={bodyStyle}>{checkPoints}</p>
         </div>
       )}
 
       {cta && (
         <div className="mt-6 bg-[#d97a3f] rounded-2xl p-6 text-center">
-          <p className="text-[15px] leading-relaxed text-white font-semibold whitespace-pre-wrap">{cta}</p>
+          <p className="leading-relaxed text-white font-semibold whitespace-pre-wrap" style={bodyStyle}>{cta}</p>
         </div>
       )}
 

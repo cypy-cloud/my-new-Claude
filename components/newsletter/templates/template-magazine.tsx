@@ -2,7 +2,8 @@ import type { NewsletterTemplateProps } from './types'
 
 // 템플릿 6 — 매거진 카드형: 잡지 스타일의 굵은 타이포와 넘버링 태그
 export function TemplateMagazine({ data }: NewsletterTemplateProps) {
-  const { issueLabel, title, agentName, agentContact, greeting, issues, checkPoints, cta, fontClassName } = data
+  const { issueLabel, title, agentName, agentContact, greeting, issues, checkPoints, cta, fontClassName, bodyFontSize } = data
+  const bodyStyle = { fontSize: bodyFontSize }
 
   return (
     <div className={`${fontClassName} w-[800px] bg-[#f4f2ec] text-[#1c1f27]`}>
@@ -20,7 +21,7 @@ export function TemplateMagazine({ data }: NewsletterTemplateProps) {
           <p className="text-xs text-gray-500">{agentContact}</p>
         </div>
 
-        <p className="text-[15px] leading-relaxed text-gray-700 whitespace-pre-wrap mb-10">{greeting}</p>
+        <p className="leading-relaxed text-gray-700 whitespace-pre-wrap mb-10" style={bodyStyle}>{greeting}</p>
 
         <div className="grid grid-cols-1 gap-0">
           {issues.map((issue, i) => (
@@ -28,7 +29,7 @@ export function TemplateMagazine({ data }: NewsletterTemplateProps) {
               <span className="text-5xl font-black text-[#d97a3f]/70 leading-none shrink-0" style={{ minWidth: 56 }}>
                 {i + 1}
               </span>
-              <p className="text-[15px] leading-relaxed text-gray-800 whitespace-pre-wrap pt-2">{issue}</p>
+              <p className="leading-relaxed text-gray-800 whitespace-pre-wrap pt-2" style={bodyStyle}>{issue}</p>
             </div>
           ))}
           <div className="border-t border-gray-300" />
@@ -37,13 +38,13 @@ export function TemplateMagazine({ data }: NewsletterTemplateProps) {
         {checkPoints && (
           <div className="mt-8 bg-white border-2 border-[#1c1f27] rounded-lg p-6">
             <p className="text-xs font-black tracking-widest uppercase mb-2">Check Point</p>
-            <p className="text-[15px] leading-relaxed text-gray-800 whitespace-pre-wrap">{checkPoints}</p>
+            <p className="leading-relaxed text-gray-800 whitespace-pre-wrap" style={bodyStyle}>{checkPoints}</p>
           </div>
         )}
 
         {cta && (
           <div className="mt-6 bg-[#d97a3f] rounded-lg p-6 text-center">
-            <p className="text-[15px] leading-relaxed text-white font-bold whitespace-pre-wrap">{cta}</p>
+            <p className="leading-relaxed text-white font-bold whitespace-pre-wrap" style={bodyStyle}>{cta}</p>
           </div>
         )}
       </div>
