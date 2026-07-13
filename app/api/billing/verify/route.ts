@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getBillingAdapter } from '@/lib/billing/billing-provider'
 import { activateSubscription, changePlan, recordPayment } from '@/lib/billing/subscription-service'
+import { validateDiscountCode, redeemDiscountCode } from '@/lib/billing/discount'
 import { PLANS, type PlanId } from '@/lib/subscription/plans'
 
 const PLAN_RANK: Record<PlanId, number> = { free: 0, basic: 1, pro: 2, premium: 3 }
@@ -13,28 +14,21 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
 
   const body = await request.json()
-  const { sessionId, planId, paymentKey, orderId, amount } = body as {
+  const { sessionId, planId, paymentKey, orderId, amount, discountCode } = body as {
     sessionId: string
     planId: PlanId
     paymentKey?: string
     orderId?: string
     amount?: number
+    discountCode?: string
   }
 
   if (!sessionId || !planId) {
     return NextResponse.json({ error: 'sessionId, planId 필수' }, { status: 400 })
   }
 
-  // amount는 클라이언트가 함께 보내는 값이라, 실제 결제 검증(adapter.verifyPayment)이
-  // "결제된 금액 == 요청 금액"만 확인하는 것과 별개로, "요청 금액 == 해당 플랜의 정가"인지도
-  // 반드시 서버에서 재검증해야 한다. 그렇지 않으면 싼 플랜을 결제해놓고 planId만
-  // 비싼 플랜으로 바꿔 보내는 방식으로 무단 업그레이드가 가능해진다.
-  const expectedAmount = PLANS[planId]?.price
-  if (!PAYABLE_PLANS.includes(planId) || amount === undefined || amount !== expectedAmount) {
-    return NextResponse.json({ error: '결제 금액이 요청한 플랜과 일치하지 않습니다' }, { status: 400 })
-  }
-
-  // 현재 플랜 조회
+  // 현재 플랜 조회 (할인코드는 업그레이드/신규 결제에만 의미가 있어 다운그레이드 여부를
+  // amount 검증보다 먼저 알아야 한다)
   const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('plan_type')
@@ -42,6 +36,21 @@ export async function POST(request: NextRequest) {
     .single()
   const currentPlan = (profile?.plan_type as PlanId) ?? 'free'
   const isDowngrade = PLAN_RANK[planId] < PLAN_RANK[currentPlan]
+
+  // amount는 클라이언트가 함께 보내는 값이라, 실제 결제 검증(adapter.verifyPayment)이
+  // "결제된 금액 == 요청 금액"만 확인하는 것과 별개로, "요청 금액 == 해당 플랜의 정가(또는
+  // 유효한 할인코드 적용가)"인지도 반드시 서버에서 재검증해야 한다. 그렇지 않으면 싼 플랜을
+  // 결제해놓고 planId만 비싼 플랜으로 바꿔 보내는 방식으로 무단 업그레이드가 가능해진다.
+  let discountResult: Awaited<ReturnType<typeof validateDiscountCode>> | null = null
+  if (discountCode && !isDowngrade) {
+    discountResult = await validateDiscountCode(discountCode, planId, user.id)
+  }
+  const expectedAmount = discountResult?.valid
+    ? discountResult.discountedAmount
+    : PLANS[planId]?.price
+  if (!PAYABLE_PLANS.includes(planId) || amount === undefined || amount !== expectedAmount) {
+    return NextResponse.json({ error: '결제 금액이 요청한 플랜과 일치하지 않습니다' }, { status: 400 })
+  }
 
   const adapter = await getBillingAdapter()
   const result = await adapter.verifyPayment({ sessionId, paymentKey, orderId, amount })
@@ -96,6 +105,10 @@ export async function POST(request: NextRequest) {
       periodEnd,
     })
     subscriptionId = subscription.id
+
+    if (discountResult?.valid && discountResult.codeId && discountResult.discountPercent) {
+      await redeemDiscountCode(discountResult.codeId, user.id, planId, discountResult.discountPercent).catch(() => null)
+    }
   }
 
   await recordPayment({
@@ -106,6 +119,7 @@ export async function POST(request: NextRequest) {
     providerTxId: result.transactionId,
     status: 'succeeded',
     paidAt: new Date(),
+    metadata: discountResult?.valid ? { discountCode: discountCode?.trim().toUpperCase(), discountPercent: discountResult.discountPercent } : undefined,
   }).catch(() => null)
 
   return NextResponse.json({

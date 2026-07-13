@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { expireSubscription, activateSubscription, recordPayment } from '@/lib/billing/subscription-service'
 import { notifyRenewalReminder, notifyPlanExpired } from '@/lib/notifications/create-notification'
 import { PortOneProvider } from '@/lib/billing/portone-provider'
+import { getActiveRedemption, incrementRedemptionUsage } from '@/lib/billing/discount'
 import { PLANS, PLAN_LABELS, type PlanId } from '@/lib/subscription/plans'
 
 // Vercel Cron이 매일 호출한다. Authorization: Bearer <CRON_SECRET> 헤더로 인증.
@@ -40,7 +41,13 @@ async function handleCheck(request: NextRequest) {
     const customerId = row.profiles?.portone_customer_id
 
     if (billingKey && customerId) {
-      const amount = PLANS[planId].price
+      // 할인코드로 가입한 계정이 아직 할인 회차(최초 3개월)가 남아있고, 가입 당시와
+      // 같은 플랜을 유지 중이면 갱신 결제에도 동일 할인율을 적용한다.
+      const activeRedemption = await getActiveRedemption(row.user_id)
+      const applyDiscount = activeRedemption && activeRedemption.planId === planId
+      const amount = applyDiscount
+        ? Math.round(PLANS[planId].price * (1 - activeRedemption!.discountPercent / 100))
+        : PLANS[planId].price
       const paymentId = `renew${row.user_id.replace(/-/g, '').slice(0, 10)}${Date.now()}`
       const result = await provider.chargeBillingKey({
         billingKey,
@@ -68,6 +75,9 @@ async function handleCheck(request: NextRequest) {
           providerTxId: result.paymentId ?? paymentId,
           status: 'succeeded',
         })
+        if (applyDiscount) {
+          await incrementRedemptionUsage(row.user_id).catch(() => null)
+        }
         renewedCount++
         continue
       }

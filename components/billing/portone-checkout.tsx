@@ -3,8 +3,9 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Loader2, ShieldCheck } from "lucide-react"
+import { Loader2, ShieldCheck, Tag } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { PLANS, PLAN_LABELS, type PlanId } from "@/lib/subscription/plans"
 import { toast } from "sonner"
 
@@ -30,8 +31,35 @@ export function PortOneCheckout({
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [refundAgreed, setRefundAgreed] = useState(false)
+  const [discountInput, setDiscountInput] = useState("")
+  const [applying, setApplying] = useState(false)
+  const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; percent: number; amount: number } | null>(null)
   const plan = PLANS[planId]
-  const amount = plan.price
+  const amount = appliedDiscount?.amount ?? plan.price
+
+  async function applyDiscountCode() {
+    if (!discountInput.trim()) return
+    setApplying(true)
+    try {
+      const res = await fetch("/api/billing/discount/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: discountInput, planId }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error ?? "유효하지 않은 할인코드입니다")
+        setAppliedDiscount(null)
+        return
+      }
+      setAppliedDiscount({ code: discountInput.trim().toUpperCase(), percent: data.discountPercent, amount: data.discountedAmount })
+      toast.success(`할인코드가 적용되었습니다 (${data.discountPercent}% 할인)`)
+    } catch {
+      toast.error("할인코드 확인 중 오류가 발생했습니다")
+    } finally {
+      setApplying(false)
+    }
+  }
 
   async function handlePay() {
     if (!refundAgreed) {
@@ -66,7 +94,7 @@ export function PortOneCheckout({
       const res = await fetch("/api/billing/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: paymentId, planId, orderId: paymentId, amount }),
+        body: JSON.stringify({ sessionId: paymentId, planId, orderId: paymentId, amount, discountCode: appliedDiscount?.code }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -89,10 +117,39 @@ export function PortOneCheckout({
         <p className="text-xs text-gray-500 mb-1">결제 상품</p>
         <p className="font-semibold text-[#1e3a5f]">FP AI Assistant {PLAN_LABELS[planId]} 플랜 (월간)</p>
         <div className="flex items-end gap-1 mt-1">
+          {appliedDiscount && (
+            <span className="text-sm text-gray-400 line-through mr-1">₩{plan.price.toLocaleString()}</span>
+          )}
           <span className="text-2xl font-bold text-[#1e3a5f]">₩{amount.toLocaleString()}</span>
           <span className="text-gray-400 text-sm mb-0.5">/월</span>
         </div>
+        {appliedDiscount && (
+          <p className="text-xs text-green-600 font-medium mt-1">
+            할인코드 {appliedDiscount.code} 적용 · {appliedDiscount.percent}% 할인 · 최초 3개월간 적용
+          </p>
+        )}
       </div>
+
+      {!appliedDiscount && (
+        <div className="space-y-1.5">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                value={discountInput}
+                onChange={(e) => setDiscountInput(e.target.value)}
+                placeholder="할인코드가 있으신가요?"
+                className="pl-9"
+                disabled={applying}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyDiscountCode() } }}
+              />
+            </div>
+            <Button variant="outline" onClick={applyDiscountCode} disabled={applying || !discountInput.trim()}>
+              {applying ? <Loader2 className="h-4 w-4 animate-spin" /> : "적용"}
+            </Button>
+          </div>
+        </div>
+      )}
 
       <label className="flex items-start gap-2 text-xs text-gray-500 px-1">
         <input
