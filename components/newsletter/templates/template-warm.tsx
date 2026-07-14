@@ -2,7 +2,7 @@ import type { NewsletterTemplateProps } from './types'
 
 // 템플릿 3 — 웜 코럴: 친근하고 따뜻한 느낌의 라운드 카드 스타일
 export function TemplateWarm({ data }: NewsletterTemplateProps) {
-  const { issueLabel, title, agentName, agentContact, greeting, issues, checkPoints, cta, fontClassName, bodyFontSize } = data
+  const { issueLabel, title, agentName, agentContact, avatarUrl, greeting, issues, checkPoints, cta, fontClassName, bodyFontSize } = data
   const bodyStyle = { fontSize: bodyFontSize }
 
   return (
@@ -49,7 +49,8 @@ export function TemplateWarm({ data }: NewsletterTemplateProps) {
         </div>
       )}
 
-      <div className="mt-10 text-center text-xs text-[#8a7860]">
+      <div className="mt-10 flex items-center justify-center gap-2 text-xs text-[#8a7860]">
+        {avatarUrl && <img src={avatarUrl} crossOrigin="anonymous" alt="" className="h-6 w-6 rounded-full object-cover" />}
         {agentName} · {agentContact}
       </div>
     </div>

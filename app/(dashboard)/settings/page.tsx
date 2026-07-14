@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { User, Lock, CreditCard, AlertTriangle, Bell } from "lucide-react"
+import { User, Lock, CreditCard, AlertTriangle, Bell, ImageIcon, Trash2 } from "lucide-react"
 import { PushNotificationToggle } from "@/components/notifications/push-notification-toggle"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -19,6 +19,10 @@ export default function SettingsPage() {
   // 프로필 상태
   const [profile, setProfile] = useState({ name: "", phone: "", company: "", branch: "", email: "" })
   const [profileLoading, setProfileLoading] = useState(false)
+
+  // 뉴스레터 발행인 이미지(로고/프로필 사진)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
 
   // 비밀번호 상태
   const [pw, setPw] = useState({ current: "", next: "", confirm: "" })
@@ -36,7 +40,7 @@ export default function SettingsPage() {
 
       const { data } = await (supabase as any)
         .from("profiles")
-        .select("full_name, phone, company, branch, plan_type")
+        .select("full_name, phone, company, branch, plan_type, avatar_url")
         .eq("id", user.id)
         .single()
 
@@ -49,10 +53,83 @@ export default function SettingsPage() {
           branch: data.branch ?? "",
         }))
         setPlanId((data.plan_type as PlanId) ?? "free")
+        setAvatarUrl(data.avatar_url ?? null)
       }
     }
     load()
   }, [])
+
+  const MAX_AVATAR_MB = 2
+  const ALLOWED_AVATAR_TYPES = ["image/png", "image/jpeg", "image/webp"]
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (!file) return
+
+    if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+      toast.error("PNG, JPG, WebP 이미지만 업로드할 수 있어요")
+      return
+    }
+    if (file.size > MAX_AVATAR_MB * 1024 * 1024) {
+      toast.error(`이미지 용량은 ${MAX_AVATAR_MB}MB 이하로 올려주세요`)
+      return
+    }
+
+    setAvatarUploading(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error("로그인이 필요합니다")
+
+      const ext = file.name.split(".").pop() ?? "png"
+      const path = `${user.id}/avatar.${ext}`
+
+      const { error: uploadError } = await supabase.storage
+        .from("newsletter-avatars")
+        .upload(path, file, { upsert: true, cacheControl: "3600" })
+      if (uploadError) throw uploadError
+
+      const { data: publicUrlData } = supabase.storage
+        .from("newsletter-avatars")
+        .getPublicUrl(path)
+      // 캐시된 옛 이미지가 계속 보이는 것을 방지하기 위해 매번 다른 URL을 저장한다
+      const freshUrl = `${publicUrlData.publicUrl}?v=${Date.now()}`
+
+      const { error: dbError } = await (supabase as any)
+        .from("profiles")
+        .update({ avatar_url: freshUrl })
+        .eq("id", user.id)
+      if (dbError) throw dbError
+
+      setAvatarUrl(freshUrl)
+      toast.success("이미지가 업로드되었습니다")
+    } catch (e: any) {
+      toast.error(e.message ?? "이미지 업로드에 실패했습니다")
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
+
+  async function handleAvatarRemove() {
+    setAvatarUploading(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error("로그인이 필요합니다")
+
+      const { error } = await (supabase as any)
+        .from("profiles")
+        .update({ avatar_url: null })
+        .eq("id", user.id)
+      if (error) throw error
+
+      setAvatarUrl(null)
+      toast.success("이미지가 삭제되었습니다")
+    } catch (e: any) {
+      toast.error(e.message ?? "삭제에 실패했습니다")
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
 
   async function saveProfile() {
     setProfileLoading(true)
@@ -156,6 +233,46 @@ export default function SettingsPage() {
               />
             </div>
           </div>
+          <div className="space-y-2">
+            <Label className="flex items-center gap-1.5">
+              <ImageIcon className="h-3.5 w-3.5" />
+              뉴스레터 발행인 이미지 (로고 또는 프로필 사진)
+            </Label>
+            <div className="flex items-center gap-3">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt="발행인 이미지"
+                  className="h-14 w-14 rounded-full object-cover border border-gray-200"
+                />
+              ) : (
+                <div className="h-14 w-14 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-300">
+                  <ImageIcon className="h-5 w-5" />
+                </div>
+              )}
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" asChild disabled={avatarUploading}>
+                  <label className="cursor-pointer">
+                    {avatarUploading ? "업로드 중..." : avatarUrl ? "이미지 변경" : "이미지 업로드"}
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={handleAvatarUpload}
+                      disabled={avatarUploading}
+                    />
+                  </label>
+                </Button>
+                {avatarUrl && (
+                  <Button variant="outline" size="sm" onClick={handleAvatarRemove} disabled={avatarUploading}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
+            </div>
+            <p className="text-xs text-gray-500">여기서 등록한 이미지는 뉴스레터 이미지 하단 발행인 정보 옆에 자동으로 표시됩니다. (PNG/JPG/WebP, {MAX_AVATAR_MB}MB 이하)</p>
+          </div>
+
           <div className="space-y-2">
             <Label>이메일</Label>
             <Input value={profile.email} disabled className="bg-gray-50" />

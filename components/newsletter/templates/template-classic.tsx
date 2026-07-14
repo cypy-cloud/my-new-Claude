@@ -2,7 +2,7 @@ import type { NewsletterTemplateProps } from './types'
 
 // 템플릿 2 — 클래식 네이비: 보험사 공식 뉴스레터 느낌의 격식있는 스타일
 export function TemplateClassic({ data }: NewsletterTemplateProps) {
-  const { issueLabel, title, agentName, agentContact, greeting, issues, checkPoints, cta, fontClassName, bodyFontSize } = data
+  const { issueLabel, title, agentName, agentContact, avatarUrl, greeting, issues, checkPoints, cta, fontClassName, bodyFontSize } = data
   const bodyStyle = { fontSize: bodyFontSize }
 
   return (
@@ -46,7 +46,8 @@ export function TemplateClassic({ data }: NewsletterTemplateProps) {
         )}
       </div>
 
-      <div className="bg-[#1e3a5f] px-16 py-4 text-center text-xs text-white/60">
+      <div className="bg-[#1e3a5f] px-16 py-4 flex items-center justify-center gap-2 text-xs text-white/60">
+        {avatarUrl && <img src={avatarUrl} crossOrigin="anonymous" alt="" className="h-6 w-6 rounded-full object-cover" />}
         {agentName} · {agentContact}
       </div>
     </div>

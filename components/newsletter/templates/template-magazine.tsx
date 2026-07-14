@@ -2,7 +2,7 @@ import type { NewsletterTemplateProps } from './types'
 
 // 템플릿 6 — 매거진 카드형: 잡지 스타일의 굵은 타이포와 넘버링 태그
 export function TemplateMagazine({ data }: NewsletterTemplateProps) {
-  const { issueLabel, title, agentName, agentContact, greeting, issues, checkPoints, cta, fontClassName, bodyFontSize } = data
+  const { issueLabel, title, agentName, agentContact, avatarUrl, greeting, issues, checkPoints, cta, fontClassName, bodyFontSize } = data
   const bodyStyle = { fontSize: bodyFontSize }
 
   return (
@@ -49,7 +49,8 @@ export function TemplateMagazine({ data }: NewsletterTemplateProps) {
         )}
       </div>
 
-      <div className="bg-[#1c1f27] px-16 py-4 text-center text-xs text-white/50">
+      <div className="bg-[#1c1f27] px-16 py-4 flex items-center justify-center gap-2 text-xs text-white/50">
+        {avatarUrl && <img src={avatarUrl} crossOrigin="anonymous" alt="" className="h-6 w-6 rounded-full object-cover" />}
         {agentName} · {agentContact}
       </div>
     </div>

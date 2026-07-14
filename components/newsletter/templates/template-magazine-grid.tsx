@@ -2,7 +2,7 @@ import type { NewsletterTemplateProps } from './types'
 
 // 템플릿 4 — 매거진 그리드형: 기관 뉴스레터처럼 헤더 배너 + 2단 그리드 구조의 정식 레이아웃
 export function TemplateMagazineGrid({ data }: NewsletterTemplateProps) {
-  const { issueLabel, title, agentName, agentContact, greeting, issues, checkPoints, cta, fontClassName, bodyFontSize } = data
+  const { issueLabel, title, agentName, agentContact, avatarUrl, greeting, issues, checkPoints, cta, fontClassName, bodyFontSize } = data
   const [issue1, issue2, issue3] = issues
   const bodyStyle = { fontSize: bodyFontSize }
 
@@ -75,9 +75,12 @@ export function TemplateMagazineGrid({ data }: NewsletterTemplateProps) {
 
       {/* 푸터 */}
       <div className="bg-[#f7f5f1] px-12 py-5 border-t border-gray-200">
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
-          <span><b className="text-gray-700">발행</b> {agentName}</span>
-          <span><b className="text-gray-700">연락처</b> {agentContact}</span>
+        <div className="flex items-center gap-2">
+          {avatarUrl && <img src={avatarUrl} crossOrigin="anonymous" alt="" className="h-7 w-7 rounded-full object-cover shrink-0" />}
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
+            <span><b className="text-gray-700">발행</b> {agentName}</span>
+            <span><b className="text-gray-700">연락처</b> {agentContact}</span>
+          </div>
         </div>
       </div>
     </div>

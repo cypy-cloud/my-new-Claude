@@ -84,7 +84,7 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
   // 이미지에 찍히는 발행인 이름·연락처는 계정에 등록된 실명·연락처로 고정한다.
   // 매번 자유 입력을 허용하면 계정 하나로 여러 사람이 각자 다른 이름으로
   // 뉴스레터를 찍어낼 수 있어 이를 막기 위한 조치다 (프로필에서만 수정 가능).
-  const [profile, setProfile] = useState<{ name: string; phone: string; email: string } | null>(null)
+  const [profile, setProfile] = useState<{ name: string; phone: string; email: string; avatarUrl: string | null } | null>(null)
   const [profileLoading, setProfileLoading] = useState(true)
   const profileComplete = !!(profile?.name && profile?.phone)
 
@@ -97,13 +97,14 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
       if (!user) { setProfileLoading(false); return }
       const { data } = await (supabase as any)
         .from('profiles')
-        .select('full_name, phone')
+        .select('full_name, phone, avatar_url')
         .eq('id', user.id)
         .single()
       setProfile({
         name: data?.full_name ?? '',
         phone: data?.phone ?? '',
         email: user.email ?? '',
+        avatarUrl: data?.avatar_url ?? null,
       })
       setProfileLoading(false)
     })()
@@ -159,6 +160,7 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
     title: clean(fields.title),
     agentName: profile?.name || '담당 FP',
     agentContact: profile?.phone || '연락처를 등록해주세요',
+    avatarUrl: profile?.avatarUrl ?? undefined,
     greeting: clean(fields.greeting),
     issues: [fields.issue1, fields.issue2, fields.issue3].map(clean).filter(Boolean),
     checkPoints: limitCheckPoints(clean(fields.checkPoints)),
@@ -230,7 +232,11 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
                 <div>
                   <Label className="mb-2 block">발행인 정보 (계정에 등록된 정보로 자동 표시)</Label>
                   <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm">
-                    <ShieldCheck className="h-4 w-4 text-gray-400 shrink-0" />
+                    {profile?.avatarUrl ? (
+                      <img src={profile.avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <ShieldCheck className="h-4 w-4 text-gray-400 shrink-0" />
+                    )}
                     {profileLoading ? (
                       <span className="text-gray-400">불러오는 중...</span>
                     ) : (
@@ -239,7 +245,12 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-gray-400 mt-1">계정 공유 방지를 위해 발행인 정보는 여기서 수정할 수 없어요.</p>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    계정 공유 방지를 위해 발행인 정보는 여기서 수정할 수 없어요.
+                    {!profileLoading && !profile?.avatarUrl && (
+                      <> <Link href="/settings" className="underline">설정</Link>에서 로고·프로필 사진을 등록하면 뉴스레터 하단에 함께 표시돼요.</>
+                    )}
+                  </p>
                 </div>
 
                 <div>

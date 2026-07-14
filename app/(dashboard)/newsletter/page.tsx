@@ -436,6 +436,11 @@ export default function NewsletterPage() {
             </div>
           </div>
 
+          <div className="flex gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+            <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-amber-600" />
+            <p>카테고리만 선택하면 내용이 다소 일반적일 수 있어요. 아래 참고 자료를 채우면 훨씬 풍성하고 구체적인 뉴스레터가 만들어져요.</p>
+          </div>
+
           <div className="space-y-2">
             <Label className="flex items-center gap-1.5">
               직접 제공하는 참고 자료

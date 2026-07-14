@@ -3,6 +3,7 @@ export interface NewsletterTemplateData {
   title: string           // 뉴스레터 제목
   agentName: string       // 발행인(FP) 이름
   agentContact: string    // 연락처
+  avatarUrl?: string      // 발행인 로고/프로필 사진 (설정 페이지에서 등록, 선택사항)
   greeting: string
   issues: string[]        // 핵심 이슈 1~3
   checkPoints: string

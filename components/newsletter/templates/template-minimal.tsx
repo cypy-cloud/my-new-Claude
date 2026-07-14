@@ -2,7 +2,7 @@ import type { NewsletterTemplateProps } from './types'
 
 // 템플릿 1 — 미니멀 화이트: 여백을 넉넉히 두고 얇은 라인으로만 구분하는 정갈한 스타일
 export function TemplateMinimal({ data }: NewsletterTemplateProps) {
-  const { issueLabel, title, agentName, agentContact, greeting, issues, checkPoints, cta, fontClassName, bodyFontSize } = data
+  const { issueLabel, title, agentName, agentContact, avatarUrl, greeting, issues, checkPoints, cta, fontClassName, bodyFontSize } = data
   const bodyStyle = { fontSize: bodyFontSize }
 
   return (
@@ -45,7 +45,8 @@ export function TemplateMinimal({ data }: NewsletterTemplateProps) {
         </div>
       )}
 
-      <div className="mt-12 pt-4 border-t border-gray-200 text-center text-xs text-gray-400">
+      <div className="mt-12 pt-4 border-t border-gray-200 flex items-center justify-center gap-2 text-xs text-gray-400">
+        {avatarUrl && <img src={avatarUrl} crossOrigin="anonymous" alt="" className="h-6 w-6 rounded-full object-cover" />}
         {agentName} · {agentContact}
       </div>
     </div>
