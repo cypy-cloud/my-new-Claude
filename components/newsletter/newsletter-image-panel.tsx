@@ -87,12 +87,12 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
     setFields(prev => ({
       ...prev,
       title: stripTrailingRule(sections.TITLE ?? topic),
-      greeting: sections.GREETING ?? '',
-      issue1: sections.ISSUE_1 ?? '',
-      issue2: sections.ISSUE_2 ?? '',
-      issue3: sections.ISSUE_3 ?? '',
-      checkPoints: sections.CHECK_POINTS ?? '',
-      cta: stripDisclaimer(sections.CTA ?? ''),
+      greeting: stripTrailingRule(sections.GREETING ?? ''),
+      issue1: stripTrailingRule(sections.ISSUE_1 ?? ''),
+      issue2: stripTrailingRule(sections.ISSUE_2 ?? ''),
+      issue3: stripTrailingRule(sections.ISSUE_3 ?? ''),
+      checkPoints: stripTrailingRule(sections.CHECK_POINTS ?? ''),
+      cta: stripTrailingRule(stripDisclaimer(sections.CTA ?? '')),
     }))
   }, [open, sections, topic])
 
