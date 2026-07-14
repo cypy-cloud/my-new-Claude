@@ -44,6 +44,36 @@ function stripMarkdown(text: string) {
     .trim()
 }
 
+// 보험 점검 포인트 프롬프트를 3개로 제한하기 전에 저장된 옛 보관함 항목은 5개까지 있을 수
+// 있어, 이미지에는 몇 개가 저장돼 있든 항상 앞 3개(✓/✅ 항목 단위)만 보이도록 한다.
+// 원본 저장 텍스트·TXT/DOCX 다운로드는 그대로 두고 이미지 표시에만 적용한다.
+function limitCheckPoints(text: string, max = 3) {
+  const groups: string[][] = []
+  let current: string[] | null = null
+  for (const raw of text.split('\n')) {
+    const line = raw.trim()
+    if (/^[-=]{2,}$/.test(line)) continue
+    if (/^[✓✅]/.test(line)) {
+      current = [line]
+      groups.push(current)
+    } else if (current && line) {
+      current.push(line)
+    }
+  }
+  if (groups.length === 0) return text
+  return groups.slice(0, max).map(g => g.join('\n')).join('\n\n')
+}
+
+// CTA 사과 표현 금지 규칙 추가 이전에 저장된 옛 보관함 항목에는 "안부 문자로만... 죄송/미안"
+// 같은 문장이 남아있을 수 있어, 이미지 표시 단계에서 해당 문장만 걸러낸다.
+function stripApologyCta(text: string) {
+  return text
+    .split(/(?<=[.!?다요])\s+/)
+    .filter(sentence => !(/안부\s*문자/.test(sentence) && /(죄송|미안)/.test(sentence)))
+    .join(' ')
+    .trim()
+}
+
 export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelProps) {
   const [open, setOpen] = useState(false)
   const [templateId, setTemplateId] = useState<NewsletterTemplateId>('minimal')
@@ -131,8 +161,8 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
     agentContact: profile?.phone || '연락처를 등록해주세요',
     greeting: clean(fields.greeting),
     issues: [fields.issue1, fields.issue2, fields.issue3].map(clean).filter(Boolean),
-    checkPoints: clean(fields.checkPoints),
-    cta: clean(stripDisclaimer(fields.cta)),
+    checkPoints: limitCheckPoints(clean(fields.checkPoints)),
+    cta: stripApologyCta(clean(stripDisclaimer(fields.cta))),
     fontClassName: getNewsletterFontClassName(fontId),
     bodyFontSize,
   }
