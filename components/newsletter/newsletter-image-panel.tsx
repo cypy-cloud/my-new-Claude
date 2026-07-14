@@ -23,6 +23,13 @@ function defaultIssueLabel() {
   return `${now.getFullYear()}년 ${now.getMonth() + 1}월호`
 }
 
+// app/api/ai/newsletter/route.ts에서 CTA 뒤에 항상 붙이는 컴플라이언스 안내문(NEWSLETTER_DISCLAIMER)은
+// 설계사 본인이 발송 전 확인하라는 내부용 문구라, 고객에게 바로 전달되는 이미지에는 넣지 않는다.
+function stripDisclaimer(cta: string) {
+  const idx = cta.indexOf('⚠️ 법적 유의사항')
+  return idx === -1 ? cta.trim() : cta.slice(0, idx).trim()
+}
+
 export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelProps) {
   const [open, setOpen] = useState(false)
   const [templateId, setTemplateId] = useState<NewsletterTemplateId>('minimal')
@@ -80,7 +87,7 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
       issue2: sections.ISSUE_2 ?? '',
       issue3: sections.ISSUE_3 ?? '',
       checkPoints: sections.CHECK_POINTS ?? '',
-      cta: sections.CTA ?? '',
+      cta: stripDisclaimer(sections.CTA ?? ''),
     }))
   }, [open, sections, topic])
 
