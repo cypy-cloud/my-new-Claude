@@ -13,8 +13,11 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { NewsletterImagePanel } from "@/components/newsletter/newsletter-image-panel"
+import { NEWSLETTER_TOPIC_CATEGORIES } from "@/lib/content/newsletter-topics"
 
 // ─── Constants ──────────────────────────────────────────────────────────────
+
+const MAX_SUGGEST_RETRIES = 3
 
 const INSURANCE_FIELDS = [
   "생명보험", "건강보험", "실손보험", "암보험", "종신보험",
@@ -133,7 +136,6 @@ export default function NewsletterPage() {
     targetAudience: "",
     topic: "",
     insuranceField: "",
-    seasonalIssue: "",
     recentConsultingIssue: "",
     tone: "전문적이고 따뜻한",
     length: "보통",
@@ -145,7 +147,41 @@ export default function NewsletterPage() {
   const [savedId, setSavedId] = useState<string | null>(null)
   const [remaining, setRemaining] = useState<number | null>(null)
 
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
+  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(null)
+  const [topicSuggestions, setTopicSuggestions] = useState<string[]>([])
+  const [suggestLoading, setSuggestLoading] = useState(false)
+  const [suggestCount, setSuggestCount] = useState(0)
+
+  const selectedCategory = NEWSLETTER_TOPIC_CATEGORIES.find(c => c.id === selectedCategoryId) ?? null
+  const selectedSubcategory = selectedCategory?.subcategories.find(s => s.id === selectedSubcategoryId) ?? null
+
   const set = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }))
+
+  const handleSuggestTopics = async () => {
+    if (!selectedCategory || !selectedSubcategory || suggestCount >= MAX_SUGGEST_RETRIES) return
+    setSuggestLoading(true)
+    try {
+      const res = await fetch("/api/ai/newsletter/suggest-topics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          categoryLabel: selectedCategory.label,
+          subcategoryLabel: selectedSubcategory.label,
+          targetAudience: form.targetAudience,
+          insuranceField: form.insuranceField,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { toast.error(data.error ?? "주제 제안에 실패했습니다"); return }
+      setTopicSuggestions(data.topics ?? [])
+      setSuggestCount(c => c + 1)
+    } catch {
+      toast.error("네트워크 오류가 발생했습니다")
+    } finally {
+      setSuggestLoading(false)
+    }
+  }
 
   const handleGenerate = async (forceRegenerate = false) => {
     if (!form.targetAudience.trim()) { toast.error("대상 고객층을 입력해주세요"); return }
@@ -259,8 +295,98 @@ export default function NewsletterPage() {
 
           <div className="space-y-2">
             <Label>뉴스레터 주제 <span className="text-red-500">*</span></Label>
+
+            <div className="grid grid-cols-2 gap-2">
+              {NEWSLETTER_TOPIC_CATEGORIES.map(c => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategoryId(c.id)
+                    setSelectedSubcategoryId(null)
+                    setTopicSuggestions([])
+                    setSuggestCount(0)
+                  }}
+                  className={`text-left rounded-lg border p-2.5 text-xs transition-colors ${
+                    selectedCategoryId === c.id
+                      ? 'border-orange-500 bg-orange-50 text-orange-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                  }`}
+                >
+                  <span className="mr-1">{c.emoji}</span>{c.label}
+                </button>
+              ))}
+            </div>
+
+            {selectedCategory && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {selectedCategory.subcategories.map(s => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedSubcategoryId(s.id)
+                      setTopicSuggestions([])
+                      setSuggestCount(0)
+                    }}
+                    className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                      selectedSubcategoryId === s.id
+                        ? 'border-orange-500 bg-orange-50 text-orange-700'
+                        : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {selectedSubcategory && (
+              <div className="space-y-2 pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 h-8 text-xs"
+                  onClick={handleSuggestTopics}
+                  disabled={suggestLoading || suggestCount >= MAX_SUGGEST_RETRIES}
+                >
+                  {suggestLoading ? (
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" />
+                  )}
+                  {topicSuggestions.length === 0 ? "AI로 주제 추천받기" : "다른 주제 추천받기"}
+                  {suggestCount > 0 && <span className="text-gray-400">({suggestCount}/{MAX_SUGGEST_RETRIES})</span>}
+                </Button>
+
+                {suggestCount >= MAX_SUGGEST_RETRIES && (
+                  <p className="text-xs text-gray-400">추천 횟수를 다 사용했어요. 참고해서 아래에 직접 입력해보세요.</p>
+                )}
+
+                {topicSuggestions.length > 0 && (
+                  <div className="space-y-1.5">
+                    {topicSuggestions.map((t, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => set("topic", t)}
+                        className={`w-full text-left rounded-lg border px-3 py-2 text-xs transition-colors ${
+                          form.topic === t
+                            ? 'border-orange-500 bg-orange-50 text-orange-700'
+                            : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <Input
-              placeholder="예: 여름철 건강보험 점검, 연말 절세 전략"
+              placeholder="위에서 추천받은 주제를 선택하거나, 직접 입력해도 됩니다"
               value={form.topic}
               onChange={e => set("topic", e.target.value)}
             />
@@ -276,15 +402,6 @@ export default function NewsletterPage() {
               <option value="">보험 분야 선택</option>
               {INSURANCE_FIELDS.map(f => <option key={f} value={f}>{f}</option>)}
             </select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>계절/시기 이슈</Label>
-            <Input
-              placeholder="예: 여름 폭염, 연말 정산 시즌, 신학기"
-              value={form.seasonalIssue}
-              onChange={e => set("seasonalIssue", e.target.value)}
-            />
           </div>
 
           <div className="space-y-2">

@@ -4,6 +4,7 @@ import { generateWithAI, DuplicateRequestError } from '@/lib/ai/provider'
 import { blockIfLimitExceeded, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
 import { trackFeatureComplete } from '@/lib/analytics/track'
 import { handleApiError } from '@/lib/errors/api-error-handler'
+import { getCurrentSeasonContext } from '@/lib/content/newsletter-season'
 
 const NEWSLETTER_DISCLAIMER = `
 
@@ -34,13 +35,14 @@ function buildNewsletterPrompt(params: {
   targetAudience: string
   topic: string
   insuranceField: string
-  seasonalIssue: string
   recentConsultingIssue: string
   tone: string
   length: string
   userProvidedInfo: string
 }): string {
-  const { targetAudience, topic, insuranceField, seasonalIssue, recentConsultingIssue, tone, length, userProvidedInfo } = params
+  const { targetAudience, topic, insuranceField, recentConsultingIssue, tone, length, userProvidedInfo } = params
+  // 사용자가 직접 입력하던 "계절/시기 이슈" 필드는 없어졌고, 오늘 날짜 기준으로 자동 계산한다.
+  const seasonalIssue = getCurrentSeasonContext()
 
   const charRange = length === '짧게' ? '800~1200자' : length === '길게' ? '2000~2500자' : '1200~1800자'
 
@@ -106,7 +108,6 @@ export async function POST(request: NextRequest) {
     targetAudience,
     topic,
     insuranceField,
-    seasonalIssue = '',
     recentConsultingIssue = '',
     tone = '전문적이고 따뜻한',
     length = '보통',
@@ -130,8 +131,8 @@ export async function POST(request: NextRequest) {
     throw err
   }
 
-  const prompt = buildNewsletterPrompt({ targetAudience, topic, insuranceField, seasonalIssue, recentConsultingIssue, tone, length, userProvidedInfo })
-  const cacheInput = { targetAudience, topic, insuranceField, seasonalIssue, recentConsultingIssue, tone, length, userProvidedInfo }
+  const prompt = buildNewsletterPrompt({ targetAudience, topic, insuranceField, recentConsultingIssue, tone, length, userProvidedInfo })
+  const cacheInput = { targetAudience, topic, insuranceField, recentConsultingIssue, tone, length, userProvidedInfo }
 
   let result
   let sections: Record<string, string>
