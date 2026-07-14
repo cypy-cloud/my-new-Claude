@@ -30,6 +30,11 @@ function stripDisclaimer(cta: string) {
   return idx === -1 ? cta.trim() : cta.slice(0, idx).trim()
 }
 
+// AI가 가끔 제목 끝에 마크다운 구분선(---, ===)을 덧붙이는 경우가 있어 제거한다.
+function stripTrailingRule(text: string) {
+  return text.replace(/\s*[-=]{2,}\s*$/, '').trim()
+}
+
 export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelProps) {
   const [open, setOpen] = useState(false)
   const [templateId, setTemplateId] = useState<NewsletterTemplateId>('minimal')
@@ -81,7 +86,7 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
     if (!open) return
     setFields(prev => ({
       ...prev,
-      title: sections.TITLE ?? topic,
+      title: stripTrailingRule(sections.TITLE ?? topic),
       greeting: sections.GREETING ?? '',
       issue1: sections.ISSUE_1 ?? '',
       issue2: sections.ISSUE_2 ?? '',

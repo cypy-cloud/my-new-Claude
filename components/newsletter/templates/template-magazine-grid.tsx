@@ -15,7 +15,7 @@ export function TemplateMagazineGrid({ data }: NewsletterTemplateProps) {
         }} />
         <div className="relative flex items-start justify-between">
           <div>
-            <p className="text-xs font-bold tracking-[0.25em] text-[#1e3a5f] uppercase">FP AI Assistant</p>
+            <p className="text-xs font-bold tracking-[0.25em] text-[#1e3a5f] uppercase">Insurance Newsletter</p>
             <h1 className="text-4xl font-black leading-none text-[#1e3a5f] mt-1">NEWS<br />LETTER</h1>
           </div>
           <div className="text-right">
