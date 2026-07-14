@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { getAuthUser, getFullProfile } from "@/lib/auth/session"
 import { Sidebar } from "@/components/layout/sidebar"
 import { DashboardShell } from "@/components/layout/dashboard-shell"
+import { DailyQuotePopup } from "@/components/dashboard/daily-quote-popup"
 import { PLAN_LABELS } from "@/types"
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -26,6 +27,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <DailyQuotePopup />
       <Sidebar profile={effectiveProfile} planName={planName} />
       <DashboardShell profile={effectiveProfile} planName={planName}>
         {children}
