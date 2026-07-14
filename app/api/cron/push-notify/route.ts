@@ -56,7 +56,9 @@ export async function GET(req: Request) {
   for (const task of tasks ?? []) {
     if (!task.due_time) continue
 
-    const dueAt = new Date(`${task.due_date}T${task.due_time}`)
+    // due_date/due_time은 사용자가 한국 시간(KST) 기준으로 입력한 값인데, Vercel 서버는
+    // UTC로 동작하므로 시간대 오프셋 없이 파싱하면 9시간이 밀린다 — 반드시 +09:00을 명시한다.
+    const dueAt = new Date(`${task.due_date}T${task.due_time}+09:00`)
     const notifyAt = new Date(dueAt.getTime() - task.notify_before_minutes * 60 * 1000)
 
     // 현재 시각이 알림 시각에 도달했고, 아직 일정 시각이 지나지 않은 경우
