@@ -35,6 +35,15 @@ function stripTrailingRule(text: string) {
   return text.replace(/\s*[-=]{2,}\s*$/, '').trim()
 }
 
+// 이미지는 마크다운을 렌더링하지 않고 텍스트 그대로 찍히므로, 프롬프트에서 금지했어도
+// 혹시 남아있는 #/##/** 같은 기호나 예전에 저장된 뉴스레터의 옛 형식 잔재를 제거한다.
+function stripMarkdown(text: string) {
+  return text
+    .replace(/^#{1,6}\s*/gm, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .trim()
+}
+
 export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelProps) {
   const [open, setOpen] = useState(false)
   const [templateId, setTemplateId] = useState<NewsletterTemplateId>('minimal')
@@ -114,15 +123,16 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
   // 6개 템플릿이 실제로 그리는 최종 데이터를 여기서 한 번 더 정리한다 — 새로 생성한 직후든
   // 보관함에서 저장된 텍스트를 다시 불러온 것이든, 이 지점만 거치면 전부 적용되므로 진입 경로에
   // 상관없이 확실하게 걸러진다.
+  const clean = (text: string) => stripTrailingRule(stripMarkdown(text))
   const templateData = {
     issueLabel: fields.issueLabel,
-    title: stripTrailingRule(fields.title),
+    title: clean(fields.title),
     agentName: profile?.name || '담당 FP',
     agentContact: profile?.phone || '연락처를 등록해주세요',
-    greeting: stripTrailingRule(fields.greeting),
-    issues: [fields.issue1, fields.issue2, fields.issue3].map(stripTrailingRule).filter(Boolean),
-    checkPoints: stripTrailingRule(fields.checkPoints),
-    cta: stripTrailingRule(stripDisclaimer(fields.cta)),
+    greeting: clean(fields.greeting),
+    issues: [fields.issue1, fields.issue2, fields.issue3].map(clean).filter(Boolean),
+    checkPoints: clean(fields.checkPoints),
+    cta: clean(stripDisclaimer(fields.cta)),
     fontClassName: getNewsletterFontClassName(fontId),
     bodyFontSize,
   }
