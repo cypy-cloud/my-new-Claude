@@ -111,15 +111,18 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
     totalChars > 900 ? '13.5px' :
     '15px'
 
+  // 6개 템플릿이 실제로 그리는 최종 데이터를 여기서 한 번 더 정리한다 — 새로 생성한 직후든
+  // 보관함에서 저장된 텍스트를 다시 불러온 것이든, 이 지점만 거치면 전부 적용되므로 진입 경로에
+  // 상관없이 확실하게 걸러진다.
   const templateData = {
     issueLabel: fields.issueLabel,
-    title: fields.title,
+    title: stripTrailingRule(fields.title),
     agentName: profile?.name || '담당 FP',
     agentContact: profile?.phone || '연락처를 등록해주세요',
-    greeting: fields.greeting,
-    issues: [fields.issue1, fields.issue2, fields.issue3].filter(Boolean),
-    checkPoints: fields.checkPoints,
-    cta: fields.cta,
+    greeting: stripTrailingRule(fields.greeting),
+    issues: [fields.issue1, fields.issue2, fields.issue3].map(stripTrailingRule).filter(Boolean),
+    checkPoints: stripTrailingRule(fields.checkPoints),
+    cta: stripTrailingRule(stripDisclaimer(fields.cta)),
     fontClassName: getNewsletterFontClassName(fontId),
     bodyFontSize,
   }
