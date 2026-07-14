@@ -35,6 +35,45 @@ function stripTrailingRule(text: string) {
   return text.replace(/\s*[-=]{2,}\s*$/, '').trim()
 }
 
+// 이미지는 마크다운을 렌더링하지 않고 텍스트 그대로 찍히므로, 프롬프트에서 금지했어도
+// 혹시 남아있는 #/##/** 같은 기호나 예전에 저장된 뉴스레터의 옛 형식 잔재를 제거한다.
+function stripMarkdown(text: string) {
+  return text
+    .replace(/^#{1,6}\s*/gm, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .trim()
+}
+
+// 보험 점검 포인트 프롬프트를 3개로 제한하기 전에 저장된 옛 보관함 항목은 5개까지 있을 수
+// 있어, 이미지에는 몇 개가 저장돼 있든 항상 앞 3개(✓/✅ 항목 단위)만 보이도록 한다.
+// 원본 저장 텍스트·TXT/DOCX 다운로드는 그대로 두고 이미지 표시에만 적용한다.
+function limitCheckPoints(text: string, max = 3) {
+  const groups: string[][] = []
+  let current: string[] | null = null
+  for (const raw of text.split('\n')) {
+    const line = raw.trim()
+    if (/^[-=]{2,}$/.test(line)) continue
+    if (/^[✓✅]/.test(line)) {
+      current = [line]
+      groups.push(current)
+    } else if (current && line) {
+      current.push(line)
+    }
+  }
+  if (groups.length === 0) return text
+  return groups.slice(0, max).map(g => g.join('\n')).join('\n\n')
+}
+
+// CTA 사과 표현 금지 규칙 추가 이전에 저장된 옛 보관함 항목에는 "안부 문자로만... 죄송/미안"
+// 같은 문장이 남아있을 수 있어, 이미지 표시 단계에서 해당 문장만 걸러낸다.
+function stripApologyCta(text: string) {
+  return text
+    .split(/(?<=[.!?다요])\s+/)
+    .filter(sentence => !(/안부\s*문자/.test(sentence) && /(죄송|미안)/.test(sentence)))
+    .join(' ')
+    .trim()
+}
+
 export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelProps) {
   const [open, setOpen] = useState(false)
   const [templateId, setTemplateId] = useState<NewsletterTemplateId>('minimal')
@@ -87,12 +126,12 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
     setFields(prev => ({
       ...prev,
       title: stripTrailingRule(sections.TITLE ?? topic),
-      greeting: sections.GREETING ?? '',
-      issue1: sections.ISSUE_1 ?? '',
-      issue2: sections.ISSUE_2 ?? '',
-      issue3: sections.ISSUE_3 ?? '',
-      checkPoints: sections.CHECK_POINTS ?? '',
-      cta: stripDisclaimer(sections.CTA ?? ''),
+      greeting: stripTrailingRule(sections.GREETING ?? ''),
+      issue1: stripTrailingRule(sections.ISSUE_1 ?? ''),
+      issue2: stripTrailingRule(sections.ISSUE_2 ?? ''),
+      issue3: stripTrailingRule(sections.ISSUE_3 ?? ''),
+      checkPoints: stripTrailingRule(sections.CHECK_POINTS ?? ''),
+      cta: stripTrailingRule(stripDisclaimer(sections.CTA ?? '')),
     }))
   }, [open, sections, topic])
 
@@ -111,15 +150,19 @@ export function NewsletterImagePanel({ sections, topic }: NewsletterImagePanelPr
     totalChars > 900 ? '13.5px' :
     '15px'
 
+  // 6개 템플릿이 실제로 그리는 최종 데이터를 여기서 한 번 더 정리한다 — 새로 생성한 직후든
+  // 보관함에서 저장된 텍스트를 다시 불러온 것이든, 이 지점만 거치면 전부 적용되므로 진입 경로에
+  // 상관없이 확실하게 걸러진다.
+  const clean = (text: string) => stripTrailingRule(stripMarkdown(text))
   const templateData = {
     issueLabel: fields.issueLabel,
-    title: fields.title,
+    title: clean(fields.title),
     agentName: profile?.name || '담당 FP',
     agentContact: profile?.phone || '연락처를 등록해주세요',
-    greeting: fields.greeting,
-    issues: [fields.issue1, fields.issue2, fields.issue3].filter(Boolean),
-    checkPoints: fields.checkPoints,
-    cta: fields.cta,
+    greeting: clean(fields.greeting),
+    issues: [fields.issue1, fields.issue2, fields.issue3].map(clean).filter(Boolean),
+    checkPoints: limitCheckPoints(clean(fields.checkPoints)),
+    cta: stripApologyCta(clean(stripDisclaimer(fields.cta))),
     fontClassName: getNewsletterFontClassName(fontId),
     bodyFontSize,
   }

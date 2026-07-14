@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { clientTrackDownload } from "@/lib/analytics/client-track"
+import { NewsletterImagePanel } from "@/components/newsletter/newsletter-image-panel"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -71,6 +72,31 @@ function formatDate(iso: string) {
 function getPreview(text: string, maxLen = 100) {
   const clean = text.replace(/\[.*?\]\n?/g, " ").replace(/\s+/g, " ").trim()
   return clean.length > maxLen ? clean.slice(0, maxLen) + "..." : clean
+}
+
+// app/(dashboard)/newsletter/page.tsx의 buildFullText()가 만든 "【라벨】\n내용" 형식의
+// 저장 텍스트를, 뉴스레터 이미지 패널이 요구하는 sections 객체로 다시 되돌린다.
+// 이렇게 하면 보관함에서도 사용량 차감(재생성) 없이 바로 이미지를 만들 수 있다.
+const NEWSLETTER_LABEL_TO_KEY: Record<string, string> = {
+  "뉴스레터 제목": "TITLE",
+  "인사말": "GREETING",
+  "핵심 이슈 1": "ISSUE_1",
+  "핵심 이슈 2": "ISSUE_2",
+  "핵심 이슈 3": "ISSUE_3",
+  "보험 점검 포인트": "CHECK_POINTS",
+  "고객 행동 유도 문구": "CTA",
+  "카톡 발송용 요약": "KAKAO_SUMMARY",
+}
+
+function parseNewsletterSections(text: string): Record<string, string> {
+  const sections: Record<string, string> = {}
+  const regex = /【([^】]+)】\n([\s\S]*?)(?=\n【|\n=+\n|$)/g
+  let match: RegExpExecArray | null
+  while ((match = regex.exec(text)) !== null) {
+    const key = NEWSLETTER_LABEL_TO_KEY[match[1].trim()]
+    if (key) sections[key] = match[2].trim()
+  }
+  return sections
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -479,6 +505,12 @@ ${body}
                       ? <><StarOff className="h-3 w-3 mr-1" />즐겨찾기 해제</>
                       : <><Star className="h-3 w-3 mr-1" />즐겨찾기</>}
                   </Button>
+                  {detailOutput.type === "newsletter" && (
+                    <NewsletterImagePanel
+                      sections={parseNewsletterSections(detailOutput.output_text)}
+                      topic={detailOutput.title.replace(/^\[뉴스레터\]\s*/, "")}
+                    />
+                  )}
                 </div>
 
                 {/* Full content */}
