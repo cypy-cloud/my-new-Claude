@@ -38,8 +38,13 @@ export function PushNotificationToggle() {
       toast.success("일정 알림을 해제했습니다")
     } else {
       const ok = await subscribe()
-      if (ok) toast.success("일정 알림이 활성화되었습니다! 🔔")
-      else if (permission === "denied") toast.error("알림 권한이 거부되었습니다. 브라우저 설정에서 허용해주세요.")
+      if (ok) {
+        toast.success("일정 알림이 활성화되었습니다! 🔔")
+      } else if (permission === "denied") {
+        toast.error("알림 권한이 거부되었습니다. 브라우저 설정에서 허용해주세요.")
+      } else {
+        toast.error("알림 활성화에 실패했습니다. iOS는 홈 화면에 추가한 앱에서만 알림이 지원됩니다.")
+      }
     }
   }
 
