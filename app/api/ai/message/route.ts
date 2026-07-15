@@ -30,8 +30,11 @@ function stripLeakedInstruction(text: string): string {
   return lines.join('\n')
 }
 
-function parseOutputSections(raw: string): Record<string, string> {
-  const markers = ['SMS', 'KAKAO', 'SOFT', 'PERSUASIVE', 'FOLLOWUP']
+// markers는 그 raw 텍스트를 생성한 프롬프트가 실제로 요청한 마커 목록·순서와 정확히 일치해야
+// 한다 — Haiku 응답(SMS/KAKAO/SOFT/FOLLOWUP)과 Sonnet 응답(PERSUASIVE)을 하나의 고정 마커
+// 목록으로 같이 파싱하면, 존재하지 않는 다음 마커를 찾지 못해 마지막 섹션의 내용이 통째로
+// 앞 섹션에 잘못 붙어버리는 문제가 있었다(예: SOFT가 PERSUASIVE를 못 찾아 FOLLOWUP까지 삼킴).
+function parseOutputSections(raw: string, markers: readonly string[]): Record<string, string> {
   const result: Record<string, string> = {}
 
   for (let i = 0; i < markers.length; i++) {
@@ -205,7 +208,11 @@ export async function POST(request: NextRequest) {
         feature: 'ai_message',
         userId: user.id,
         model: HAIKU_MODEL,
-        maxTokens: 2500,
+        // SMS(800~1000자)+KAKAO(800~1000자)+SOFT(400~500자)+FOLLOWUP(300~500자) 4개 섹션을
+        // 한 번에 생성하는데 2500으로는 부족해 마지막 FOLLOWUP 섹션이 중간에 잘렸음 — 그 잘린
+        // 내용이 SOFT 파싱 버그(위 parseOutputSections 주석 참고)와 겹쳐 SOFT 탭에 잘못 붙어
+        // 보이는 문제로 이어졌음.
+        maxTokens: 5000,
         temperature: 0.75,
         cacheInput: { ...baseCacheInput, split: 'haiku' },
         forceRegenerate,
@@ -228,10 +235,10 @@ export async function POST(request: NextRequest) {
     return handleApiError(err, { userId: user.id, area: 'ai', metadata: { feature: 'ai_message', purpose, productField } })
   }
 
-  // 섹션 파싱 및 병합
+  // 섹션 파싱 및 병합 — 각 raw 텍스트는 그걸 생성한 프롬프트의 마커 목록으로만 파싱한다
   const sections: Record<string, string> = {
-    ...parseOutputSections(haikuResult.text),
-    ...parseOutputSections(sonnetResult.text),
+    ...parseOutputSections(haikuResult.text, HAIKU_SECTIONS),
+    ...parseOutputSections(sonnetResult.text, SONNET_SECTIONS),
   }
 
   // 고지문 추가
