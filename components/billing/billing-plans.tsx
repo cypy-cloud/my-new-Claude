@@ -64,7 +64,7 @@ function getPlanFeatures(planId: PlanId) {
       { label: `파일당 ${plan.maxFileSizeMb}MB`, included: true },
       { label: `원본 보관 ${plan.storageDays}일`, included: true },
       { label: `블로그·SNS 콘텐츠 월 ${plan.contentLimit}회`, included: true },
-      { label: `뉴스레터 생성 월 ${plan.newsletterLimit}회 (맛보기)`, included: true },
+      { label: `뉴스레터 생성 월 ${plan.newsletterLimit}회`, included: true },
       { label: "우선 처리", included: false },
       { label: "팀 공유", included: false },
     )
