@@ -214,7 +214,8 @@ export async function POST(request: NextRequest) {
         feature: 'ai_message',
         userId: user.id,
         model: SONNET_MODEL,
-        maxTokens: 3000, // Sonnet 5의 extended thinking 소모분을 감안한 여유 마진 (1500은 드물게 거의 빈 응답으로 잘림)
+        maxTokens: 4096, // 700~1000자 한글 5단계 구조 응답이 3000에서도 문장 중간에 잘리는 사례가
+                         // 실사용자에게 발생해 상향(1500→3000 때와 동일한 문제 재발, 여유를 더 확보)
         temperature: 0.75,
         cacheInput: { ...baseCacheInput, split: 'sonnet' },
         forceRegenerate,
