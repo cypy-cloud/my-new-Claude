@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { toast } from "sonner"
 import { Brain, Copy, RefreshCw, Star, AlertTriangle, MessageSquare, Tag, TrendingUp, Mic, MicOff, Loader2, Save, BookmarkCheck, QrCode, ClipboardList } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -28,6 +28,17 @@ const INCOME_LEVELS = ["월 200만원 미만", "월 200~300만원", "월 300~500
 const FAMILY_STATUS = ["미혼", "기혼 (자녀 없음)", "기혼 (자녀 있음)", "이혼/사별"]
 const PERSONALITY_TYPES = ["꼼꼼하고 분석적", "빠른 결정 선호", "관계 중심적", "보수적/안전 추구", "트렌드에 민감", "가격 민감형"]
 const CONCERNS = ["노후 준비", "질병/암 대비", "가족 보장", "저축/재테크", "사고/상해 대비", "세금 절약"]
+
+interface CustomerRecord {
+  id: string
+  name: string
+  phone: string | null
+  age_group: string | null
+  gender: string | null
+  job: string | null
+  family_status: string | null
+  children_status: string | null
+}
 
 interface AnalysisResult {
   personality: string
@@ -58,6 +69,8 @@ export function CustomerAnalysis({ planName, planId, limits, usage }: CustomerAn
   const [personality, setPersonality] = useState("")
   const [extraNotes, setExtraNotes] = useState("")
   const [mbtiType, setMbtiType] = useState("")
+  const [customers, setCustomers] = useState<CustomerRecord[]>([])
+  const [selectedCustomerId, setSelectedCustomerId] = useState("")
   const [activeTab, setActiveTab] = useState<"form" | "qr">("form")
   const [loading, setLoading] = useState(false)
   const [loadingStep, setLoadingStep] = useState(0)
@@ -70,6 +83,45 @@ export function CustomerAnalysis({ planName, planId, limits, usage }: CustomerAn
   const recognitionRef = useRef<any>(null)
   const transcriptRef = useRef("")
   const loadingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    fetch("/api/customers")
+      .then(res => res.json())
+      .then(data => setCustomers(data.customers ?? []))
+      .catch(() => {})
+  }, [])
+
+  // 고객관리에 등록된 고객 정보를 불러와 채운다. 고객관리와 성향분석은 항목 값 체계가 달라서
+  // (예: 연령대 "30대" vs "30대 초반/후반", 소득 구간 경계가 다름) 안전하게 대응되는 항목만
+  // 채우고, 값 체계가 어긋나는 소득 수준은 채우지 않고 사용자가 직접 고르도록 둔다.
+  function handleSelectCustomer(id: string) {
+    setSelectedCustomerId(id)
+    if (!id) return
+    const c = customers.find(x => x.id === id)
+    if (!c) return
+
+    setCustomerName(c.name ?? "")
+    if (c.gender === "남성" || c.gender === "여성") setGender(c.gender)
+    if (c.job) setOccupation(c.job)
+
+    if (c.age_group) {
+      const mappedAge =
+        c.age_group === "30대" ? "30대 초반" :
+        c.age_group === "40대" ? "40대 초반" :
+        c.age_group
+      if (AGE_GROUPS.includes(mappedAge)) setAgeGroup(mappedAge)
+    }
+
+    if (c.family_status === "미혼") {
+      setFamilyStatus("미혼")
+    } else if (c.family_status === "기혼") {
+      setFamilyStatus(c.children_status && c.children_status !== "없음" ? "기혼 (자녀 있음)" : "기혼 (자녀 없음)")
+    } else if (c.family_status === "이혼/별거" || c.family_status === "사별") {
+      setFamilyStatus("이혼/사별")
+    }
+
+    toast.success(`${c.name} 고객 정보를 불러왔습니다`)
+  }
 
   const LOADING_STEPS = [
     "고객 정보 분석 중...",
@@ -308,6 +360,26 @@ export function CustomerAnalysis({ planName, planId, limits, usage }: CustomerAn
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {customers.length > 0 && (
+            <div className="space-y-1.5">
+              <Label>기존 고객 불러오기 <span className="text-gray-400 text-xs">(선택)</span></Label>
+              <select
+                value={selectedCustomerId}
+                onChange={e => handleSelectCustomer(e.target.value)}
+                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">직접 입력</option>
+                {customers.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}{c.phone ? ` (${c.phone})` : ""}</option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-400">
+                선택하면 이름·나이대·성별·직업·가족상황이 자동으로 채워집니다. 나이대·가족상황은
+                고객관리 등록 정보를 기준으로 한 근사치이니 정확한지 확인해주세요.
+              </p>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <Label>고객 이름 (선택)</Label>
             <Input placeholder="예: 홍길동" value={customerName} onChange={e => setCustomerName(e.target.value)} />
