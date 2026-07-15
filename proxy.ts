@@ -5,6 +5,14 @@ const PUBLIC_PATHS = ['/', '/login', '/signup', '/forgot-password', '/reset-pass
 const ADMIN_PATHS = ['/admin']
 
 export async function proxy(request: NextRequest) {
+  // Vercel Cron이 호출하는 API는 세션 쿠키가 없고(브라우저가 아니므로) 각 라우트 자체가
+  // Authorization: Bearer <CRON_SECRET>로 자체 인증한다. 이 미들웨어의 세션 기반 로그인
+  // 체크를 거치면 user가 항상 null이라 /login으로 307 리다이렉트되어 크론 핸들러 코드가
+  // 아예 실행되지 않는다 — 발견된 push-notify 알림 미발송 문제의 진짜 근본 원인.
+  if (request.nextUrl.pathname.startsWith('/api/cron/')) {
+    return NextResponse.next({ request })
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
