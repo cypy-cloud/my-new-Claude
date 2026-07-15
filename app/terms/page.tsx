@@ -22,7 +22,7 @@ export default function TermsPage() {
 
       <main className="max-w-3xl mx-auto px-4 py-10 text-gray-800 leading-relaxed">
         <h1 className="text-2xl font-bold text-[#1e3a5f] mb-1">이용약관</h1>
-        <p className="text-sm text-gray-400 mb-8">시행일: 2026년 7월 8일 · 버전 v1.2</p>
+        <p className="text-sm text-gray-400 mb-8">시행일: 2026년 7월 16일 · 버전 v1.3</p>
 
         <section className="space-y-3 mb-8">
           <h2 className="text-lg font-semibold text-[#1e3a5f]">제1조 (목적)</h2>
@@ -117,7 +117,41 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-3 mb-8">
-          <h2 className="text-lg font-semibold text-[#1e3a5f]">제9조 (약관의 변경)</h2>
+          <h2 className="text-lg font-semibold text-[#1e3a5f]">제9조 (지식재산권)</h2>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>서비스의 명칭, 로고, 화면 구성(UI/UX), 디자인, 소스코드, AI 프롬프트 설계 및 관련 알고리즘,
+              데이터베이스 구조 등 서비스를 구성하는 일체의 지식재산권은 회사에 귀속됩니다.</li>
+            <li>이용자는 회사의 사전 서면 동의 없이 서비스의 전부 또는 일부를 복제, 모방, 배포, 전송, 출판,
+              개작하거나 제3자에게 이용하게 할 수 없습니다.</li>
+            <li>이용자가 서비스를 이용하여 생성한 결과물(문자, 상담 스크립트, 분석 리포트, 콘텐츠, 이미지 등)에
+              대한 이용 권한은 이용자에게 있으며, 이용자는 이를 자유롭게 활용할 수 있습니다. 다만 이는 결과물
+              생성에 사용된 서비스 자체(프롬프트 설계, AI 모델 연동 방식 등)에 대한 권리를 이전하는 것은 아닙니다.</li>
+            <li>이용자가 위 각 항을 위반하여 회사에 손해를 발생시킨 경우, 회사는 관련 법령에 따라 민형사상
+              책임을 물을 수 있습니다.</li>
+          </ul>
+        </section>
+
+        <section className="space-y-3 mb-8">
+          <h2 className="text-lg font-semibold text-[#1e3a5f]">제10조 (금지행위)</h2>
+          <p>이용자는 서비스 이용과 관련하여 다음 각 호의 행위를 해서는 안 됩니다.</p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>회사의 사전 동의 없이 서비스를 크롤링, 스크래핑하거나 자동화된 수단(봇, 매크로 등)으로
+              접근하는 행위</li>
+            <li>서비스의 소스코드, 프롬프트, API를 리버스 엔지니어링, 역컴파일, 역어셈블하거나 이를
+              시도하는 행위</li>
+            <li>서비스를 복제하여 유사·경쟁 서비스를 개발하거나, 서비스의 일부 또는 전부를 제3자에게
+              재판매·재라이선싱하는 행위</li>
+            <li>하나의 계정을 본인이 아닌 제3자와 공유하거나, 다수의 이용자가 하나의 계정을 공동으로
+              사용하는 행위</li>
+            <li>서비스의 정상적인 운영을 방해하거나 서버에 과도한 부하를 유발하는 행위</li>
+            <li>기타 관계 법령 또는 이 약관에서 금지하는 행위</li>
+          </ul>
+          <p>회사는 이용자가 위 각 호의 행위를 한 것으로 확인되는 경우, 사전 통지 없이 서비스 이용을
+            제한하거나 계약을 해지할 수 있으며, 이로 인해 회사에 발생한 손해에 대해 배상을 청구할 수 있습니다.</p>
+        </section>
+
+        <section className="space-y-3 mb-8">
+          <h2 className="text-lg font-semibold text-[#1e3a5f]">제11조 (약관의 변경)</h2>
           <p>
             회사는 필요한 경우 관계 법령을 위반하지 않는 범위에서 이 약관을 변경할 수 있으며, 변경 시
             서비스 내 공지 또는 이메일을 통해 사전 안내합니다.
@@ -125,7 +159,7 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-3 mb-8">
-          <h2 className="text-lg font-semibold text-[#1e3a5f]">제10조 (분쟁 해결 및 관할)</h2>
+          <h2 className="text-lg font-semibold text-[#1e3a5f]">제12조 (분쟁 해결 및 관할)</h2>
           <p>
             이 약관과 관련하여 회사와 이용자 간 발생한 분쟁에 대해서는 대한민국 법을 적용하며,
             분쟁 발생 시 민사소송법상의 관할 법원에 소를 제기할 수 있습니다.
