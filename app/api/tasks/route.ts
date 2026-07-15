@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 const TASK_SELECT = `
   id, user_id, customer_id, title, description,
   task_type, due_date, due_time, status, priority,
-  gcal_event_id, created_at, updated_at,
+  notify_before_minutes, gcal_event_id, created_at, updated_at,
   customers(id, name, phone)
 `
 
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
 
   const body = await request.json()
-  const { title, description, task_type, due_date, due_time, priority, customer_id } = body
+  const { title, description, task_type, due_date, due_time, priority, customer_id, notify_before_minutes } = body
 
   if (!title?.trim() || !due_date || !task_type) {
     return NextResponse.json({ error: '제목, 마감일, 업무 유형을 입력해주세요' }, { status: 400 })
@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
       due_time: due_time || null,
       priority: priority || 'medium',
       status: 'pending',
+      notify_before_minutes: notify_before_minutes ?? null,
     })
     .select(TASK_SELECT)
     .single()
