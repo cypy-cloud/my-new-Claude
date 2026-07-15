@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateWithAI, DuplicateRequestError } from '@/lib/ai/provider'
 import { getActivePrompt, renderPrompt } from '@/lib/ai/prompts/prompt-versioning'
-import { blockIfLimitExceeded, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
+import { reserveUsage, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
 import { trackFeatureComplete } from '@/lib/analytics/track'
 import { handleApiError } from '@/lib/errors/api-error-handler'
 import { resolveProductCategory, buildProductCategoryAddendum } from '@/lib/ai-core/product-category'
@@ -78,8 +78,9 @@ export async function POST(request: NextRequest) {
   }
 
   // Check analysis limit
+  let payerId = userId
   try {
-    await blockIfLimitExceeded(user.id, 'pdf_analysis')
+    payerId = (await reserveUsage(userId, 'pdf_analysis')).payerId
   } catch (err) {
     if (err instanceof UsageLimitError) {
       return NextResponse.json(
@@ -160,7 +161,7 @@ export async function POST(request: NextRequest) {
   const wasCached = results.every(r => !!r.cachedAt)
 
   if (!wasCached) {
-    await incrementUsage(user.id, 'pdf_analysis', {
+    await incrementUsage(payerId, 'pdf_analysis', {
       tokenInput: results.reduce((sum, r) => sum + r.usage.inputTokens, 0),
       tokenOutput: results.reduce((sum, r) => sum + r.usage.outputTokens, 0),
     })

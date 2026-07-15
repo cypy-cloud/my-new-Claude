@@ -31,7 +31,20 @@ const TOKEN_COST = {
   output: 10.0 / 1_000_000,
 }
 
-export async function getCurrentUserPlan(): Promise<PlanId> {
+// userId를 넘기면 세션(로그인된 사용자)이 아닌 해당 유저 본인의 플랜을 admin client로 직접
+// 조회한다 — 팀원이 요청한 건을 팀장 한도로 대신 확인해야 하는 경우(reserveUsage)에 필요.
+// 인자 없이 호출하면 기존과 동일하게 세션 유저 기준으로 동작한다(하위 호환).
+export async function getCurrentUserPlan(userId?: string): Promise<PlanId> {
+  if (userId) {
+    const admin = createAdminClient()
+    const { data: profile } = await (admin as any)
+      .from('profiles')
+      .select('plan_type')
+      .eq('id', userId)
+      .single()
+    return (profile?.plan_type as PlanId) ?? 'free'
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return 'free'
@@ -70,7 +83,10 @@ export async function getCurrentUserPlanStatus(): Promise<PlanStatus> {
 }
 
 export async function getMonthlyUsage(userId: string): Promise<MonthlyUsageData> {
-  const supabase = await createClient()
+  // admin client 사용 — usage_records RLS는 auth.uid() = user_id라, 팀원 세션에서 팀장의
+  // 사용량을 조회하려는 reserveUsage() 경로가 RLS에 막혀 항상 0으로 보이는 것을 방지한다.
+  // 기존 "본인 사용량 조회" 호출부는 어차피 RLS를 통과하던 케이스라 결과는 동일하다.
+  const supabase = createAdminClient()
   const month = new Date().toISOString().slice(0, 7)
 
   const { data } = await (supabase as any)
@@ -95,7 +111,10 @@ export async function getMonthlyUsage(userId: string): Promise<MonthlyUsageData>
 }
 
 export async function checkUsageLimit(userId: string, feature: UsageFeature): Promise<UsageLimitCheck> {
-  const planId = await getCurrentUserPlan()
+  // userId는 항상 호출자 본인(세션 유저)의 id로만 넘어오던 기존 호출부와 100% 동일하게 동작한다 —
+  // getCurrentUserPlan(userId)로 조회한 프로필이 세션 프로필과 같은 행이기 때문. reserveUsage()에서
+  // 팀장의 id를 넘길 때만 실제로 "다른 사람"의 플랜을 조회하는 새 경로를 타게 된다.
+  const planId = await getCurrentUserPlan(userId)
   const limits = getPlanLimits(planId)
   const usage = await getMonthlyUsage(userId)
 
@@ -159,6 +178,55 @@ export class UsageLimitError extends Error {
   constructor(message: string, public readonly check: UsageLimitCheck) {
     super(message)
     this.name = 'UsageLimitError'
+  }
+}
+
+// ── 팀 한도 대여 (팀원이 본인 한도를 다 쓰면 팀장의 남은 한도에서 대신 차감) ──────────
+
+async function getTeamOwnerIdForMember(userId: string): Promise<string | null> {
+  const admin = createAdminClient()
+  const { data: membership } = await (admin as any)
+    .from('team_members')
+    .select('team_id, role')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  // 팀 미소속이거나 본인이 팀장(owner)이면 대여할 대상이 없다
+  if (!membership || membership.role === 'owner') return null
+
+  const { data: team } = await (admin as any)
+    .from('teams')
+    .select('owner_user_id')
+    .eq('id', membership.team_id)
+    .single()
+
+  return team?.owner_user_id ?? null
+}
+
+export interface UsageReservation {
+  payerId: string          // 실제로 usage_records가 차감될 대상 — incrementUsage에 이 값을 넘길 것
+  borrowedFromTeam: boolean
+}
+
+/**
+ * blockIfLimitExceeded와 동일하게 동작하되, 본인 한도(+크레딧)를 모두 소진한 팀원의 경우
+ * 소속 팀장의 남은 한도가 있으면 예외를 던지지 않고 payerId를 팀장 id로 반환한다.
+ * 팀장 본인 호출, 팀 미소속, 팀장도 한도 소진인 경우는 기존과 동일하게 UsageLimitError를 던진다.
+ */
+export async function reserveUsage(userId: string, feature: UsageFeature): Promise<UsageReservation> {
+  try {
+    await blockIfLimitExceeded(userId, feature)
+    return { payerId: userId, borrowedFromTeam: false }
+  } catch (err) {
+    if (!(err instanceof UsageLimitError)) throw err
+
+    const ownerId = await getTeamOwnerIdForMember(userId)
+    if (!ownerId) throw err
+
+    const ownerCheck = await checkUsageLimit(ownerId, feature)
+    if (!ownerCheck.allowed) throw err
+
+    return { payerId: ownerId, borrowedFromTeam: true }
   }
 }
 

@@ -60,6 +60,7 @@ function CreateTeamCard({ onCreated }: { onCreated: () => void }) {
   const [teamName, setTeamName] = useState("")
   const [organizationName, setOrganizationName] = useState("")
   const [saving, setSaving] = useState(false)
+  const [requiresPremium, setRequiresPremium] = useState(false)
 
   async function handleCreate() {
     if (!teamName.trim()) {
@@ -75,6 +76,7 @@ function CreateTeamCard({ onCreated }: { onCreated: () => void }) {
     if (!res.ok) {
       const data = await res.json()
       toast.error(data.error ?? "팀 생성 실패")
+      if (data.requiresPlan === "premium") setRequiresPremium(true)
       setSaving(false)
       return
     }
@@ -92,7 +94,16 @@ function CreateTeamCard({ onCreated }: { onCreated: () => void }) {
         </div>
         <p className="text-sm text-gray-500">
           팀을 만들면 팀원을 초대하고, 팀 전체 사용량을 확인할 수 있습니다. 팀을 만든 사람은 자동으로 &lsquo;팀 소유자&rsquo;가 됩니다.
+          팀 관리는 <strong>프리미엄 플랜</strong> 전용 기능이며, 초대되는 팀원은 <strong>기본 플랜 이상</strong>이어야 합니다.
         </p>
+        {requiresPremium && (
+          <div className="flex items-center justify-between gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+            <span>팀 관리는 프리미엄 플랜에서만 이용할 수 있어요.</span>
+            <Button size="sm" asChild className="bg-[#1e3a5f] text-white hover:bg-[#162d4a] shrink-0">
+              <Link href="/billing">요금제 보기</Link>
+            </Button>
+          </div>
+        )}
         <div className="space-y-3">
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1 block">팀 이름 (필수)</label>
@@ -240,6 +251,7 @@ function TeamMembersCard({ isTeamAdmin, onChanged }: { isTeamAdmin: boolean; onC
         {isTeamAdmin && (
           <div className="p-4 bg-gray-50 rounded-lg space-y-2">
             <p className="text-xs font-semibold text-gray-500">팀원 수동 연결 (이메일 초대는 준비 중입니다 — 가입된 이메일을 입력하면 즉시 연결됩니다)</p>
+            <p className="text-xs text-gray-400">무료 플랜 사용자는 연결할 수 없어요 — 기본 플랜 이상 가입한 계정만 초대할 수 있습니다.</p>
             <div className="flex flex-wrap gap-2">
               <input
                 value={email}

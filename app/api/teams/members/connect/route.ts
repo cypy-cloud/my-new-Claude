@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
   const { data: profile } = await (admin as any)
     .from('profiles')
-    .select('id, team_id')
+    .select('id, team_id, plan_type')
     .ilike('email', normalizedEmail)
     .maybeSingle()
 
@@ -45,6 +45,10 @@ export async function POST(request: NextRequest) {
 
   if (profile.team_id) {
     return NextResponse.json({ error: '이미 다른 팀에 소속된 사용자입니다' }, { status: 409 })
+  }
+
+  if (profile.plan_type === 'free') {
+    return NextResponse.json({ error: '무료 플랜 사용자는 팀원으로 연결할 수 없습니다. 기본 플랜 이상 가입 후 다시 시도해주세요.' }, { status: 403 })
   }
 
   const { error: memberError } = await (admin as any)

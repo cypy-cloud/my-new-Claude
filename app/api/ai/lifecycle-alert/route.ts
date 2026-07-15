@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateWithAI } from '@/lib/ai/provider'
-import { blockIfLimitExceeded, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
+import { reserveUsage, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
 import { handleApiError } from '@/lib/errors/api-error-handler'
 
 export async function POST(request: NextRequest) {
@@ -27,8 +27,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '고객 이름과 나이대는 필수입니다' }, { status: 400 })
   }
 
+  let payerId = user.id
   try {
-    await blockIfLimitExceeded(user.id, 'sms')
+    payerId = (await reserveUsage(user.id, 'sms')).payerId
   } catch (err) {
     if (err instanceof UsageLimitError) {
       return NextResponse.json(
@@ -114,7 +115,7 @@ export async function POST(request: NextRequest) {
 
     const wasCached = !!result.cachedAt
     if (!wasCached) {
-      await incrementUsage(user.id, 'sms', {
+      await incrementUsage(payerId, 'sms', {
         tokenInput: result.usage.inputTokens,
         tokenOutput: result.usage.outputTokens,
       })

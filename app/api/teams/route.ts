@@ -52,6 +52,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '팀 이름을 입력해주세요' }, { status: 400 })
   }
 
+  // 팀 생성(=팀장)은 프리미엄 플랜 전용 기능
+  const { data: creatorProfile } = await (supabase as any)
+    .from('profiles')
+    .select('plan_type')
+    .eq('id', user.id)
+    .single()
+
+  if (creatorProfile?.plan_type !== 'premium') {
+    return NextResponse.json({ error: '팀 관리는 프리미엄 플랜에서만 이용할 수 있습니다', requiresPlan: 'premium' }, { status: 403 })
+  }
+
   const { data: existing } = await (supabase as any)
     .from('team_members')
     .select('team_id')

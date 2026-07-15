@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateWithAI, DuplicateRequestError } from '@/lib/ai/provider'
-import { blockIfLimitExceeded, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
+import { reserveUsage, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
 import { trackFeatureComplete } from '@/lib/analytics/track'
 import { handleApiError } from '@/lib/errors/api-error-handler'
 
@@ -106,8 +106,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '주제, 상품 분야, 핵심 메시지를 입력해주세요' }, { status: 400 })
   }
 
+  let payerId = user.id
   try {
-    await blockIfLimitExceeded(user.id, 'content')
+    payerId = (await reserveUsage(user.id, 'content')).payerId
   } catch (err) {
     if (err instanceof UsageLimitError) {
       return NextResponse.json(
@@ -162,7 +163,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (!wasCached) {
-    await incrementUsage(user.id, 'content', {
+    await incrementUsage(payerId, 'content', {
       tokenInput: result.usage.inputTokens,
       tokenOutput: result.usage.outputTokens,
     })

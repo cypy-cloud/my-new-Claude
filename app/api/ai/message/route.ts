@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateWithAI, DuplicateRequestError } from '@/lib/ai/provider'
 import { getActivePrompt, renderPrompt } from '@/lib/ai/prompts/prompt-versioning'
-import { blockIfLimitExceeded, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
+import { reserveUsage, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
 import { notifyUsageLimitWarning } from '@/lib/notifications/create-notification'
 import { trackFeatureComplete } from '@/lib/analytics/track'
 import { handleApiError } from '@/lib/errors/api-error-handler'
@@ -141,8 +141,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '목적과 상품 분야를 입력해주세요' }, { status: 400 })
   }
 
+  let payerId = user.id
   try {
-    await blockIfLimitExceeded(user.id, 'sms')
+    payerId = (await reserveUsage(user.id, 'sms')).payerId
   } catch (err) {
     if (err instanceof UsageLimitError) {
       return NextResponse.json(
@@ -229,7 +230,7 @@ export async function POST(request: NextRequest) {
   if (!wasCached) {
     const totalInput = haikuResult.usage.inputTokens + sonnetResult.usage.inputTokens
     const totalOutput = haikuResult.usage.outputTokens + sonnetResult.usage.outputTokens
-    await incrementUsage(user.id, 'sms', {
+    await incrementUsage(payerId, 'sms', {
       tokenInput: totalInput,
       tokenOutput: totalOutput,
     })

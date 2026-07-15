@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { teamMemberGuard, isGuardError } from '@/lib/team/guard'
 import { generateWithAI, DuplicateRequestError } from '@/lib/ai/provider'
 import { getActivePrompt, renderPrompt } from '@/lib/ai/prompts/prompt-versioning'
-import { blockIfLimitExceeded, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
+import { reserveUsage, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
 import { resolveProductCategory, buildProductCategoryAddendum } from '@/lib/ai-core/product-category'
 import { handleApiError } from '@/lib/errors/api-error-handler'
 import type { TeamRole } from '@/lib/team/types'
@@ -56,9 +56,10 @@ export async function POST(
     return NextResponse.json({ error: '텍스트가 추출되지 않은 파일입니다' }, { status: 422 })
   }
 
-  // 요청자의 pdf_analysis 한도 확인
+  // 요청자의 pdf_analysis 한도 확인 (본인 한도 소진 시 팀장 한도에서 대여)
+  let payerId = guard.ctx.userId
   try {
-    await blockIfLimitExceeded(guard.ctx.userId, 'pdf_analysis')
+    payerId = (await reserveUsage(guard.ctx.userId, 'pdf_analysis')).payerId
   } catch (err) {
     if (err instanceof UsageLimitError) {
       return NextResponse.json(
@@ -143,7 +144,7 @@ export async function POST(
   }
 
   if (!result.cachedAt) {
-    await incrementUsage(guard.ctx.userId, 'pdf_analysis', {
+    await incrementUsage(payerId, 'pdf_analysis', {
       tokenInput: result.usage.inputTokens,
       tokenOutput: result.usage.outputTokens,
     })

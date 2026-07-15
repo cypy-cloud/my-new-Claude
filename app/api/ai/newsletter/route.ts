@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateWithAI, DuplicateRequestError } from '@/lib/ai/provider'
-import { blockIfLimitExceeded, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
+import { reserveUsage, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
 import { trackFeatureComplete } from '@/lib/analytics/track'
 import { handleApiError } from '@/lib/errors/api-error-handler'
 import { getCurrentSeasonContext } from '@/lib/content/newsletter-season'
@@ -123,8 +123,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '대상 고객층, 주제, 보험 분야를 입력해주세요' }, { status: 400 })
   }
 
+  let payerId = user.id
   try {
-    await blockIfLimitExceeded(user.id, 'newsletter')
+    payerId = (await reserveUsage(user.id, 'newsletter')).payerId
   } catch (err) {
     if (err instanceof UsageLimitError) {
       return NextResponse.json(
@@ -176,7 +177,7 @@ export async function POST(request: NextRequest) {
   if (withDisclaimer.CTA) withDisclaimer.CTA = withDisclaimer.CTA + NEWSLETTER_DISCLAIMER
 
   if (!wasCached) {
-    await incrementUsage(user.id, 'newsletter', {
+    await incrementUsage(payerId, 'newsletter', {
       tokenInput: result.usage.inputTokens,
       tokenOutput: result.usage.outputTokens,
     })
