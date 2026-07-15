@@ -61,8 +61,12 @@ export async function GET(req: Request) {
     const dueAt = new Date(`${task.due_date}T${task.due_time}+09:00`)
     const notifyAt = new Date(dueAt.getTime() - task.notify_before_minutes * 60 * 1000)
 
-    // 현재 시각이 알림 시각에 도달했고, 아직 일정 시각이 지나지 않은 경우
-    if (now < notifyAt || now > dueAt) continue
+    // 크론은 15분 간격으로만 도는데, "10분 전" 같은 짧은 알림 설정은 [notifyAt, dueAt] 구간이
+    // 15분보다 좁아서 크론 실행 시점이 그 구간을 아예 비껴갈 수 있다(놓치면 다시는 안 옴).
+    // 그래서 아직 못 보낸 알림은 일정 시각이 지난 뒤에도 30분간 유예를 두고 다음 크론에서
+    // 잡아내도록 한다 — 정시 알림보다 늦더라도 "안 오는 것"보다는 낫다.
+    const GRACE_MS = 30 * 60 * 1000
+    if (now < notifyAt || now > new Date(dueAt.getTime() + GRACE_MS)) continue
 
     // 해당 유저의 push 구독 가져오기
     const { data: subs } = await (admin as any)
@@ -72,13 +76,16 @@ export async function GET(req: Request) {
 
     if (!subs?.length) continue
 
-    const minuteLabel =
-      task.notify_before_minutes >= 60
-        ? `${task.notify_before_minutes / 60}시간`
-        : `${task.notify_before_minutes}분`
+    // 크론 유예 시간 때문에 실제 발송 시점이 설정한 알림 시간보다 늦어질 수 있어(위 GRACE_MS
+    // 참고), 설정값이 아니라 지금 이 순간 실제로 남은 시간을 기준으로 문구를 만든다.
+    const minutesUntilDue = Math.round((dueAt.getTime() - now.getTime()) / 60000)
+    const title =
+      minutesUntilDue > 0
+        ? `⏰ ${minutesUntilDue >= 60 ? `${Math.round(minutesUntilDue / 60)}시간` : `${minutesUntilDue}분`} 후 일정이 있습니다`
+        : "⏰ 일정 시간이 되었습니다"
 
     const payload = JSON.stringify({
-      title: `⏰ ${minuteLabel} 후 일정이 있습니다`,
+      title,
       body: `[${TYPE_LABELS[task.task_type] ?? "일정"}] ${task.title}${task.customers?.name ? ` — ${task.customers.name}` : ""}`,
       icon: "/icons/icon-192.png",
       badge: "/icons/icon-192.png",
