@@ -31,8 +31,8 @@ export function TemplateMagazineGrid({ data }: NewsletterTemplateProps) {
 
       {/* 메인 기사 */}
       <div className="px-12 py-8 border-b border-gray-200">
-        <h2 className="text-xl font-bold leading-snug mb-3">{title}</h2>
-        <p className="leading-relaxed text-gray-600 whitespace-pre-wrap" style={bodyStyle}>{greeting}</p>
+        <h2 className="text-xl font-bold leading-snug mb-3 break-keep">{title}</h2>
+        <p className="leading-relaxed text-gray-600 whitespace-pre-wrap break-keep" style={bodyStyle}>{greeting}</p>
       </div>
 
       {/* 2단 그리드 */}
@@ -40,13 +40,13 @@ export function TemplateMagazineGrid({ data }: NewsletterTemplateProps) {
         {issue1 && (
           <div>
             <p className="text-xs font-bold text-[#d97a3f] mb-2">이슈 01</p>
-            <p className="leading-relaxed text-gray-700 whitespace-pre-wrap" style={bodyStyle}>{issue1}</p>
+            <p className="leading-relaxed text-gray-700 whitespace-pre-wrap break-keep" style={bodyStyle}>{issue1}</p>
           </div>
         )}
         {issue2 && (
           <div>
             <p className="text-xs font-bold text-[#d97a3f] mb-2">이슈 02</p>
-            <p className="leading-relaxed text-gray-700 whitespace-pre-wrap" style={bodyStyle}>{issue2}</p>
+            <p className="leading-relaxed text-gray-700 whitespace-pre-wrap break-keep" style={bodyStyle}>{issue2}</p>
           </div>
         )}
       </div>
@@ -55,7 +55,7 @@ export function TemplateMagazineGrid({ data }: NewsletterTemplateProps) {
         <div className="px-12 pb-8">
           <div className="border-t border-gray-200 pt-6">
             <p className="text-xs font-bold text-[#d97a3f] mb-2">이슈 03</p>
-            <p className="leading-relaxed text-gray-700 whitespace-pre-wrap" style={bodyStyle}>{issue3}</p>
+            <p className="leading-relaxed text-gray-700 whitespace-pre-wrap break-keep" style={bodyStyle}>{issue3}</p>
           </div>
         </div>
       )}
@@ -63,13 +63,13 @@ export function TemplateMagazineGrid({ data }: NewsletterTemplateProps) {
       {checkPoints && (
         <div className="mx-12 mb-6 bg-[#f7f5f1] rounded-lg p-6">
           <p className="text-xs font-bold tracking-widest text-[#1e3a5f] uppercase mb-2">보험 점검 포인트</p>
-          <p className="leading-relaxed text-gray-700 whitespace-pre-wrap" style={bodyStyle}>{checkPoints}</p>
+          <p className="leading-relaxed text-gray-700 whitespace-pre-wrap break-keep" style={bodyStyle}>{checkPoints}</p>
         </div>
       )}
 
       {cta && (
         <div className="mx-12 mb-10 bg-[#1e3a5f] rounded-lg p-5 text-center">
-          <p className="leading-relaxed text-white font-semibold whitespace-pre-wrap" style={bodyStyle}>{cta}</p>
+          <p className="leading-relaxed text-white font-semibold whitespace-pre-wrap break-keep" style={bodyStyle}>{cta}</p>
         </div>
       )}
 

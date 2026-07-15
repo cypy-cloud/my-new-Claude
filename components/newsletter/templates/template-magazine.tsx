@@ -12,7 +12,7 @@ export function TemplateMagazine({ data }: NewsletterTemplateProps) {
           <span className="text-xs tracking-[0.3em] text-white/60 uppercase">Insurance Newsletter</span>
           <span className="text-xs font-bold text-[#d97a3f]">{issueLabel}</span>
         </div>
-        <h1 className="text-4xl font-black leading-tight text-white">{title}</h1>
+        <h1 className="text-4xl font-black leading-tight text-white break-keep">{title}</h1>
       </div>
 
       <div className="px-16 py-10">
@@ -21,7 +21,7 @@ export function TemplateMagazine({ data }: NewsletterTemplateProps) {
           <p className="text-xs text-gray-500">{agentContact}</p>
         </div>
 
-        <p className="leading-relaxed text-gray-700 whitespace-pre-wrap mb-10" style={bodyStyle}>{greeting}</p>
+        <p className="leading-relaxed text-gray-700 whitespace-pre-wrap break-keep mb-10" style={bodyStyle}>{greeting}</p>
 
         <div className="grid grid-cols-1 gap-0">
           {issues.map((issue, i) => (
@@ -29,7 +29,7 @@ export function TemplateMagazine({ data }: NewsletterTemplateProps) {
               <span className="text-5xl font-black text-[#d97a3f]/70 leading-none shrink-0" style={{ minWidth: 56 }}>
                 {i + 1}
               </span>
-              <p className="leading-relaxed text-gray-800 whitespace-pre-wrap pt-2" style={bodyStyle}>{issue}</p>
+              <p className="leading-relaxed text-gray-800 whitespace-pre-wrap break-keep pt-2" style={bodyStyle}>{issue}</p>
             </div>
           ))}
           <div className="border-t border-gray-300" />
@@ -38,13 +38,13 @@ export function TemplateMagazine({ data }: NewsletterTemplateProps) {
         {checkPoints && (
           <div className="mt-8 bg-white border-2 border-[#1c1f27] rounded-lg p-6">
             <p className="text-xs font-black tracking-widest uppercase mb-2">Check Point</p>
-            <p className="leading-relaxed text-gray-800 whitespace-pre-wrap" style={bodyStyle}>{checkPoints}</p>
+            <p className="leading-relaxed text-gray-800 whitespace-pre-wrap break-keep" style={bodyStyle}>{checkPoints}</p>
           </div>
         )}
 
         {cta && (
           <div className="mt-6 bg-[#d97a3f] rounded-lg p-6 text-center">
-            <p className="leading-relaxed text-white font-bold whitespace-pre-wrap" style={bodyStyle}>{cta}</p>
+            <p className="leading-relaxed text-white font-bold whitespace-pre-wrap break-keep" style={bodyStyle}>{cta}</p>
           </div>
         )}
       </div>

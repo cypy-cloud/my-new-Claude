@@ -17,9 +17,9 @@ export function TemplateWarm({ data }: NewsletterTemplateProps) {
         </div>
       </div>
 
-      <h1 className="text-3xl font-bold leading-snug mt-6 mb-8">{title}</h1>
+      <h1 className="text-3xl font-bold leading-snug mt-6 mb-8 break-keep">{title}</h1>
 
-      <div className="bg-white rounded-2xl p-6 shadow-sm leading-relaxed text-[#5a4a35] whitespace-pre-wrap" style={bodyStyle}>
+      <div className="bg-white rounded-2xl p-6 shadow-sm leading-relaxed text-[#5a4a35] whitespace-pre-wrap break-keep" style={bodyStyle}>
         {greeting}
       </div>
 
@@ -31,7 +31,7 @@ export function TemplateWarm({ data }: NewsletterTemplateProps) {
             >
               {i + 1}
             </span>
-            <p className="leading-relaxed text-[#5a4a35] whitespace-pre-wrap pt-1" style={bodyStyle}>{issue}</p>
+            <p className="leading-relaxed text-[#5a4a35] whitespace-pre-wrap break-keep pt-1" style={bodyStyle}>{issue}</p>
           </div>
         ))}
       </div>
@@ -39,13 +39,13 @@ export function TemplateWarm({ data }: NewsletterTemplateProps) {
       {checkPoints && (
         <div className="mt-6 bg-white rounded-2xl p-6 shadow-sm">
           <p className="text-sm font-bold text-[#d97a3f] mb-2">✓ 보험 점검 포인트</p>
-          <p className="leading-relaxed text-[#5a4a35] whitespace-pre-wrap" style={bodyStyle}>{checkPoints}</p>
+          <p className="leading-relaxed text-[#5a4a35] whitespace-pre-wrap break-keep" style={bodyStyle}>{checkPoints}</p>
         </div>
       )}
 
       {cta && (
         <div className="mt-6 bg-[#d97a3f] rounded-2xl p-6 text-center">
-          <p className="leading-relaxed text-white font-semibold whitespace-pre-wrap" style={bodyStyle}>{cta}</p>
+          <p className="leading-relaxed text-white font-semibold whitespace-pre-wrap break-keep" style={bodyStyle}>{cta}</p>
         </div>
       )}
 

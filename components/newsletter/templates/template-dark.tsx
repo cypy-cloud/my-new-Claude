@@ -10,7 +10,7 @@ export function TemplateDark({ data }: NewsletterTemplateProps) {
       <div className="flex items-start justify-between border-b border-[#c9a24b]/40 pb-8">
         <div>
           <p className="text-xs tracking-[0.25em] text-[#c9a24b] uppercase mb-3 font-semibold">{issueLabel}</p>
-          <h1 className="text-3xl font-bold leading-snug max-w-[440px]">{title}</h1>
+          <h1 className="text-3xl font-bold leading-snug max-w-[440px] break-keep">{title}</h1>
         </div>
         <div className="text-right shrink-0 pl-6">
           <p className="text-sm font-bold text-[#c9a24b]">{agentName}</p>
@@ -18,7 +18,7 @@ export function TemplateDark({ data }: NewsletterTemplateProps) {
         </div>
       </div>
 
-      <div className="mt-8 leading-relaxed text-[#ece9e2]/85 whitespace-pre-wrap" style={bodyStyle}>{greeting}</div>
+      <div className="mt-8 leading-relaxed text-[#ece9e2]/85 whitespace-pre-wrap break-keep" style={bodyStyle}>{greeting}</div>
 
       <div className="mt-10 space-y-7">
         {issues.map((issue, i) => (
@@ -27,7 +27,7 @@ export function TemplateDark({ data }: NewsletterTemplateProps) {
               {String(i + 1).padStart(2, '0')}
             </span>
             <div className="flex-1 pt-1">
-              <p className="leading-relaxed text-[#ece9e2]/90 whitespace-pre-wrap" style={bodyStyle}>{issue}</p>
+              <p className="leading-relaxed text-[#ece9e2]/90 whitespace-pre-wrap break-keep" style={bodyStyle}>{issue}</p>
               <div className="h-px bg-[#c9a24b]/20 mt-5" />
             </div>
           </div>
@@ -37,13 +37,13 @@ export function TemplateDark({ data }: NewsletterTemplateProps) {
       {checkPoints && (
         <div className="mt-8">
           <p className="text-xs font-bold tracking-widest text-[#c9a24b] uppercase mb-2">Check Point</p>
-          <p className="leading-relaxed text-[#ece9e2]/85 whitespace-pre-wrap" style={bodyStyle}>{checkPoints}</p>
+          <p className="leading-relaxed text-[#ece9e2]/85 whitespace-pre-wrap break-keep" style={bodyStyle}>{checkPoints}</p>
         </div>
       )}
 
       {cta && (
         <div className="mt-8 border border-[#c9a24b]/50 rounded-lg p-6 text-center">
-          <p className="leading-relaxed text-[#c9a24b] font-semibold whitespace-pre-wrap" style={bodyStyle}>{cta}</p>
+          <p className="leading-relaxed text-[#c9a24b] font-semibold whitespace-pre-wrap break-keep" style={bodyStyle}>{cta}</p>
         </div>
       )}
 

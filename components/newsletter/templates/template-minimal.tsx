@@ -10,7 +10,7 @@ export function TemplateMinimal({ data }: NewsletterTemplateProps) {
       <div className="border-t-2 border-[#1e3a5f] pt-6 flex items-start justify-between">
         <div>
           <p className="text-xs tracking-widest text-gray-400 uppercase mb-2">Newsletter</p>
-          <h1 className="text-3xl font-bold leading-snug max-w-[440px]">{title}</h1>
+          <h1 className="text-3xl font-bold leading-snug max-w-[440px] break-keep">{title}</h1>
         </div>
         <div className="text-right shrink-0 pl-6">
           <p className="text-sm font-semibold text-[#1e3a5f]">{issueLabel}</p>
@@ -19,7 +19,7 @@ export function TemplateMinimal({ data }: NewsletterTemplateProps) {
         </div>
       </div>
 
-      <div className="mt-10 leading-relaxed text-gray-700 whitespace-pre-wrap" style={bodyStyle}>{greeting}</div>
+      <div className="mt-10 leading-relaxed text-gray-700 whitespace-pre-wrap break-keep" style={bodyStyle}>{greeting}</div>
 
       <div className="mt-10 space-y-8">
         {issues.map((issue, i) => (
@@ -27,7 +27,7 @@ export function TemplateMinimal({ data }: NewsletterTemplateProps) {
             <span className="text-4xl font-bold text-gray-200 leading-none shrink-0" style={{ minWidth: 44 }}>
               {String(i + 1).padStart(2, '0')}
             </span>
-            <p className="leading-relaxed text-gray-800 whitespace-pre-wrap pt-1" style={bodyStyle}>{issue}</p>
+            <p className="leading-relaxed text-gray-800 whitespace-pre-wrap break-keep pt-1" style={bodyStyle}>{issue}</p>
           </div>
         ))}
       </div>
@@ -35,13 +35,13 @@ export function TemplateMinimal({ data }: NewsletterTemplateProps) {
       {checkPoints && (
         <div className="mt-10 border-t border-gray-200 pt-6">
           <p className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-2">Check Point</p>
-          <p className="leading-relaxed text-gray-800 whitespace-pre-wrap" style={bodyStyle}>{checkPoints}</p>
+          <p className="leading-relaxed text-gray-800 whitespace-pre-wrap break-keep" style={bodyStyle}>{checkPoints}</p>
         </div>
       )}
 
       {cta && (
         <div className="mt-10 bg-[#f7f5f1] rounded-xl p-6 text-center">
-          <p className="leading-relaxed text-[#1e3a5f] font-semibold whitespace-pre-wrap" style={bodyStyle}>{cta}</p>
+          <p className="leading-relaxed text-[#1e3a5f] font-semibold whitespace-pre-wrap break-keep" style={bodyStyle}>{cta}</p>
         </div>
       )}
 
