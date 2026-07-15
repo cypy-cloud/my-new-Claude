@@ -47,7 +47,7 @@ export function TemplateClassic({ data }: NewsletterTemplateProps) {
       </div>
 
       <div className="bg-[#1e3a5f] px-16 py-4 flex items-center justify-center gap-2 text-xs text-white/60">
-        {avatarUrl && <img src={avatarUrl} crossOrigin="anonymous" alt="" className="h-6 w-6 rounded-full object-cover" />}
+        {avatarUrl && <img src={avatarUrl} crossOrigin="anonymous" alt="" className="h-6 w-auto max-w-[64px] object-contain rounded" />}
         {agentName} · {agentContact}
       </div>
     </div>

@@ -50,7 +50,7 @@ export function TemplateMagazine({ data }: NewsletterTemplateProps) {
       </div>
 
       <div className="bg-[#1c1f27] px-16 py-4 flex items-center justify-center gap-2 text-xs text-white/50">
-        {avatarUrl && <img src={avatarUrl} crossOrigin="anonymous" alt="" className="h-6 w-6 rounded-full object-cover" />}
+        {avatarUrl && <img src={avatarUrl} crossOrigin="anonymous" alt="" className="h-6 w-auto max-w-[64px] object-contain rounded" />}
         {agentName} · {agentContact}
       </div>
     </div>

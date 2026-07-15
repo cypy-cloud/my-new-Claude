@@ -46,7 +46,7 @@ export function TemplateMinimal({ data }: NewsletterTemplateProps) {
       )}
 
       <div className="mt-12 pt-4 border-t border-gray-200 flex items-center justify-center gap-2 text-xs text-gray-400">
-        {avatarUrl && <img src={avatarUrl} crossOrigin="anonymous" alt="" className="h-6 w-6 rounded-full object-cover" />}
+        {avatarUrl && <img src={avatarUrl} crossOrigin="anonymous" alt="" className="h-6 w-auto max-w-[64px] object-contain rounded" />}
         {agentName} · {agentContact}
       </div>
     </div>

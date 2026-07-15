@@ -76,7 +76,7 @@ export function TemplateMagazineGrid({ data }: NewsletterTemplateProps) {
       {/* 푸터 */}
       <div className="bg-[#f7f5f1] px-12 py-5 border-t border-gray-200">
         <div className="flex items-center gap-2">
-          {avatarUrl && <img src={avatarUrl} crossOrigin="anonymous" alt="" className="h-7 w-7 rounded-full object-cover shrink-0" />}
+          {avatarUrl && <img src={avatarUrl} crossOrigin="anonymous" alt="" className="h-7 w-auto max-w-[72px] object-contain rounded shrink-0" />}
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
             <span><b className="text-gray-700">발행</b> {agentName}</span>
             <span><b className="text-gray-700">연락처</b> {agentContact}</span>

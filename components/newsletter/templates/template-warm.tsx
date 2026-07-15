@@ -50,7 +50,7 @@ export function TemplateWarm({ data }: NewsletterTemplateProps) {
       )}
 
       <div className="mt-10 flex items-center justify-center gap-2 text-xs text-[#8a7860]">
-        {avatarUrl && <img src={avatarUrl} crossOrigin="anonymous" alt="" className="h-6 w-6 rounded-full object-cover" />}
+        {avatarUrl && <img src={avatarUrl} crossOrigin="anonymous" alt="" className="h-6 w-auto max-w-[64px] object-contain rounded" />}
         {agentName} · {agentContact}
       </div>
     </div>
