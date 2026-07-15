@@ -18,6 +18,18 @@ const HAIKU_SECTIONS = ['SMS', 'KAKAO', 'SOFT', 'FOLLOWUP'] as const
 // PERSUASIVE → Sonnet (고품질 모델)
 const SONNET_SECTIONS = ['PERSUASIVE'] as const
 
+// 모델이 마커 아래 괄호 안 지시문(예: "(카카오톡용 - 800~1000자, ...)")을 실제 메시지 내용인 것처럼
+// 그대로 옮겨 적는 경우가 있어(간혹 "카토톡용"처럼 오타까지 섞여 나옴), 섹션 첫 줄이 이 지시문
+// 패턴과 일치하면 방어적으로 제거한다.
+function stripLeakedInstruction(text: string): string {
+  const lines = text.split('\n')
+  if (lines[0] && /^\(.*\d+[~-]\d+자.*\)$/.test(lines[0].trim())) {
+    lines.shift()
+    while (lines[0] === '') lines.shift()
+  }
+  return lines.join('\n')
+}
+
 function parseOutputSections(raw: string): Record<string, string> {
   const markers = ['SMS', 'KAKAO', 'SOFT', 'PERSUASIVE', 'FOLLOWUP']
   const result: Record<string, string> = {}
@@ -31,7 +43,7 @@ function parseOutputSections(raw: string): Record<string, string> {
 
     const contentStart = start + startTag.length
     const end = nextMarker ? raw.indexOf(`[${nextMarker}]`, contentStart) : raw.length
-    result[marker] = raw.slice(contentStart, end !== -1 ? end : raw.length).trim()
+    result[marker] = stripLeakedInstruction(raw.slice(contentStart, end !== -1 ? end : raw.length).trim())
   }
 
   return result
@@ -67,6 +79,8 @@ ${hasAnalysis ? buildPersonalityAddendum(vars.product_field) : ''}
 
 아래 4가지 버전의 메시지를 반드시 마커로 구분하여 작성하세요.
 모든 버전은 ① 관심 유도 → ② 공감 사례 스토리 → ③ 상품 핵심 설명 → ④ 차별화 포인트 → ⑤ 자연스러운 마무리 구조를 따를 것.
+각 마커 아래 괄호 안 문구는 어떤 내용을 써야 하는지 알려주는 지시사항일 뿐입니다 — 이 지시문 자체를
+메시지 본문에 그대로 옮겨 쓰지 말고, 오직 실제 메시지 내용만 작성하세요.
 
 [SMS]
 (LMS 문자용 - 800~1000자, 문어체·격식체, 5단계 구조 포함, 이모지 최소화)
@@ -100,7 +114,8 @@ function buildSonnetPrompt(vars: Record<string, string>, categoryAddendum: strin
 - 특별 보장 내용(후킹 포인트): ${vars.extra_notes}
 ${hasAnalysis ? buildPersonalityAddendum(vars.product_field) : ''}
 
-아래 1가지 버전의 메시지를 반드시 마커로 구분하여 작성하세요:
+아래 1가지 버전의 메시지를 반드시 마커로 구분하여 작성하세요. 마커 아래 괄호 안 문구는 어떤
+내용을 써야 하는지 알려주는 지시사항일 뿐이니, 그 문구 자체를 메시지 본문에 옮겨 쓰지 마세요:
 
 [PERSUASIVE]
 (강력한 스토리텔링 설득 메시지 - 반드시 700~1000자. 다음 5단계 구조를 모두 포함:
