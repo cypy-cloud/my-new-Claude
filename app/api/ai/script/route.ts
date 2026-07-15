@@ -6,8 +6,10 @@ import { trackFeatureComplete } from '@/lib/analytics/track'
 import { handleApiError } from '@/lib/errors/api-error-handler'
 import { resolveProductCategory, buildProductCategoryAddendum } from '@/lib/ai-core/product-category'
 
-// 10개 섹션 상세 스크립트는 출력 토큰이 많아 응답에 시간이 걸림 — 기본 함수 실행 제한보다 넉넉하게 확보
-export const maxDuration = 60
+// 성향분석 연동 시(Sonnet + 16,000토큰 상세 프롬프트) 응답까지 실측 약 120초 걸림 — 60초로는
+// Vercel 함수가 생성 도중 강제 종료되어 클라이언트에 타임아웃 에러만 반환되는 문제가 있었음.
+// Vercel Pro 기본 한도(300초)보다 낮춰 잡을 이유가 없으므로 여유 있게 확보한다.
+export const maxDuration = 240
 
 const DISCLAIMER = '\n\n[보험 관련 유의사항] 이 스크립트는 AI가 생성한 참고용 자료입니다. 실제 상담 시 고객 상황에 맞게 조정하시기 바랍니다. 보험 상품의 보장 내용 및 보험료는 계약 조건에 따라 달라질 수 있으며, 가입 전 반드시 약관을 확인하시기 바랍니다.'
 
