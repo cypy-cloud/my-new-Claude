@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateWithAI, DuplicateRequestError } from '@/lib/ai/provider'
-import { reserveUsage, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
+import { blockIfLimitExceeded, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
 import { trackFeatureComplete } from '@/lib/analytics/track'
 import { handleApiError } from '@/lib/errors/api-error-handler'
 
@@ -106,9 +106,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '주제, 상품 분야, 핵심 메시지를 입력해주세요' }, { status: 400 })
   }
 
-  let payerId = user.id
+  // 콘텐츠는 팀 한도 대여 대상이 아님 — 기본 플랜은 애초에 0회라 대여를 허용하면
+  // 요금제 등급(콘텐츠는 프로 이상 기능)이 무력화되기 때문
   try {
-    payerId = (await reserveUsage(user.id, 'content')).payerId
+    await blockIfLimitExceeded(user.id, 'content')
   } catch (err) {
     if (err instanceof UsageLimitError) {
       return NextResponse.json(
@@ -163,7 +164,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (!wasCached) {
-    await incrementUsage(payerId, 'content', {
+    await incrementUsage(user.id, 'content', {
       tokenInput: result.usage.inputTokens,
       tokenOutput: result.usage.outputTokens,
     })

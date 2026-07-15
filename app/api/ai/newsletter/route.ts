@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateWithAI, DuplicateRequestError } from '@/lib/ai/provider'
-import { reserveUsage, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
+import { blockIfLimitExceeded, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
 import { trackFeatureComplete } from '@/lib/analytics/track'
 import { handleApiError } from '@/lib/errors/api-error-handler'
 import { getCurrentSeasonContext } from '@/lib/content/newsletter-season'
@@ -123,9 +123,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '대상 고객층, 주제, 보험 분야를 입력해주세요' }, { status: 400 })
   }
 
-  let payerId = user.id
+  // 뉴스레터는 팀 한도 대여 대상이 아님 — 기본 플랜은 애초에 0회라 대여를 허용하면
+  // 요금제 등급이 무력화되고, 발행인 이름·연락처가 항상 생성한 본인 것으로 찍히는
+  // 특성상 팀장 한도로 팀원 개인 브랜딩 뉴스레터를 만드는 것도 맞지 않음
   try {
-    payerId = (await reserveUsage(user.id, 'newsletter')).payerId
+    await blockIfLimitExceeded(user.id, 'newsletter')
   } catch (err) {
     if (err instanceof UsageLimitError) {
       return NextResponse.json(
@@ -177,7 +179,7 @@ export async function POST(request: NextRequest) {
   if (withDisclaimer.CTA) withDisclaimer.CTA = withDisclaimer.CTA + NEWSLETTER_DISCLAIMER
 
   if (!wasCached) {
-    await incrementUsage(payerId, 'newsletter', {
+    await incrementUsage(user.id, 'newsletter', {
       tokenInput: result.usage.inputTokens,
       tokenOutput: result.usage.outputTokens,
     })
