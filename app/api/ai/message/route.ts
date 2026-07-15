@@ -30,6 +30,18 @@ function stripLeakedInstruction(text: string): string {
   return lines.join('\n')
 }
 
+// 모델이 프롬프트의 "5단계 구조" 설명(①②③④⑤)을 실제 출력 서식으로 오해해 문단 앞에 그대로
+// 붙이거나, 섹션 사이에 마크다운 구분선(---, ##)을 끼워 넣는 경우가 있어 방어적으로 제거한다.
+function cleanSectionText(text: string): string {
+  return text
+    .split('\n')
+    .map(line => line.replace(/^[①②③④⑤]\s*/, ''))
+    .join('\n')
+    .replace(/\n+-{2,}\n+#{1,6}\s*$/, '')
+    .replace(/\n+-{2,}\s*$/, '')
+    .trim()
+}
+
 // markers는 그 raw 텍스트를 생성한 프롬프트가 실제로 요청한 마커 목록·순서와 정확히 일치해야
 // 한다 — Haiku 응답(SMS/KAKAO/SOFT/FOLLOWUP)과 Sonnet 응답(PERSUASIVE)을 하나의 고정 마커
 // 목록으로 같이 파싱하면, 존재하지 않는 다음 마커를 찾지 못해 마지막 섹션의 내용이 통째로
@@ -46,7 +58,7 @@ function parseOutputSections(raw: string, markers: readonly string[]): Record<st
 
     const contentStart = start + startTag.length
     const end = nextMarker ? raw.indexOf(`[${nextMarker}]`, contentStart) : raw.length
-    result[marker] = stripLeakedInstruction(raw.slice(contentStart, end !== -1 ? end : raw.length).trim())
+    result[marker] = cleanSectionText(stripLeakedInstruction(raw.slice(contentStart, end !== -1 ? end : raw.length).trim()))
   }
 
   return result
@@ -81,9 +93,11 @@ function buildHaikuPrompt(vars: Record<string, string>, categoryAddendum: string
 ${hasAnalysis ? buildPersonalityAddendum(vars.product_field) : ''}
 
 아래 4가지 버전의 메시지를 반드시 마커로 구분하여 작성하세요.
-모든 버전은 ① 관심 유도 → ② 공감 사례 스토리 → ③ 상품 핵심 설명 → ④ 차별화 포인트 → ⑤ 자연스러운 마무리 구조를 따를 것.
-각 마커 아래 괄호 안 문구는 어떤 내용을 써야 하는지 알려주는 지시사항일 뿐입니다 — 이 지시문 자체를
-메시지 본문에 그대로 옮겨 쓰지 말고, 오직 실제 메시지 내용만 작성하세요.
+모든 버전은 "관심 유도 → 공감 사례 스토리 → 상품 핵심 설명 → 차별화 포인트 → 자연스러운 마무리"
+흐름을 속으로 따르되, 이 5단계 구분은 내용을 구성하는 흐름일 뿐 실제 메시지에 그대로 드러나는
+형식이 아닙니다. 각 마커 아래 괄호 안 문구도 어떤 내용을 써야 하는지 알려주는 지시사항일 뿐입니다.
+이 지시문이나 단계 설명 자체를 메시지 본문에 옮겨 쓰지 말고, 번호(①②③, 1. 2. 3. 등)나 글머리
+기호(-, • 등)도 붙이지 말고, 오직 자연스러운 줄글 문단으로만 실제 메시지 내용을 작성하세요.
 
 [SMS]
 (LMS 문자용 - 800~1000자, 문어체·격식체, 5단계 구조 포함, 이모지 최소화)
@@ -100,6 +114,8 @@ ${hasAnalysis ? buildPersonalityAddendum(vars.product_field) : ''}
 작성 주의사항:
 - 보험 가입 강요 금지, "무조건"·"100%" 등 과장 표현 금지
 - "확정 보장"·"반드시 지급" 등 확정적 표현 금지
+- 문단 앞에 번호(①②③, 1. 2. 3. 등)나 글머리 기호(-, • 등) 붙이지 말 것 — 자연스러운 줄글로만 작성
+- 마크다운 기호(#, ##, **, --- 구분선 등) 절대 사용 금지, 마커([SMS] 등) 외 다른 기호로 섹션 구분하지 말 것
 - 고지문은 시스템이 자동 추가하므로 포함하지 말 것${categoryAddendum ? `\n\n${categoryAddendum}` : ''}`
 }
 
@@ -133,6 +149,8 @@ ${hasAnalysis ? buildPersonalityAddendum(vars.product_field) : ''}
 작성 주의사항:
 - 보험 가입 강요 금지, "무조건"·"100%" 등 과장 표현 금지
 - "확정 보장"·"반드시 지급" 등 확정적 표현 금지
+- 문단 앞에 번호(①②③, 1. 2. 3. 등)나 글머리 기호(-, • 등) 붙이지 말 것 — 자연스러운 줄글로만 작성
+- 마크다운 기호(#, ##, **, --- 구분선 등) 절대 사용 금지
 - 고지문은 시스템이 자동 추가하므로 포함하지 말 것${categoryAddendum ? `\n\n${categoryAddendum}` : ''}`
 }
 
