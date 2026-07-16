@@ -29,8 +29,11 @@ export async function POST(request: NextRequest) {
   }
 
   let payerId = user.id
+  let borrowedTeamId: string | undefined
   try {
-    payerId = (await reserveUsage(user.id, 'script')).payerId
+    const reservation = await reserveUsage(user.id, 'script')
+    payerId = reservation.payerId
+    borrowedTeamId = reservation.teamId
   } catch (err) {
     if (err instanceof UsageLimitError) {
       return NextResponse.json(
@@ -146,6 +149,7 @@ ${mbtiProfile.J_P}
       await incrementUsage(payerId, 'script', {
         tokenInput: result.usage.inputTokens,
         tokenOutput: result.usage.outputTokens,
+        teamId: borrowedTeamId,
       })
     }
 

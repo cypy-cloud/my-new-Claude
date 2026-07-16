@@ -76,7 +76,7 @@ export const PLANS: Record<PlanId, Plan> = {
   premium: {
     id: 'premium',
     name: '프리미엄',
-    price: 16900,
+    price: 19900,
     currency: 'KRW',
     interval: 'month',
     smsLimit: 70,

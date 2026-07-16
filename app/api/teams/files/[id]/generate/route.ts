@@ -58,8 +58,11 @@ export async function POST(
 
   // 요청자의 pdf_analysis 한도 확인 (본인 한도 소진 시 팀장 한도에서 대여)
   let payerId = guard.ctx.userId
+  let borrowedTeamId: string | undefined
   try {
-    payerId = (await reserveUsage(guard.ctx.userId, 'pdf_analysis')).payerId
+    const reservation = await reserveUsage(guard.ctx.userId, 'pdf_analysis')
+    payerId = reservation.payerId
+    borrowedTeamId = reservation.teamId
   } catch (err) {
     if (err instanceof UsageLimitError) {
       return NextResponse.json(
@@ -147,6 +150,7 @@ export async function POST(
     await incrementUsage(payerId, 'pdf_analysis', {
       tokenInput: result.usage.inputTokens,
       tokenOutput: result.usage.outputTokens,
+      teamId: borrowedTeamId,
     })
   }
 

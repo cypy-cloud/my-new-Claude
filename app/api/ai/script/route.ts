@@ -246,8 +246,11 @@ export async function POST(request: NextRequest) {
   }
 
   let payerId = user.id
+  let borrowedTeamId: string | undefined
   try {
-    payerId = (await reserveUsage(user.id, 'script')).payerId
+    const reservation = await reserveUsage(user.id, 'script')
+    payerId = reservation.payerId
+    borrowedTeamId = reservation.teamId
   } catch (err) {
     if (err instanceof UsageLimitError) {
       return NextResponse.json(
@@ -338,6 +341,7 @@ export async function POST(request: NextRequest) {
     await incrementUsage(payerId, 'script', {
       tokenInput: result.usage.inputTokens,
       tokenOutput: result.usage.outputTokens,
+      teamId: borrowedTeamId,
     })
     await trackFeatureComplete('ai_script', user.id, {
       productInterest,

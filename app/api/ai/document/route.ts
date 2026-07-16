@@ -79,8 +79,11 @@ export async function POST(request: NextRequest) {
 
   // Check analysis limit
   let payerId = userId
+  let borrowedTeamId: string | undefined
   try {
-    payerId = (await reserveUsage(userId, 'pdf_analysis')).payerId
+    const reservation = await reserveUsage(userId, 'pdf_analysis')
+    payerId = reservation.payerId
+    borrowedTeamId = reservation.teamId
   } catch (err) {
     if (err instanceof UsageLimitError) {
       return NextResponse.json(
@@ -164,6 +167,7 @@ export async function POST(request: NextRequest) {
     await incrementUsage(payerId, 'pdf_analysis', {
       tokenInput: results.reduce((sum, r) => sum + r.usage.inputTokens, 0),
       tokenOutput: results.reduce((sum, r) => sum + r.usage.outputTokens, 0),
+      teamId: borrowedTeamId,
     })
     await trackFeatureComplete('ai_document', user.id, {
       fileId,

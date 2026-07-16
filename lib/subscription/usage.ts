@@ -127,7 +127,7 @@ export async function checkUsageLimit(userId: string, feature: UsageFeature): Pr
 export async function incrementUsage(
   userId: string,
   feature: UsageFeature,
-  opts: { tokenInput?: number; tokenOutput?: number; storageMb?: number } = {}
+  opts: { tokenInput?: number; tokenOutput?: number; storageMb?: number; teamId?: string } = {}
 ): Promise<void> {
   const supabase = await createClient()
   const cost = estimateAiCost(opts.tokenInput ?? 0, opts.tokenOutput ?? 0)
@@ -147,6 +147,11 @@ export async function incrementUsage(
     p_cost: cost,
     p_storage_mb: opts.storageMb ?? 0,
   })
+
+  // reserveUsage()가 팀장 한도를 대여하기로 한 건이면, 팀 전체 월간 대여 캡 집계에도 반영
+  if (opts.teamId) {
+    await incrementTeamLoan(opts.teamId, feature)
+  }
 
   // Keep legacy monthly_usage in sync
   if (feature === 'sms' || feature === 'script' || feature === 'pdf_analysis') {
@@ -183,7 +188,12 @@ export class UsageLimitError extends Error {
 
 // ── 팀 한도 대여 (팀원이 본인 한도를 다 쓰면 팀장의 남은 한도에서 대신 차감) ──────────
 
-async function getTeamOwnerIdForMember(userId: string): Promise<string | null> {
+interface TeamOwnerLookup {
+  ownerId: string
+  teamId: string
+}
+
+async function getTeamOwnerIdForMember(userId: string): Promise<TeamOwnerLookup | null> {
   const admin = createAdminClient()
   const { data: membership } = await (admin as any)
     .from('team_members')
@@ -200,18 +210,53 @@ async function getTeamOwnerIdForMember(userId: string): Promise<string | null> {
     .eq('id', membership.team_id)
     .single()
 
-  return team?.owner_user_id ?? null
+  if (!team?.owner_user_id) return null
+  return { ownerId: team.owner_user_id, teamId: membership.team_id }
+}
+
+// 팀 전체(팀원 전원 합산)가 이번 달에 팀장 한도에서 빌려갈 수 있는 총량 — 팀 규모가
+// 커져도 팀장 계정 하나가 감당하는 비용이 무한정 늘어나지 않도록 별도로 캡을 둔다.
+// 팀장 본인 몫(프리미엄 기준 문자70/스크립트45/PDF분석50)의 약 25~30%를 항상 팀장에게
+// 남겨두는 선으로 설정 (2026-07-16). usage_records(팀장 계정 실사용량)와는 별개로
+// team_usage_loans 테이블에서 대여분만 따로 집계한다.
+const TEAM_LOAN_CAPS: Partial<Record<UsageFeature, number>> = {
+  sms: 20,
+  script: 10,
+  pdf_analysis: 15,
+}
+
+async function getTeamLoanCount(teamId: string, feature: UsageFeature): Promise<number> {
+  const admin = createAdminClient()
+  const month = new Date().toISOString().slice(0, 7)
+  const column = feature === 'sms' ? 'sms_borrowed' : feature === 'script' ? 'script_borrowed' : 'pdf_analysis_borrowed'
+
+  const { data } = await (admin as any)
+    .from('team_usage_loans')
+    .select(column)
+    .eq('team_id', teamId)
+    .eq('usage_month', month)
+    .maybeSingle()
+
+  return data?.[column] ?? 0
+}
+
+async function incrementTeamLoan(teamId: string, feature: UsageFeature): Promise<void> {
+  const admin = createAdminClient()
+  await (admin as any).rpc('increment_team_loan', { p_team_id: teamId, p_feature: feature })
 }
 
 export interface UsageReservation {
   payerId: string          // 실제로 usage_records가 차감될 대상 — incrementUsage에 이 값을 넘길 것
   borrowedFromTeam: boolean
+  teamId?: string          // borrowedFromTeam이 true일 때만 설정 — incrementUsage(teamId)로 그대로 전달할 것
 }
 
 /**
  * blockIfLimitExceeded와 동일하게 동작하되, 본인 한도(+크레딧)를 모두 소진한 팀원의 경우
- * 소속 팀장의 남은 한도가 있으면 예외를 던지지 않고 payerId를 팀장 id로 반환한다.
- * 팀장 본인 호출, 팀 미소속, 팀장도 한도 소진인 경우는 기존과 동일하게 UsageLimitError를 던진다.
+ * 소속 팀장의 남은 한도가 있고 팀 전체 월간 대여 캡(TEAM_LOAN_CAPS)도 아직 남아있으면
+ * 예외를 던지지 않고 payerId를 팀장 id로 반환한다.
+ * 팀장 본인 호출, 팀 미소속, 팀장도 한도 소진, 대여 캡 소진인 경우는 기존과 동일하게
+ * UsageLimitError를 던진다.
  */
 export async function reserveUsage(userId: string, feature: UsageFeature): Promise<UsageReservation> {
   try {
@@ -220,13 +265,19 @@ export async function reserveUsage(userId: string, feature: UsageFeature): Promi
   } catch (err) {
     if (!(err instanceof UsageLimitError)) throw err
 
-    const ownerId = await getTeamOwnerIdForMember(userId)
-    if (!ownerId) throw err
+    const team = await getTeamOwnerIdForMember(userId)
+    if (!team) throw err
 
-    const ownerCheck = await checkUsageLimit(ownerId, feature)
+    const ownerCheck = await checkUsageLimit(team.ownerId, feature)
     if (!ownerCheck.allowed) throw err
 
-    return { payerId: ownerId, borrowedFromTeam: true }
+    const loanCap = TEAM_LOAN_CAPS[feature]
+    if (loanCap !== undefined) {
+      const borrowed = await getTeamLoanCount(team.teamId, feature)
+      if (borrowed >= loanCap) throw err
+    }
+
+    return { payerId: team.ownerId, borrowedFromTeam: true, teamId: team.teamId }
   }
 }
 
