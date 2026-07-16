@@ -301,8 +301,8 @@
       (`{ data } = await ...`로 error 미확인, 다른 함수들과 동일 패턴), 마이그레이션 미실행
       상태에서도 팀원 한도 대여 자체가 깨지지는 않음 — 다만 그 경우 캡이 그냥 적용되지
       않고(항상 0건으로 조회됨) 기존처럼 무제한 대여로 동작함.
-      **[사용자 액션 필요]** `supabase/migrations/056_team_usage_loan_cap.sql`을 Supabase
-      SQL Editor에서 실행해야 실제로 캡이 걸림 — 배포 후 최대한 빨리 실행할 것.
+      **[x] 마이그레이션 실행 완료 (2026-07-17)** — Supabase SQL Editor에서 직접 실행,
+      "Success. No rows returned" 확인. 캡이 실제로 적용되는 상태.
 - [x] 백업 로그 시스템
 
 ---
