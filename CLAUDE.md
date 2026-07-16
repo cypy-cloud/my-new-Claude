@@ -409,9 +409,11 @@
 4. **[진행중, 2026-07-17] KPN 카드사 심사 — 9개 중 7개 카드사 심사 완료, 결제 테스트 요청 받음.**
    KPN 담당자(김현아)로부터 "하나·현대카드를 제외한 7개 카드사 모두 심사 완료. 상기 두 카드를
    제외한 카드로 결제 테스트 진행 부탁드립니다" 메일 수신 — 7/13 제출, 최장 2주 예상했던 것보다
-   빠르게 진행됨. 이 요청에 응하려면 아직 안 되어 있는 아래 절차가 먼저 필요:
+   빠르게 진행됨. **실운영 키값은 2026-07-20(월요일)에 전달받기로 함** — 그 전까지는 테스트
+   자체가 불가하니, 그 사이 시간에 Vercel/Supabase 접근 권한 설정을 먼저 끝내서 월요일에 키
+   받자마자 바로 설정·테스트할 수 있도록 준비해둘 것. 이 요청에 응하려면 아래 절차가 필요:
    1) admin.portone.io에서 KPN 채널의 **실운영(라이브)** 키 확인 (테스트 채널 키가 아님 —
-      혼동 주의)
+      혼동 주의) — 월요일 키 수령 후 진행
    2) Vercel에 실제 값 설정: `PORTONE_API_SECRET`, `NEXT_PUBLIC_PORTONE_STORE_ID`,
       `NEXT_PUBLIC_PORTONE_CHANNEL_KEY`, `NEXT_PUBLIC_PORTONE_BILLING_CHANNEL_KEY`,
       `PORTONE_WEBHOOK_SECRET` — 사용자가 Vercel Personal Access Token을 곧 제공할 예정이라
