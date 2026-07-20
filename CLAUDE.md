@@ -288,7 +288,8 @@
       **안전장치**: 일반 고객(`contact_type='customer'`, 기본값) 경로는 분기 조건이 전부
       `isRecruit === false`로 귀결되어 기존 코드와 완전히 동일한 로직을 그대로 타도록 설계 —
       새 기능 추가가 기존 문자/스크립트 생성 기능에 영향을 주지 않음(코드 리뷰로 확인,
-      `tsc --noEmit`+`next build` 통과). 실사용자 클릭 테스트는 배포 후 별도 확인 필요.
+      `tsc --noEmit`+`next build` 통과). **[x] 마이그레이션 실행 완료 (2026-07-20)** — Supabase
+      SQL Editor에서 직접 실행, "Success. No rows returned" 확인. 실사용자 클릭 테스트 진행 중.
 
 ### 결제/구독
 - [x] 요금제 페이지 (기본/프로/프리미엄)
