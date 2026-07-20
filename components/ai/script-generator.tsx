@@ -133,6 +133,45 @@ export function ScriptGenerator({ initialUsage, limit, planName, planId, initial
   const [agentStyle, setAgentStyle] = useState("친근하고 따뜻하게")
   const [extraNotes, setExtraNotes] = useState(initialData?.extraNotes ?? "")
   const [categoryId, setCategoryId] = useState("")
+  const [mbtiType, setMbtiType] = useState(initialData?.mbtiType ?? "")
+
+  // 고객관리에 등록된 고객 목록 불러오기 — URL로 customerId 없이 이 화면에 직접 들어온 경우에도
+  // 등록된 고객을 바로 선택해서 정보를 채울 수 있도록 함 (customer-analysis.tsx와 동일 패턴)
+  const [customers, setCustomers] = useState<Array<{
+    id: string; name: string; phone: string | null; gender: string | null; age_group: string | null
+    job: string | null; family_status: string | null; children_status: string | null
+    income_level: string | null; interest_products: string[]; memo: string | null
+    contact_type: "customer" | "recruit"; mbti_type: string | null
+  }>>([])
+  const [selectedCustomerId, setSelectedCustomerId] = useState(initialData?.customerId ?? "")
+
+  useEffect(() => {
+    fetch("/api/customers")
+      .then(res => res.json())
+      .then(data => setCustomers(data.customers ?? []))
+      .catch(() => {})
+  }, [])
+
+  function handleSelectCustomer(id: string) {
+    setSelectedCustomerId(id)
+    if (!id) return
+    const c = customers.find(x => x.id === id)
+    if (!c) return
+
+    const recruit = c.contact_type === "recruit"
+    setIsRecruit(recruit)
+    setConsultationPurpose("")
+    setCustomerName(c.name ?? "")
+    if (c.gender === "남성" || c.gender === "여성") setGender(c.gender)
+    if (c.age_group) setAgeGroup(c.age_group)
+    if (c.job) setOccupation(c.job)
+    if (c.family_status) setMaritalStatus(c.family_status)
+    if (c.children_status) setHasChildren(c.children_status)
+    if (c.income_level) setIncomeLevel(c.income_level)
+    setProductInterest(recruit ? "" : (Array.isArray(c.interest_products) ? (c.interest_products[0] ?? "") : ""))
+    setExtraNotes(c.memo ?? "")
+    setMbtiType(c.mbti_type ?? "")
+  }
 
   // 고객성향분석 결과 불러오기
   const [analysisResults, setAnalysisResults] = useState<Array<{ id: string; title: string; output_text: string; created_at: string; input_data?: Record<string, string> }>>([])
@@ -307,7 +346,7 @@ export function ScriptGenerator({ initialUsage, limit, planName, planId, initial
       incomeLevel, existingInsurance, productInterest, consultationPurpose,
       customerPersonality, expectedObjections, agentStyle,
       contactType: isRecruit ? "recruit" : "customer",
-      mbtiType: initialData?.mbtiType ?? "",
+      mbtiType,
       extraNotes: [
         selectedAnalysisText ? `[고객성향분석 결과]\n${selectedAnalysisText}` : '',
         extraNotes,
@@ -471,12 +510,30 @@ export function ScriptGenerator({ initialUsage, limit, planName, planId, initial
           inline
         />
 
-        {initialData?.customerId && (
+        {customers.length > 0 && (
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">기존 고객 불러오기 <span className="text-gray-400 font-normal">(선택)</span></Label>
+            <select
+              value={selectedCustomerId}
+              onChange={e => handleSelectCustomer(e.target.value)}
+              className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">직접 입력</option>
+              {customers.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.name}{c.phone ? ` (${c.phone})` : ""}{c.contact_type === "recruit" ? " · 리크루팅 후보" : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {selectedCustomerId && customerName && (
           <div className="flex items-center gap-1.5 text-xs text-purple-700 bg-purple-50 border border-purple-100 rounded-lg px-3 py-2">
             <CheckCircle className="h-3.5 w-3.5" />
             <span>
-              고객 정보 &ldquo;{initialData.customerName}&rdquo;가 자동으로 입력되었습니다
-              {initialData.mbtiType && ` · MBTI(${initialData.mbtiType})에 맞춰 문체가 자동 조정됩니다`}
+              고객 정보 &ldquo;{customerName}&rdquo;가 자동으로 입력되었습니다
+              {mbtiType && ` · MBTI(${mbtiType})에 맞춰 문체가 자동 조정됩니다`}
             </span>
           </div>
         )}
