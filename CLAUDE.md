@@ -305,8 +305,8 @@
       불러오기"가 이제 MBTI도 함께 자동으로 채워줌 — 두 화면이 같은 16유형 체계를 쓰므로
       별도 값 변환 없이 그대로 매핑. `MBTI_TYPES` 상수는 `types/index.ts`로 단일화해서
       customer-form.tsx/customer-analysis.tsx가 같은 목록을 공유(기존엔 각자 따로 정의돼
-      있었음). **[사용자 액션 필요]** `supabase/migrations/058_customer_mbti_type.sql`
-      아직 미실행 — Supabase SQL Editor에서 실행 전까지는 MBTI 저장 시 에러 발생.
+      있었음). **[x] 마이그레이션 실행 완료 (2026-07-20)** — Supabase SQL Editor에서 직접
+      실행, "Success. No rows returned" 확인. MBTI 저장 기능 실제로 사용 가능한 상태.
 
 ### 결제/구독
 - [x] 요금제 페이지 (기본/프로/프리미엄)
