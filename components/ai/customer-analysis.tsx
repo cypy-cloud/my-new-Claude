@@ -91,23 +91,36 @@ export function CustomerAnalysis({ planName, planId, limits, usage }: CustomerAn
   // 채우고, 값 체계가 어긋나는 소득 수준은 채우지 않고 사용자가 직접 고르도록 둔다.
   function handleSelectCustomer(id: string) {
     setSelectedCustomerId(id)
-    if (!id) return
+    if (!id) {
+      // "직접 입력"으로 되돌리면 이전에 불러온 고객의 값이 남아있지 않도록 초기화한다.
+      setCustomerName("")
+      setGender("")
+      setOccupation("")
+      setMbtiType("")
+      setAgeGroup("")
+      setFamilyStatus("")
+      return
+    }
     const c = customers.find(x => x.id === id)
     if (!c) return
 
+    // 필드별로 값이 있을 때만 채우면, 이전에 선택했던 다른 고객의 값이 새 고객에게
+    // 없는 필드에 그대로 남아 두 고객의 정보가 섞이는 문제가 있어 항상 전체를 새로 채운다.
     setCustomerName(c.name ?? "")
-    if (c.gender === "남성" || c.gender === "여성") setGender(c.gender)
-    if (c.job) setOccupation(c.job)
+    setGender(c.gender === "남성" || c.gender === "여성" ? c.gender : "")
+    setOccupation(c.job ?? "")
     // MBTI는 두 화면이 같은 16유형 체계를 쓰므로 값 변환 없이 그대로 채운다 —
     // 고객관리에 미리 저장해두면 매번 다시 입력할 필요가 없다.
-    if (c.mbti_type) setMbtiType(c.mbti_type)
+    setMbtiType(c.mbti_type ?? "")
 
     if (c.age_group) {
       const mappedAge =
         c.age_group === "30대" ? "30대 초반" :
         c.age_group === "40대" ? "40대 초반" :
         c.age_group
-      if (AGE_GROUPS.includes(mappedAge)) setAgeGroup(mappedAge)
+      setAgeGroup(AGE_GROUPS.includes(mappedAge) ? mappedAge : "")
+    } else {
+      setAgeGroup("")
     }
 
     if (c.family_status === "미혼") {
@@ -116,6 +129,8 @@ export function CustomerAnalysis({ planName, planId, limits, usage }: CustomerAn
       setFamilyStatus(c.children_status && c.children_status !== "없음" ? "기혼 (자녀 있음)" : "기혼 (자녀 없음)")
     } else if (c.family_status === "이혼/별거" || c.family_status === "사별") {
       setFamilyStatus("이혼/사별")
+    } else {
+      setFamilyStatus("")
     }
 
     toast.success(`${c.name} 고객 정보를 불러왔습니다`)
