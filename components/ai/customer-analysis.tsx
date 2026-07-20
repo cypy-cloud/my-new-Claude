@@ -13,15 +13,9 @@ import QRCode from "react-qr-code"
 import type { MonthlyUsageData } from "@/lib/subscription/usage"
 import type { PlanLimits, PlanId } from "@/lib/subscription/plans"
 import { UsageWarningBanner } from "@/components/billing/usage-limit-banner"
+import { MBTI_TYPES } from "@/types"
 
 const MBTI_URL = "https://m.site.naver.com/2bjIA"
-
-const MBTI_TYPES = [
-  "ISTJ", "ISFJ", "INFJ", "INTJ",
-  "ISTP", "ISFP", "INFP", "INTP",
-  "ESTP", "ESFP", "ENFP", "ENTP",
-  "ESTJ", "ESFJ", "ENFJ", "ENTJ",
-]
 
 const AGE_GROUPS = ["20대", "30대 초반", "30대 후반", "40대 초반", "40대 후반", "50대", "60대 이상"]
 const INCOME_LEVELS = ["월 200만원 미만", "월 200~300만원", "월 300~500만원", "월 500만원 이상"]
@@ -38,6 +32,7 @@ interface CustomerRecord {
   job: string | null
   family_status: string | null
   children_status: string | null
+  mbti_type: string | null
 }
 
 interface AnalysisResult {
@@ -103,6 +98,9 @@ export function CustomerAnalysis({ planName, planId, limits, usage }: CustomerAn
     setCustomerName(c.name ?? "")
     if (c.gender === "남성" || c.gender === "여성") setGender(c.gender)
     if (c.job) setOccupation(c.job)
+    // MBTI는 두 화면이 같은 16유형 체계를 쓰므로 값 변환 없이 그대로 채운다 —
+    // 고객관리에 미리 저장해두면 매번 다시 입력할 필요가 없다.
+    if (c.mbti_type) setMbtiType(c.mbti_type)
 
     if (c.age_group) {
       const mappedAge =

@@ -76,6 +76,7 @@ export function CustomerDetail({ customer }: { customer: Customer }) {
             <Field label="자녀 여부" value={customer.children_status} />
             <Field label="소득 수준" value={customer.income_level} />
             <Field label="고객과의 관계" value={customer.relationship_type} />
+            <Field label="MBTI" value={customer.mbti_type} />
           </div>
 
           {customer.interest_products.length > 0 && (

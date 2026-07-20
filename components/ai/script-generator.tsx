@@ -103,7 +103,9 @@ function buildPensionNote(p: Record<string, string>): string {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function ScriptGenerator({ initialUsage, limit, planName, planId, initialData, pensionData }: Props) {
-  const isRecruit = initialData?.contactType === "recruit"
+  // 고객을 불러온 경우 그 구분(customer/recruit)을 기본값으로 쓰되, 고객 불러오기 없이도
+  // 수동으로 전환할 수 있도록 상태로 관리
+  const [isRecruit, setIsRecruit] = useState(initialData?.contactType === "recruit")
   const appealOptions = isRecruit ? RECRUIT_APPEAL_POINTS : PRODUCT_INTERESTS
   const appealLabel = isRecruit ? "제안 포인트" : "관심 상품"
   const purposeOptions = isRecruit ? RECRUIT_CONSULTATION_PURPOSES : CONSULTATION_PURPOSES
@@ -119,6 +121,12 @@ export function ScriptGenerator({ initialUsage, limit, planName, planId, initial
   const [existingInsurance, setExistingInsurance] = useState("")
   const [productInterest, setProductInterest] = useState(initialData?.productInterest ?? "")
   const [consultationPurpose, setConsultationPurpose] = useState("")
+
+  function toggleRecruitMode(next: boolean) {
+    setIsRecruit(next)
+    setProductInterest("")
+    setConsultationPurpose("")
+  }
   const [customerPersonality, setCustomerPersonality] = useState("")
   const [expectedObjections, setExpectedObjections] = useState(initialData?.expectedObjections ?? "")
   const [agentStyle, setAgentStyle] = useState("친근하고 따뜻하게")
@@ -467,6 +475,33 @@ export function ScriptGenerator({ initialUsage, limit, planName, planId, initial
             <span>고객 정보 &ldquo;{initialData.customerName}&rdquo;가 자동으로 입력되었습니다</span>
           </div>
         )}
+
+        {/* 스크립트 종류 — 고객을 안 불러온 경우에도 여기서 바로 리크루팅 상담으로 전환 가능 */}
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium">스크립트 종류</Label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => toggleRecruitMode(false)}
+              disabled={isLoading}
+              className={`px-3 py-2 rounded-lg text-sm border transition-all disabled:opacity-50 ${
+                !isRecruit ? "bg-[#1e3a5f] text-white border-[#1e3a5f]" : "bg-white text-gray-700 border-gray-200 hover:border-blue-300"
+              }`}
+            >
+              일반 고객 상담
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleRecruitMode(true)}
+              disabled={isLoading}
+              className={`px-3 py-2 rounded-lg text-sm border transition-all disabled:opacity-50 ${
+                isRecruit ? "bg-purple-700 text-white border-purple-700" : "bg-white text-gray-700 border-gray-200 hover:border-purple-300"
+              }`}
+            >
+              리크루팅 제안 상담
+            </button>
+          </div>
+        </div>
 
         {isRecruit && (
           <div className="flex items-center gap-1.5 text-xs text-purple-700 bg-purple-50 border border-purple-100 rounded-lg px-3 py-2">

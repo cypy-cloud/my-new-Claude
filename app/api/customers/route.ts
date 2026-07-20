@@ -3,10 +3,14 @@ import { createClient } from '@/lib/supabase/server'
 import { handleApiError } from '@/lib/errors/api-error-handler'
 
 const CUSTOMER_COLUMNS =
-  'id, name, phone, age_group, gender, job, relationship_type, family_status, children_status, income_level, interest_products, memo, tags, status, contact_type, created_at, updated_at'
+  'id, name, phone, age_group, gender, job, relationship_type, family_status, children_status, income_level, interest_products, memo, tags, status, contact_type, mbti_type, created_at, updated_at'
 
 const STATUSES = ['prospect', 'active', 'dormant', 'contracted', 'lost']
 const CONTACT_TYPES = ['customer', 'recruit']
+const MBTI_TYPES = [
+  'ISTJ', 'ISFJ', 'INFJ', 'INTJ', 'ISTP', 'ISFP', 'INFP', 'INTP',
+  'ESTP', 'ESFP', 'ENFP', 'ENTP', 'ESTJ', 'ESFJ', 'ENFJ', 'ENTJ',
+]
 
 // GET /api/customers?q=&tag=&status= — list current user's customers with optional search/filter
 export async function GET(request: NextRequest) {
@@ -46,7 +50,7 @@ export async function POST(request: NextRequest) {
   const {
     name, phone, ageGroup, gender, job, relationshipType,
     familyStatus, childrenStatus, incomeLevel, interestProducts,
-    memo, tags, status, contactType,
+    memo, tags, status, contactType, mbtiType,
   } = body
 
   if (!name || typeof name !== 'string' || !name.trim()) {
@@ -57,6 +61,9 @@ export async function POST(request: NextRequest) {
   }
   if (contactType && !CONTACT_TYPES.includes(contactType)) {
     return NextResponse.json({ error: '올바르지 않은 구분값입니다' }, { status: 400 })
+  }
+  if (mbtiType && !MBTI_TYPES.includes(mbtiType)) {
+    return NextResponse.json({ error: '올바르지 않은 MBTI 값입니다' }, { status: 400 })
   }
 
   const { data, error } = await (supabase as any)
@@ -77,6 +84,7 @@ export async function POST(request: NextRequest) {
       tags: Array.isArray(tags) ? tags : [],
       status: status || 'prospect',
       contact_type: contactType || 'customer',
+      mbti_type: mbtiType || null,
     })
     .select(CUSTOMER_COLUMNS)
     .single()

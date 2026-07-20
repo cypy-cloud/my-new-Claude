@@ -76,6 +76,14 @@ export interface DashboardStats {
 export type CustomerStatus = 'prospect' | 'active' | 'dormant' | 'contracted' | 'lost'
 export type CustomerContactType = 'customer' | 'recruit'
 
+export const MBTI_TYPES = [
+  'ISTJ', 'ISFJ', 'INFJ', 'INTJ',
+  'ISTP', 'ISFP', 'INFP', 'INTP',
+  'ESTP', 'ESFP', 'ENFP', 'ENTP',
+  'ESTJ', 'ESFJ', 'ENFJ', 'ENTJ',
+] as const
+export type MbtiType = typeof MBTI_TYPES[number]
+
 export interface Customer {
   id: string
   name: string
@@ -92,6 +100,7 @@ export interface Customer {
   tags: string[]
   status: CustomerStatus
   contact_type: CustomerContactType
+  mbti_type: string | null
   created_at: string
   updated_at: string
 }

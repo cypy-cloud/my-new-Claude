@@ -67,7 +67,10 @@ interface Props {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function MessageGenerator({ initialUsage, limit, planName, initialData }: Props) {
-  const isRecruit = initialData?.contactType === "recruit"
+  // 고객을 불러온 경우 그 구분(customer/recruit)을 기본값으로 쓰되, 고객 불러오기 없이도
+  // 수동으로 전환할 수 있도록 상태로 관리 — 리크루팅 후보를 미리 등록해두지 않은 경우에도
+  // 이 화면에서 바로 리크루팅 제안 문자를 만들 수 있어야 함.
+  const [isRecruit, setIsRecruit] = useState(initialData?.contactType === "recruit")
   const purposeOptions = isRecruit ? RECRUIT_PURPOSES : PURPOSES
   const appealOptions = isRecruit ? RECRUIT_APPEAL_POINTS : PRODUCT_FIELDS
   const appealLabel = isRecruit ? "제안 포인트" : "상품 분야"
@@ -80,6 +83,12 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
   const [purpose, setPurpose] = useState("")
   const [productField, setProductField] = useState(initialData?.productField ?? "")
   const [categoryId, setCategoryId] = useState("")
+
+  function toggleRecruitMode(next: boolean) {
+    setIsRecruit(next)
+    setPurpose("")
+    setProductField("")
+  }
   const [tone, setTone] = useState("친근체")
   const [length, setLength] = useState("보통 (100자 이내)")
   const [extraNotes, setExtraNotes] = useState(initialData?.extraNotes ?? "")
@@ -414,6 +423,33 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
             <span>고객 정보 &ldquo;{initialData.customerName}&rdquo;가 자동으로 입력되었습니다</span>
           </div>
         )}
+
+        {/* 문자 종류 — 고객을 안 불러온 경우에도 여기서 바로 리크루팅 제안 문자로 전환 가능 */}
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium">문자 종류</Label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => toggleRecruitMode(false)}
+              disabled={isLoading}
+              className={`px-3 py-2 rounded-lg text-sm border transition-all disabled:opacity-50 ${
+                !isRecruit ? "bg-[#1e3a5f] text-white border-[#1e3a5f]" : "bg-white text-gray-700 border-gray-200 hover:border-blue-300"
+              }`}
+            >
+              일반 고객 문자
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleRecruitMode(true)}
+              disabled={isLoading}
+              className={`px-3 py-2 rounded-lg text-sm border transition-all disabled:opacity-50 ${
+                isRecruit ? "bg-purple-700 text-white border-purple-700" : "bg-white text-gray-700 border-gray-200 hover:border-purple-300"
+              }`}
+            >
+              리크루팅 제안 문자
+            </button>
+          </div>
+        </div>
 
         {/* 고객성향분석 결과 불러오기 — 불러오면 MBTI/성향에 맞춰 문체가 조정됨 (선택) */}
         <div className="space-y-1.5">

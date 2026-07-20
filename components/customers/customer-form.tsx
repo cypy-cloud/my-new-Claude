@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { CUSTOMER_STATUS_LABELS, CONTACT_TYPE_LABELS, type Customer, type CustomerStatus, type CustomerContactType } from "@/types"
+import { CUSTOMER_STATUS_LABELS, CONTACT_TYPE_LABELS, MBTI_TYPES, type Customer, type CustomerStatus, type CustomerContactType } from "@/types"
 
 const AGE_GROUPS = ["20대", "30대", "40대", "50대", "60대 이상"]
 const GENDERS = ["남성", "여성", "미입력"]
@@ -46,6 +46,7 @@ export function CustomerForm({ customer }: Props) {
   const [tagsText, setTagsText] = useState((customer?.tags ?? []).join(", "))
   const [status, setStatus] = useState<CustomerStatus>(customer?.status ?? "prospect")
   const [contactType, setContactType] = useState<CustomerContactType>(customer?.contact_type ?? "customer")
+  const [mbtiType, setMbtiType] = useState(customer?.mbti_type ?? "")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   function toggleProduct(p: string) {
@@ -62,7 +63,7 @@ export function CustomerForm({ customer }: Props) {
       const payload = {
         name, phone, ageGroup, gender, job, relationshipType,
         familyStatus, childrenStatus, incomeLevel, interestProducts,
-        memo, tags, status, contactType,
+        memo, tags, status, contactType, mbtiType,
       }
       const res = await fetch(isEdit ? `/api/customers/${customer!.id}` : "/api/customers", {
         method: isEdit ? "PATCH" : "POST",
@@ -180,13 +181,25 @@ export function CustomerForm({ customer }: Props) {
         </div>
       </div>
 
-      <div className="space-y-1.5">
-        <Label className="text-xs font-medium">고객과의 관계</Label>
-        <select className={selectClass} value={relationshipType} onChange={e => setRelationshipType(e.target.value)} disabled={isSubmitting}>
-          <option value="">선택</option>
-          {RELATIONSHIPS.map(r => <option key={r} value={r}>{r}</option>)}
-        </select>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium">고객과의 관계</Label>
+          <select className={selectClass} value={relationshipType} onChange={e => setRelationshipType(e.target.value)} disabled={isSubmitting}>
+            <option value="">선택</option>
+            {RELATIONSHIPS.map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium">MBTI <span className="text-gray-400 font-normal">(알고 있다면)</span></Label>
+          <select className={selectClass} value={mbtiType} onChange={e => setMbtiType(e.target.value)} disabled={isSubmitting}>
+            <option value="">모름 / 나중에</option>
+            {MBTI_TYPES.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
       </div>
+      <p className="text-xs text-gray-400 -mt-3">
+        MBTI를 모른다면 &ldquo;고객 성향 분석&rdquo; 메뉴의 QR 간이검사로 확인 후 여기에 저장해두면, 다음부터는 다시 입력할 필요 없이 자동으로 불러와집니다.
+      </p>
 
       <div className="space-y-1.5">
         <Label className="text-xs font-medium">관심 상품 분야 <span className="text-gray-400 font-normal">(복수 선택 가능)</span></Label>
