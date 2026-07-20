@@ -74,6 +74,7 @@ export interface DashboardStats {
 }
 
 export type CustomerStatus = 'prospect' | 'active' | 'dormant' | 'contracted' | 'lost'
+export type CustomerContactType = 'customer' | 'recruit'
 
 export interface Customer {
   id: string
@@ -90,6 +91,7 @@ export interface Customer {
   memo: string | null
   tags: string[]
   status: CustomerStatus
+  contact_type: CustomerContactType
   created_at: string
   updated_at: string
 }
@@ -100,6 +102,11 @@ export const CUSTOMER_STATUS_LABELS: Record<CustomerStatus, string> = {
   dormant: '휴면고객',
   contracted: '계약완료',
   lost: '이탈',
+}
+
+export const CONTACT_TYPE_LABELS: Record<CustomerContactType, string> = {
+  customer: '일반 고객',
+  recruit: '리크루팅 후보',
 }
 
 export type InteractionType = 'call' | 'meeting' | 'kakao' | 'sms' | 'contract' | 'followup' | 'memo'

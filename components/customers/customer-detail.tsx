@@ -60,7 +60,12 @@ export function CustomerDetail({ customer }: { customer: Customer }) {
                 </p>
               )}
             </div>
-            <Badge variant={STATUS_VARIANT[customer.status]}>{CUSTOMER_STATUS_LABELS[customer.status]}</Badge>
+            <div className="flex items-center gap-1.5">
+              {customer.contact_type === "recruit" && (
+                <Badge variant="outline" className="border-purple-300 text-purple-600">리크루팅 후보</Badge>
+              )}
+              <Badge variant={STATUS_VARIANT[customer.status]}>{CUSTOMER_STATUS_LABELS[customer.status]}</Badge>
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4">

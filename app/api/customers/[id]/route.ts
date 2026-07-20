@@ -3,9 +3,10 @@ import { createClient } from '@/lib/supabase/server'
 import { handleApiError } from '@/lib/errors/api-error-handler'
 
 const CUSTOMER_COLUMNS =
-  'id, name, phone, age_group, gender, job, relationship_type, family_status, children_status, income_level, interest_products, memo, tags, status, created_at, updated_at'
+  'id, name, phone, age_group, gender, job, relationship_type, family_status, children_status, income_level, interest_products, memo, tags, status, contact_type, created_at, updated_at'
 
 const STATUSES = ['prospect', 'active', 'dormant', 'contracted', 'lost']
+const CONTACT_TYPES = ['customer', 'recruit']
 
 // GET /api/customers/[id] — single customer detail
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -38,11 +39,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const {
     name, phone, ageGroup, gender, job, relationshipType,
     familyStatus, childrenStatus, incomeLevel, interestProducts,
-    memo, tags, status,
+    memo, tags, status, contactType,
   } = body
 
   if (status && !STATUSES.includes(status)) {
     return NextResponse.json({ error: '올바르지 않은 상태값입니다' }, { status: 400 })
+  }
+  if (contactType && !CONTACT_TYPES.includes(contactType)) {
+    return NextResponse.json({ error: '올바르지 않은 구분값입니다' }, { status: 400 })
   }
 
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
@@ -62,6 +66,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (memo !== undefined) update.memo = memo?.trim() || null
   if (tags !== undefined) update.tags = Array.isArray(tags) ? tags : []
   if (status !== undefined) update.status = status
+  if (contactType !== undefined) update.contact_type = contactType
 
   const { data, error } = await (supabase as any)
     .from('customers')

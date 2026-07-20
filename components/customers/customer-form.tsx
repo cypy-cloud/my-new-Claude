@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { CUSTOMER_STATUS_LABELS, type Customer, type CustomerStatus } from "@/types"
+import { CUSTOMER_STATUS_LABELS, CONTACT_TYPE_LABELS, type Customer, type CustomerStatus, type CustomerContactType } from "@/types"
 
 const AGE_GROUPS = ["20대", "30대", "40대", "50대", "60대 이상"]
 const GENDERS = ["남성", "여성", "미입력"]
@@ -19,6 +19,7 @@ const CHILDREN_OPTIONS = ["없음", "1명", "2명", "3명 이상"]
 const INCOME_LEVELS = ["200만원 미만", "200~400만원", "400~600만원", "600만원 이상", "미입력"]
 const PRODUCT_FIELDS = ["생명보험", "건강보험", "실손보험", "자동차보험", "연금보험", "저축보험", "어린이보험", "종신보험", "기타"]
 const STATUSES: CustomerStatus[] = ["prospect", "active", "dormant", "contracted", "lost"]
+const CONTACT_TYPES: CustomerContactType[] = ["customer", "recruit"]
 
 const selectClass =
   "w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
@@ -44,6 +45,7 @@ export function CustomerForm({ customer }: Props) {
   const [memo, setMemo] = useState(customer?.memo ?? "")
   const [tagsText, setTagsText] = useState((customer?.tags ?? []).join(", "))
   const [status, setStatus] = useState<CustomerStatus>(customer?.status ?? "prospect")
+  const [contactType, setContactType] = useState<CustomerContactType>(customer?.contact_type ?? "customer")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   function toggleProduct(p: string) {
@@ -60,7 +62,7 @@ export function CustomerForm({ customer }: Props) {
       const payload = {
         name, phone, ageGroup, gender, job, relationshipType,
         familyStatus, childrenStatus, incomeLevel, interestProducts,
-        memo, tags, status,
+        memo, tags, status, contactType,
       }
       const res = await fetch(isEdit ? `/api/customers/${customer!.id}` : "/api/customers", {
         method: isEdit ? "PATCH" : "POST",
@@ -91,6 +93,32 @@ export function CustomerForm({ customer }: Props) {
             연령대·직업군 등 일반적인 분류 정보만 입력해주세요.
           </p>
         </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs font-medium">구분</Label>
+        <div className="grid grid-cols-2 gap-2">
+          {CONTACT_TYPES.map(t => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setContactType(t)}
+              disabled={isSubmitting}
+              className={`px-3 py-2 rounded-lg text-sm border transition-all disabled:opacity-50 ${
+                contactType === t
+                  ? "bg-[#1e3a5f] text-white border-[#1e3a5f]"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-blue-300"
+              }`}
+            >
+              {CONTACT_TYPE_LABELS[t]}
+            </button>
+          ))}
+        </div>
+        {contactType === "recruit" && (
+          <p className="text-xs text-gray-400">
+            리크루팅 후보로 등록하면, AI 문자/상담 스크립트 생성 시 자동으로 리크루팅 제안용 내용으로 작성됩니다.
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">

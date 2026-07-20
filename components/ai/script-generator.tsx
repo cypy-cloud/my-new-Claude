@@ -38,6 +38,10 @@ const CONSULTATION_PURPOSES = [
   "신규 계약 유치", "기존 계약 갱신", "추가 상품 안내",
   "해지 방어", "보장 분석", "리모델링",
 ]
+
+// 리크루팅 후보 대상 상담 스크립트 — 고객 불러오기에서 "리크루팅 후보"를 선택하면 자동 전환
+const RECRUIT_APPEAL_POINTS = ["수입 구조", "시간 자유도", "자기계발/성장", "여성 친화적 근무환경", "정년 없음", "본사 지원 시스템", "기타"]
+const RECRUIT_CONSULTATION_PURPOSES = ["리크루팅 제안 상담", "설명회 초대 상담", "커리어 전환 상담", "복직 제안 상담", "부업/투잡 제안 상담"]
 const PERSONALITIES = [
   "분석형 (꼼꼼하게 따짐)", "감성형 (관계 중시)", "가격중시형 (비용 민감)",
   "바쁜형 (시간 없음)", "불신형 (보험에 부정적)", "긍정형 (이미 관심 있음)",
@@ -71,6 +75,7 @@ interface InitialData {
   productInterest?: string
   extraNotes?: string
   expectedObjections?: string
+  contactType?: "customer" | "recruit"
 }
 
 interface Props {
@@ -98,6 +103,11 @@ function buildPensionNote(p: Record<string, string>): string {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function ScriptGenerator({ initialUsage, limit, planName, planId, initialData, pensionData }: Props) {
+  const isRecruit = initialData?.contactType === "recruit"
+  const appealOptions = isRecruit ? RECRUIT_APPEAL_POINTS : PRODUCT_INTERESTS
+  const appealLabel = isRecruit ? "제안 포인트" : "관심 상품"
+  const purposeOptions = isRecruit ? RECRUIT_CONSULTATION_PURPOSES : CONSULTATION_PURPOSES
+
   // Form state
   const [customerName, setCustomerName] = useState(initialData?.customerName ?? "")
   const [gender, setGender] = useState(initialData?.gender ?? "")
@@ -287,6 +297,7 @@ export function ScriptGenerator({ initialUsage, limit, planName, planId, initial
       customerName, gender, ageGroup, occupation, maritalStatus, hasChildren,
       incomeLevel, existingInsurance, productInterest, consultationPurpose,
       customerPersonality, expectedObjections, agentStyle,
+      contactType: isRecruit ? "recruit" : "customer",
       extraNotes: [
         selectedAnalysisText ? `[고객성향분석 결과]\n${selectedAnalysisText}` : '',
         extraNotes,
@@ -297,7 +308,7 @@ export function ScriptGenerator({ initialUsage, limit, planName, planId, initial
   }
 
   function handleGenerate() {
-    if (!productInterest) { toast.error("관심 상품을 선택해주세요"); return }
+    if (!productInterest) { toast.error(`${appealLabel}을 선택해주세요`); return }
     if (!consultationPurpose) { toast.error("상담 목적을 선택해주세요"); return }
     if (isLimitReached) { toast.error("이번 달 사용 한도를 초과했습니다"); return }
     clientTrackFeatureStart("ai_script", { productInterest, consultationPurpose })
@@ -457,6 +468,13 @@ export function ScriptGenerator({ initialUsage, limit, planName, planId, initial
           </div>
         )}
 
+        {isRecruit && (
+          <div className="flex items-center gap-1.5 text-xs text-purple-700 bg-purple-50 border border-purple-100 rounded-lg px-3 py-2">
+            <CheckCircle className="h-3.5 w-3.5" />
+            <span>리크루팅 후보용 상담 스크립트로 작성됩니다</span>
+          </div>
+        )}
+
         {/* 고객성향분석 결과 불러오기 — 가장 먼저 선택하면 고객 기본 정보가 자동으로 채워짐 */}
         <div className="space-y-1.5">
           <button
@@ -513,11 +531,11 @@ export function ScriptGenerator({ initialUsage, limit, planName, planId, initial
 
         <hr className="border-gray-100" />
 
-        {/* 필수: 관심 상품 + 상담 목적 */}
-        <ChipSelect label="관심 상품" required value={productInterest} onChange={setProductInterest} options={PRODUCT_INTERESTS} columns={3} />
-        <ChipSelect label="상담 목적" required value={consultationPurpose} onChange={setConsultationPurpose} options={CONSULTATION_PURPOSES} columns={2} />
+        {/* 필수: 관심 상품(또는 제안 포인트) + 상담 목적 */}
+        <ChipSelect label={appealLabel} required value={productInterest} onChange={setProductInterest} options={appealOptions} columns={3} />
+        <ChipSelect label="상담 목적" required value={consultationPurpose} onChange={setConsultationPurpose} options={purposeOptions} columns={2} />
 
-        <CategorySelect value={categoryId} onChange={setCategoryId} disabled={isLoading} />
+        {!isRecruit && <CategorySelect value={categoryId} onChange={setCategoryId} disabled={isLoading} />}
 
         <hr className="border-gray-100" />
 

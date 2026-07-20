@@ -154,6 +154,77 @@ ${hasAnalysis ? buildPersonalityAddendum(vars.product_field) : ''}
 - 고지문은 시스템이 자동 추가하므로 포함하지 말 것${categoryAddendum ? `\n\n${categoryAddendum}` : ''}`
 }
 
+// ── 리크루팅 후보용 프롬프트 (기존 고객 대상 상품 제안 프롬프트와 구조는 동일하게 유지 —
+// 파싱/탭 UI를 그대로 재사용하기 위해 마커 구성만 똑같이 맞추고 내용만 리크루팅 제안으로 전환) ──
+
+function buildRecruitHaikuPrompt(vars: Record<string, string>): string {
+  return `당신은 보험대리점 지점장/팀장을 돕는 리크루팅(신규 설계사 영입) 메시지 작성 AI입니다.
+
+리크루팅 후보 정보:
+- 이름: ${vars.customer_name}
+- 연령대: ${vars.age_group}
+- 현재 직업: ${vars.occupation}
+- 관계: ${vars.relationship}
+- 제안 목적: ${vars.purpose}
+- 어필 포인트: ${vars.product_field}
+- 선호 말투: ${vars.tone}
+- 참고 메모: ${vars.extra_notes}
+
+아래 4가지 버전의 메시지를 반드시 마커로 구분하여 작성하세요. 보험 상품을 파는 메시지가 아니라
+"보험설계사라는 직업/커리어"를 제안하는 메시지입니다. 강요하거나 과장하지 말고, 상대방의 현재
+상황(직업, 관계)을 존중하며 자연스럽게 관심을 유도하세요. 각 마커 아래 괄호 안 문구는 지시사항일
+뿐이니 그대로 옮겨 쓰지 마세요.
+
+[SMS]
+(LMS 문자용 - 800~1000자, 문어체·격식체. 안부 → 왜 이 사람에게 제안하는지 → 어필 포인트 설명 → 부담 없는 제안 → 마무리)
+
+[KAKAO]
+(카카오톡용 - 800~1000자, 구어체·친근체, 이모지 3~5개. 위와 같은 흐름을 편하게 풀어서)
+
+[SOFT]
+(부드러운 버전 - 400~500자, 부담 주지 않는 톤. "생각 있으면 편하게 연락줘" 정도의 가벼운 제안)
+
+[FOLLOWUP]
+(후속 연락용 - 300~500자, 이전 대화를 리마인드하며 다시 한번 가볍게 제안)
+
+작성 주의사항:
+- "무조건 성공한다", "누구나 큰 돈을 번다" 등 과장·확정 표현 금지
+- 상대방의 현재 직업/상황을 깎아내리는 표현 금지
+- 문단 앞에 번호나 글머리 기호 붙이지 말 것 — 자연스러운 줄글로만 작성
+- 마크다운 기호(#, ##, **, --- 구분선 등) 절대 사용 금지, 마커([SMS] 등) 외 다른 기호로 섹션 구분하지 말 것`
+}
+
+function buildRecruitSonnetPrompt(vars: Record<string, string>): string {
+  return `당신은 보험대리점 지점장/팀장을 돕는 리크루팅(신규 설계사 영입) 메시지 작성 AI입니다.
+
+리크루팅 후보 정보:
+- 이름: ${vars.customer_name}
+- 연령대: ${vars.age_group}
+- 현재 직업: ${vars.occupation}
+- 관계: ${vars.relationship}
+- 제안 목적: ${vars.purpose}
+- 어필 포인트: ${vars.product_field}
+- 선호 말투: ${vars.tone}
+- 참고 메모: ${vars.extra_notes}
+
+아래 1가지 버전의 메시지를 반드시 마커로 구분하여 작성하세요:
+
+[PERSUASIVE]
+(강력한 스토리텔링 제안 메시지 - 반드시 1200~1500자. 다음 흐름을 포함하되 더 구체적이고 풍성하게:
+ ①공감 오프닝: 상대방의 현재 상황(직업/생애주기)에 맞는 공감 질문 2~3줄
+ ②스토리: 비슷한 상황에서 보험설계사로 전환해 성공한 3인칭 사례를 5~7문장으로 생생하게
+ ③어필: "어필 포인트"를 구체적으로 설명 (3~4문장)
+ ④왜 지금: 왜 지금이 고려해볼 타이밍인지 2~3문장
+ ⑤마무리: 부담 없는 만남/설명회 제안 CTA 2~3줄
+ 반드시 5단계 모두 포함, 1200자 이상이어야 합니다.)
+
+작성 주의사항:
+- "무조건 성공한다", "누구나 큰 돈을 번다" 등 과장·확정 표현 금지
+- 상대방의 현재 직업/상황을 깎아내리는 표현 금지
+- 문단 앞에 번호나 글머리 기호 붙이지 말 것 — 자연스러운 줄글로만 작성
+- 마크다운 기호(#, ##, **, --- 구분선 등) 절대 사용 금지`
+}
+
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -171,11 +242,17 @@ export async function POST(request: NextRequest) {
     tone,
     length,
     extraNotes,
+    contactType,
     forceRegenerate = false,
   } = body
 
+  const isRecruit = contactType === 'recruit'
+
   if (!purpose || !productField) {
-    return NextResponse.json({ error: '목적과 상품 분야를 입력해주세요' }, { status: 400 })
+    return NextResponse.json(
+      { error: isRecruit ? '목적과 제안 포인트를 입력해주세요' : '목적과 상품 분야를 입력해주세요' },
+      { status: 400 }
+    )
   }
 
   let payerId = user.id
@@ -194,9 +271,10 @@ export async function POST(request: NextRequest) {
     throw err
   }
 
-  const category = await resolveProductCategory(categoryId)
-  const categoryAddendum = buildProductCategoryAddendum(category) ?? ''
-  const fullDisclaimer = category?.riskNotice ? `${DISCLAIMER}\n${category.riskNotice}` : DISCLAIMER
+  // 리크루팅 제안 메시지는 보험 상품과 무관하므로 상품 카테고리 해석·고지문을 건너뛴다
+  const category = isRecruit ? null : await resolveProductCategory(categoryId)
+  const categoryAddendum = isRecruit ? '' : (buildProductCategoryAddendum(category) ?? '')
+  const fullDisclaimer = isRecruit ? '' : (category?.riskNotice ? `${DISCLAIMER}\n${category.riskNotice}` : DISCLAIMER)
 
   const vars = {
     customer_name: customerName || '고객',
@@ -210,8 +288,8 @@ export async function POST(request: NextRequest) {
   }
 
   const hasAnalysis = typeof extraNotes === 'string' && extraNotes.includes('[고객성향분석 결과]')
-  const haikuPrompt = buildHaikuPrompt(vars, categoryAddendum, hasAnalysis)
-  const sonnetPrompt = buildSonnetPrompt(vars, categoryAddendum, hasAnalysis)
+  const haikuPrompt = isRecruit ? buildRecruitHaikuPrompt(vars) : buildHaikuPrompt(vars, categoryAddendum, hasAnalysis)
+  const sonnetPrompt = isRecruit ? buildRecruitSonnetPrompt(vars) : buildSonnetPrompt(vars, categoryAddendum, hasAnalysis)
 
   const baseCacheInput = {
     customerName: customerName || '',

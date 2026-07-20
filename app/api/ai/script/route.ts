@@ -78,6 +78,49 @@ ${customerInfoBlock(v)}
 - 고지문은 시스템이 자동 추가하므로 포함하지 말 것`
 }
 
+// 리크루팅 후보 대상 상담 스크립트 — 파싱/탭 UI를 그대로 재사용하기 위해 기존 10개 마커 구성은
+// 그대로 유지하고 내용만 "보험 상품 상담"에서 "설계사 리크루팅 제안 상담"으로 전환한다.
+// MBTI 성향분석 연동은 리크루팅 후보에는 아직 연결돼 있지 않아 lite 버전(Haiku)만 사용한다.
+function buildRecruitScriptPrompt(v: ScriptVars): string {
+  return `당신은 20년 경력의 보험대리점 지점장/팀장을 돕는 리크루팅(신규 설계사 영입) 상담 코치입니다. 실제 현장에서 영입 성사율이 높은 지점장들이 쓰는 검증된 상담 스크립트를 작성합니다.
+
+리크루팅 후보 정보:
+- 이름: ${v.customer_name}
+- 성별: ${v.gender}
+- 연령대: ${v.age_group}
+- 현재 직업: ${v.occupation}
+- 결혼 여부: ${v.marital_status}
+- 자녀 여부: ${v.has_children}
+- 현재 수입 상황: ${v.income_level}
+- 제안 포인트: ${v.product_interest}
+- 상담 목적: ${v.consultation_purpose}
+- 후보자 성향: ${v.customer_personality}
+- 예상 반론: ${v.expected_objections}
+- 상담 스타일: ${v.agent_style}
+- 추가 메모: ${v.extra_notes}
+
+아래 10개 섹션을 반드시 정확히 마커로 구분하여, 각 섹션은 실전에서 바로 쓸 수 있을 만큼 구체적이되 간결하게 작성하세요 (섹션당 3~6문장 또는 3~5개 항목 수준). 보험 상품을 파는 상담이 아니라 "보험설계사라는 직업/커리어"를 제안하는 상담입니다.
+
+[PREP] 상담 전 준비: 이 후보자가 지금 어떤 상황·고민을 가지고 있을지 분석, 준비물, 핵심 목표, 주의할 실수
+[GREETING] 오프닝 멘트 2가지 버전 + 신뢰를 쌓는 핵심 행동 팁 2가지
+[ICEBREAK] 자연스러운 대화 소재 2가지 + 본론(커리어 제안) 전환 멘트 1가지
+[NEEDS] 후보자의 현재 상황·고민 파악 질문 4~5개 + 공감 반응 예시 2~3가지
+[AWARENESS] 비슷한 상황에서 설계사로 전환해 성공한 후킹 스토리 1개(5~6문장) + 현실 인식 포인트 2가지
+[PRODUCT] 이 일(보험설계사)을 소개하는 브릿지 멘트 + "제안 포인트" 구체 설명 + 현실적인 장점 1가지
+[PERSONA] 이 후보자 유형에 맞는 접근법과 핵심 멘트 2~3가지
+[OBJECTION] 예상 반론 대응 멘트 + 자주 나오는 반론("안정적이지 않을 것 같다" 등) 1가지 대응
+[CLOSING] 클로징 멘트 1~2가지 + 다음 단계(설명회 초대 등) 제안
+[FOLLOWUP] 당일 문자, 3일 후 문자, 1주일 후 문자 각 1개씩
+
+작성 필수 조건:
+- 실제 현장에서 바로 읽으며 사용할 수 있는 구어체
+- 불필요한 반복 없이 핵심 위주로 간결하게
+- "무조건 성공한다", "누구나 큰 돈을 번다" 등 과장·확정 표현 금지
+- 후보자의 현재 직업/상황을 깎아내리는 표현 금지
+- 섹션 마커 외에 --- 구분선이나 ## 마크다운 사용 금지
+- 고지문은 시스템이 자동 추가하므로 포함하지 말 것`
+}
+
 // 성향분석 연동(Sonnet) — 관리자 프롬프트 설정과 무관하게 항상 이 상세 버전으로 고정.
 // (관리자 패널의 프롬프트가 실수로 바뀌어도 이 핵심 기능의 품질이 깨지지 않도록 코드에 고정.)
 function buildAnalysisScriptPrompt(v: ScriptVars): string {
@@ -238,11 +281,17 @@ export async function POST(request: NextRequest) {
     agentStyle,
     extraNotes,
     categoryId,
+    contactType,
     forceRegenerate = false,
   } = body
 
+  const isRecruit = contactType === 'recruit'
+
   if (!productInterest || !consultationPurpose) {
-    return NextResponse.json({ error: '관심 상품과 상담 목적을 입력해주세요' }, { status: 400 })
+    return NextResponse.json(
+      { error: isRecruit ? '제안 포인트와 상담 목적을 입력해주세요' : '관심 상품과 상담 목적을 입력해주세요' },
+      { status: 400 }
+    )
   }
 
   let payerId = user.id
@@ -261,7 +310,8 @@ export async function POST(request: NextRequest) {
     throw err
   }
 
-  const category = await resolveProductCategory(categoryId)
+  // 리크루팅 제안 스크립트는 보험 상품과 무관하므로 상품 카테고리 해석을 건너뛴다
+  const category = isRecruit ? null : await resolveProductCategory(categoryId)
 
   const scriptVars = {
     customer_name: customerName || '고객',
@@ -283,15 +333,16 @@ export async function POST(request: NextRequest) {
   // 성향분석 결과가 포함된 경우 Sonnet + 상세 프롬프트로 업그레이드 (MBTI 지시 이행률 향상)
   // 관리자 프롬프트 설정과 무관하게 두 프롬프트 모두 코드에 고정 — 실측상 Haiku는 상세 버전을
   // 완결하지 못해(24,000토큰+3분 이상) 성향분석 미연동 시엔 간결한 버전을 사용해야 함.
-  const hasAnalysis = typeof extraNotes === 'string' && extraNotes.includes('[고객성향분석 결과]')
+  // 리크루팅 후보는 MBTI 성향분석 연동이 아직 없어 항상 lite(Haiku) 리크루팅 프롬프트를 사용한다.
+  const hasAnalysis = !isRecruit && typeof extraNotes === 'string' && extraNotes.includes('[고객성향분석 결과]')
   const scriptModel = hasAnalysis ? 'claude-sonnet-5' : undefined // undefined = 기본 Haiku
   const scriptMaxTokens = hasAnalysis ? 16000 : 8000
-  const version = hasAnalysis ? 'code-analysis-v1' : 'code-lite-v1'
+  const version = isRecruit ? 'code-recruit-v1' : hasAnalysis ? 'code-analysis-v1' : 'code-lite-v1'
 
-  let prompt = hasAnalysis ? buildAnalysisScriptPrompt(scriptVars) : buildLiteScriptPrompt(scriptVars)
-  const categoryAddendum = buildProductCategoryAddendum(category)
+  let prompt = isRecruit ? buildRecruitScriptPrompt(scriptVars) : (hasAnalysis ? buildAnalysisScriptPrompt(scriptVars) : buildLiteScriptPrompt(scriptVars))
+  const categoryAddendum = isRecruit ? '' : buildProductCategoryAddendum(category)
   if (categoryAddendum) prompt = `${prompt}\n\n${categoryAddendum}`
-  const fullDisclaimer = category?.riskNotice ? `${DISCLAIMER}\n${category.riskNotice}` : DISCLAIMER
+  const fullDisclaimer = isRecruit ? '' : (category?.riskNotice ? `${DISCLAIMER}\n${category.riskNotice}` : DISCLAIMER)
 
   const cacheInput = {
     customerName: customerName || '', gender, ageGroup, occupation, maritalStatus,

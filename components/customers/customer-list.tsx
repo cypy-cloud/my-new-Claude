@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { CUSTOMER_STATUS_LABELS, type Customer, type CustomerStatus } from "@/types"
+import { CUSTOMER_STATUS_LABELS, CONTACT_TYPE_LABELS, type Customer, type CustomerStatus, type CustomerContactType } from "@/types"
 
 const STATUSES: CustomerStatus[] = ["prospect", "active", "dormant", "contracted", "lost"]
+const CONTACT_TYPES: CustomerContactType[] = ["customer", "recruit"]
 
 const STATUS_VARIANT: Record<CustomerStatus, "default" | "secondary" | "destructive" | "outline"> = {
   prospect: "outline",
@@ -25,6 +26,7 @@ export function CustomerList() {
   const [q, setQ] = useState("")
   const [tag, setTag] = useState("")
   const [status, setStatus] = useState("")
+  const [contactType, setContactType] = useState("")
 
   const fetchCustomers = useCallback(async () => {
     setIsLoading(true)
@@ -33,13 +35,14 @@ export function CustomerList() {
       if (q) params.set("q", q)
       if (tag) params.set("tag", tag)
       if (status) params.set("status", status)
+      if (contactType) params.set("contactType", contactType)
       const res = await fetch(`/api/customers?${params.toString()}`)
       const data = await res.json()
       setCustomers(data.customers ?? [])
     } finally {
       setIsLoading(false)
     }
-  }, [q, tag, status])
+  }, [q, tag, status, contactType])
 
   useEffect(() => {
     const timer = setTimeout(fetchCustomers, 300)
@@ -73,6 +76,14 @@ export function CustomerList() {
             <option value="">전체 상태</option>
             {STATUSES.map(s => <option key={s} value={s}>{CUSTOMER_STATUS_LABELS[s]}</option>)}
           </select>
+          <select
+            value={contactType}
+            onChange={e => setContactType(e.target.value)}
+            className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+          >
+            <option value="">전체 구분</option>
+            {CONTACT_TYPES.map(t => <option key={t} value={t}>{CONTACT_TYPE_LABELS[t]}</option>)}
+          </select>
         </div>
         <Link href="/customers/new">
           <Button className="bg-[#1e3a5f] hover:bg-[#162d4a] h-9">
@@ -92,9 +103,14 @@ export function CustomerList() {
               <Card className="p-4 hover:border-blue-300 transition-colors h-full">
                 <div className="flex items-start justify-between">
                   <span className="font-medium text-gray-900">{c.name}</span>
-                  <Badge variant={STATUS_VARIANT[c.status]} className="text-xs">
-                    {CUSTOMER_STATUS_LABELS[c.status]}
-                  </Badge>
+                  <div className="flex items-center gap-1">
+                    {c.contact_type === "recruit" && (
+                      <Badge variant="outline" className="text-xs border-purple-300 text-purple-600">리크루팅</Badge>
+                    )}
+                    <Badge variant={STATUS_VARIANT[c.status]} className="text-xs">
+                      {CUSTOMER_STATUS_LABELS[c.status]}
+                    </Badge>
+                  </div>
                 </div>
                 {c.phone && (
                   <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">

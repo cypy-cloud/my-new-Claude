@@ -73,11 +73,12 @@ export default async function AiScriptPage({
     productInterest?: string
     extraNotes?: string
     expectedObjections?: string
+    contactType?: "customer" | "recruit"
   } | undefined
   if (customerId) {
     const { data: customer } = await (supabase as any)
       .from("customers")
-      .select("id, name, gender, age_group, job, family_status, children_status, income_level, interest_products, memo")
+      .select("id, name, gender, age_group, job, family_status, children_status, income_level, interest_products, memo, contact_type")
       .eq("id", customerId)
       .eq("user_id", user!.id)
       .maybeSingle()
@@ -92,8 +93,11 @@ export default async function AiScriptPage({
         maritalStatus: customer.family_status ?? undefined,
         hasChildren: customer.children_status ?? undefined,
         incomeLevel: customer.income_level ?? undefined,
-        productInterest: Array.isArray(customer.interest_products) ? customer.interest_products[0] : undefined,
+        productInterest: customer.contact_type === "recruit"
+          ? undefined
+          : (Array.isArray(customer.interest_products) ? customer.interest_products[0] : undefined),
         extraNotes: customer.memo ?? undefined,
+        contactType: customer.contact_type === "recruit" ? "recruit" : "customer",
       }
     }
   }

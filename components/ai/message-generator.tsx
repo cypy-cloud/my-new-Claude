@@ -26,6 +26,10 @@ const OCCUPATIONS = ["직장인", "자영업자", "공무원", "주부", "학생
 const RELATIONSHIPS = ["신규 고객", "기존 고객", "지인/소개", "온라인 문의", "기타"]
 const PURPOSES = ["보험 만기 안내", "신상품 소개", "계약 갱신 권유", "생일/기념일 축하", "감사 인사", "안부 인사", "상담 예약 요청", "기타"]
 const PRODUCT_FIELDS = ["생명보험", "건강보험", "실손보험", "자동차보험", "연금보험", "저축보험", "어린이보험", "종신보험", "기타"]
+
+// 리크루팅 후보 대상 메시지 — 고객 불러오기에서 "리크루팅 후보"를 선택하면 자동 전환
+const RECRUIT_PURPOSES = ["보험설계사 커리어 제안", "설명회/상담 초대", "이직/커리어 전환 제안", "복직 제안 (경단녀 등)", "부업/투잡 제안", "안부 인사 후 제안", "기타"]
+const RECRUIT_APPEAL_POINTS = ["수입 구조", "시간 자유도", "자기계발/성장", "여성 친화적 근무환경", "정년 없음", "본사 지원 시스템", "기타"]
 const TONES = [
   { value: "격식체", desc: "공식적·정중한 문체" },
   { value: "친근체", desc: "따뜻하고 편안한 문체" },
@@ -50,6 +54,7 @@ interface InitialData {
   relationship?: string
   productField?: string
   extraNotes?: string
+  contactType?: "customer" | "recruit"
 }
 
 interface Props {
@@ -62,6 +67,11 @@ interface Props {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function MessageGenerator({ initialUsage, limit, planName, initialData }: Props) {
+  const isRecruit = initialData?.contactType === "recruit"
+  const purposeOptions = isRecruit ? RECRUIT_PURPOSES : PURPOSES
+  const appealOptions = isRecruit ? RECRUIT_APPEAL_POINTS : PRODUCT_FIELDS
+  const appealLabel = isRecruit ? "제안 포인트" : "상품 분야"
+
   // Form state
   const [customerName, setCustomerName] = useState(initialData?.customerName ?? "")
   const [ageGroup, setAgeGroup] = useState(initialData?.ageGroup ?? "")
@@ -275,6 +285,7 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
   function buildParams(forceRegenerate = false) {
     return {
       customerName, ageGroup, occupation, relationship, purpose, productField, categoryId, tone, length,
+      contactType: isRecruit ? "recruit" : "customer",
       extraNotes: [
         selectedAnalysisText ? `[고객성향분석 결과]\n${selectedAnalysisText}` : '',
         extraNotes,
@@ -285,7 +296,7 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
 
   function handleGenerate() {
     if (!purpose) { toast.error("목적을 선택해주세요"); return }
-    if (!productField) { toast.error("상품 분야를 선택해주세요"); return }
+    if (!productField) { toast.error(`${appealLabel}를 선택해주세요`); return }
     if (isLimitReached) { toast.error("이번 달 사용 한도를 초과했습니다"); return }
     clientTrackFeatureStart("ai_message", { purpose, productField })
     generate(buildParams(false))
@@ -458,6 +469,13 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
           )}
         </div>
 
+        {isRecruit && (
+          <div className="flex items-center gap-1.5 text-xs text-purple-700 bg-purple-50 border border-purple-100 rounded-lg px-3 py-2">
+            <CheckCircle className="h-3.5 w-3.5" />
+            <span>리크루팅 후보용 제안 메시지로 작성됩니다</span>
+          </div>
+        )}
+
         {/* 필수 항목 */}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
@@ -469,11 +487,11 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
               className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
             >
               <option value="">선택해주세요</option>
-              {PURPOSES.map(p => <option key={p} value={p}>{p}</option>)}
+              {purposeOptions.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium">상품 분야 <span className="text-red-500">*</span></Label>
+            <Label className="text-xs font-medium">{appealLabel} <span className="text-red-500">*</span></Label>
             <select
               value={productField}
               onChange={e => setProductField(e.target.value)}
@@ -481,12 +499,12 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
               className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
             >
               <option value="">선택해주세요</option>
-              {PRODUCT_FIELDS.map(p => <option key={p} value={p}>{p}</option>)}
+              {appealOptions.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
         </div>
 
-        <CategorySelect value={categoryId} onChange={setCategoryId} disabled={isLoading} />
+        {!isRecruit && <CategorySelect value={categoryId} onChange={setCategoryId} disabled={isLoading} />}
 
         {/* 고객 이름 + 연령대 */}
         <div className="grid grid-cols-2 gap-3">
