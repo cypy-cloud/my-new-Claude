@@ -581,7 +581,7 @@ export function ScriptGenerator({ initialUsage, limit, planName, planId, initial
           >
             <div className="flex items-center gap-2">
               <Brain className="h-4 w-4" />
-              <span className="font-medium">고객성향분석 결과 불러오기</span>
+              <span className="font-medium">고객성향분석 결과 불러오기 <span className="text-purple-400 font-normal">(선택 — MBTI보다 훨씬 깊은 맞춤 분석)</span></span>
               {selectedAnalysis && <span className="text-xs bg-purple-200 text-purple-800 px-1.5 py-0.5 rounded-full">반영됨</span>}
             </div>
             {analysisLoading
