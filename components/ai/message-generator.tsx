@@ -90,6 +90,10 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
     setIsRecruit(next)
     setPurpose("")
     setProductField("")
+    // 리크루팅 프롬프트는 [고객성향분석 결과] 마커를 이해하지 못해 그대로 넘기면
+    // "참고 메모"에 무관한 보험 성향분석 텍스트가 노이즈로 섞여 들어간다.
+    setSelectedAnalysis(null)
+    setSelectedAnalysisText('')
   }
   const [tone, setTone] = useState("친근체")
   const [length, setLength] = useState("보통 (100자 이내)")
@@ -114,17 +118,32 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
 
   function handleSelectCustomer(id: string) {
     setSelectedCustomerId(id)
-    if (!id) return
+    // 다른 고객으로 바꾸거나 "직접 입력"으로 돌아가면, 이전 고객에게서 불러온 심층
+    // 성향분석은 더 이상 유효하지 않으므로 같이 해제한다.
+    setSelectedAnalysis(null)
+    setSelectedAnalysisText('')
+    if (!id) {
+      setCustomerName("")
+      setAgeGroup("")
+      setOccupation("")
+      setRelationship("")
+      setPurpose("")
+      setProductField("")
+      setMbtiType("")
+      return
+    }
     const c = customers.find(x => x.id === id)
     if (!c) return
 
     const recruit = c.contact_type === "recruit"
     setIsRecruit(recruit)
     setPurpose("")
+    // 필드별로 값이 있을 때만 채우면, 이전에 선택했던 다른 고객의 값이 새 고객에게
+    // 없는 필드에 그대로 남아 두 고객의 정보가 섞이는 문제가 있어 항상 전체를 새로 채운다.
     setCustomerName(c.name ?? "")
-    if (c.age_group) setAgeGroup(c.age_group)
-    if (c.job) setOccupation(c.job)
-    if (c.relationship_type) setRelationship(c.relationship_type)
+    setAgeGroup(c.age_group ?? "")
+    setOccupation(c.job ?? "")
+    setRelationship(c.relationship_type ?? "")
     setProductField(recruit ? "" : (Array.isArray(c.interest_products) ? (c.interest_products[0] ?? "") : ""))
     setMbtiType(c.mbti_type ?? "")
   }

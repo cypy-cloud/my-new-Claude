@@ -127,6 +127,10 @@ export function ScriptGenerator({ initialUsage, limit, planName, planId, initial
     setIsRecruit(next)
     setProductInterest("")
     setConsultationPurpose("")
+    // 리크루팅 프롬프트는 [고객성향분석 결과] 마커를 이해하지 못해 그대로 넘기면
+    // "추가 메모"에 무관한 보험 성향분석 텍스트가 노이즈로 섞여 들어간다.
+    setSelectedAnalysis(null)
+    setSelectedAnalysisText('')
   }
   const [customerPersonality, setCustomerPersonality] = useState("")
   const [expectedObjections, setExpectedObjections] = useState(initialData?.expectedObjections ?? "")
@@ -154,20 +158,39 @@ export function ScriptGenerator({ initialUsage, limit, planName, planId, initial
 
   function handleSelectCustomer(id: string) {
     setSelectedCustomerId(id)
-    if (!id) return
+    // 다른 고객으로 바꾸거나 "직접 입력"으로 돌아가면, 이전 고객에게서 불러온 심층
+    // 성향분석은 더 이상 유효하지 않으므로 같이 해제한다.
+    setSelectedAnalysis(null)
+    setSelectedAnalysisText('')
+    if (!id) {
+      setCustomerName("")
+      setGender("")
+      setAgeGroup("")
+      setOccupation("")
+      setMaritalStatus("")
+      setHasChildren("")
+      setIncomeLevel("")
+      setProductInterest("")
+      setConsultationPurpose("")
+      setExtraNotes("")
+      setMbtiType("")
+      return
+    }
     const c = customers.find(x => x.id === id)
     if (!c) return
 
     const recruit = c.contact_type === "recruit"
     setIsRecruit(recruit)
     setConsultationPurpose("")
+    // 필드별로 값이 있을 때만 채우면, 이전에 선택했던 다른 고객의 값이 새 고객에게
+    // 없는 필드에 그대로 남아 두 고객의 정보가 섞이는 문제가 있어 항상 전체를 새로 채운다.
     setCustomerName(c.name ?? "")
-    if (c.gender === "남성" || c.gender === "여성") setGender(c.gender)
-    if (c.age_group) setAgeGroup(c.age_group)
-    if (c.job) setOccupation(c.job)
-    if (c.family_status) setMaritalStatus(c.family_status)
-    if (c.children_status) setHasChildren(c.children_status)
-    if (c.income_level) setIncomeLevel(c.income_level)
+    setGender(c.gender === "남성" || c.gender === "여성" ? c.gender : "")
+    setAgeGroup(c.age_group ?? "")
+    setOccupation(c.job ?? "")
+    setMaritalStatus(c.family_status ?? "")
+    setHasChildren(c.children_status ?? "")
+    setIncomeLevel(c.income_level ?? "")
     setProductInterest(recruit ? "" : (Array.isArray(c.interest_products) ? (c.interest_products[0] ?? "") : ""))
     setExtraNotes(c.memo ?? "")
     setMbtiType(c.mbti_type ?? "")
