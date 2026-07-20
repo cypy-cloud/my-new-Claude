@@ -55,6 +55,7 @@ interface InitialData {
   productField?: string
   extraNotes?: string
   contactType?: "customer" | "recruit"
+  mbtiType?: string
 }
 
 interface Props {
@@ -295,6 +296,7 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
     return {
       customerName, ageGroup, occupation, relationship, purpose, productField, categoryId, tone, length,
       contactType: isRecruit ? "recruit" : "customer",
+      mbtiType: initialData?.mbtiType ?? "",
       extraNotes: [
         selectedAnalysisText ? `[고객성향분석 결과]\n${selectedAnalysisText}` : '',
         extraNotes,
@@ -420,7 +422,10 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
         {initialData?.customerId && (
           <div className="flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
             <CheckCircle className="h-3.5 w-3.5" />
-            <span>고객 정보 &ldquo;{initialData.customerName}&rdquo;가 자동으로 입력되었습니다</span>
+            <span>
+              고객 정보 &ldquo;{initialData.customerName}&rdquo;가 자동으로 입력되었습니다
+              {initialData.mbtiType && ` · MBTI(${initialData.mbtiType})에 맞춰 문체가 자동 조정됩니다`}
+            </span>
           </div>
         )}
 

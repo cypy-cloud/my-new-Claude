@@ -50,12 +50,27 @@ function customerInfoBlock(v: ScriptVars): string {
 - 추가 메모 / 분석 결과: ${v.extra_notes}`
 }
 
+// customers.mbti_type만 저장돼 있고 별도의 저장된 성향분석(hasAnalysis)이 없는 경우 —
+// 심층 분석 없이 MBTI 코드만으로 과하게 단정짓지 않도록, 톤 조정 수준의 가벼운 지침만 추가한다.
+// hasAnalysis가 있으면 buildAnalysisScriptPrompt가 훨씬 상세히 다루므로 이쪽은 쓰지 않는다.
+function buildMbtiAddendum(mbti: string): string {
+  return `
+※ 참고 — 이 고객/후보자의 MBTI는 ${mbti}입니다. 별도로 저장된 성향분석 결과는 없으므로, 아래처럼
+MBTI 앞 2글자(에너지 방향)와 뒤 2글자(정보처리·결정 방식)만 참고해서 어투와 접근법을 자연스럽게
+조정하세요 — 심층 분석이 아니라 톤 조정 수준으로만 가볍게 활용하고 과하게 단정짓지 마세요:
+- E(외향) 시작: 조금 더 활기차고 적극적인 접근 / I(내향) 시작: 차분하고 부담 없는 접근
+- T(사고) 포함: 근거·수치·논리 중심 설명 / F(감정) 포함: 공감·관계·스토리 중심 설명
+- J(판단)로 끝: 명확한 다음 단계·결론 제시 / P(인식)로 끝: 선택지를 열어두고 부담 없이 제안
+- 이 성향 정보는 어투 참고용일 뿐이며, 스크립트의 주제·상품 내용에는 영향을 주지 않습니다.`
+}
+
 // 성향분석 미연동(대부분의 기본 케이스, Haiku) — 빠르고 완결되게 간결한 버전.
 // 실측 결과: 상세 버전은 Haiku가 24,000 토큰으로도 못 끝내고 3분 넘게 걸려 이 버전을 분리함.
-function buildLiteScriptPrompt(v: ScriptVars): string {
+function buildLiteScriptPrompt(v: ScriptVars, mbti?: string): string {
   return `당신은 20년 경력의 최상위 보험 상담 전문가이자 세일즈 코치입니다. 실제 현장에서 계약 성사율이 높은 설계사들이 쓰는 검증된 스크립트를 작성합니다.
 
 ${customerInfoBlock(v)}
+${mbti ? buildMbtiAddendum(mbti) : ''}
 
 아래 10개 섹션을 반드시 정확히 마커로 구분하여, 각 섹션은 실전에서 바로 쓸 수 있을 만큼 구체적이되 간결하게 작성하세요 (섹션당 3~6문장 또는 3~5개 항목 수준).
 
@@ -81,7 +96,7 @@ ${customerInfoBlock(v)}
 // 리크루팅 후보 대상 상담 스크립트 — 파싱/탭 UI를 그대로 재사용하기 위해 기존 10개 마커 구성은
 // 그대로 유지하고 내용만 "보험 상품 상담"에서 "설계사 리크루팅 제안 상담"으로 전환한다.
 // MBTI 성향분석 연동은 리크루팅 후보에는 아직 연결돼 있지 않아 lite 버전(Haiku)만 사용한다.
-function buildRecruitScriptPrompt(v: ScriptVars): string {
+function buildRecruitScriptPrompt(v: ScriptVars, mbti?: string): string {
   return `당신은 20년 경력의 보험대리점 지점장/팀장을 돕는 리크루팅(신규 설계사 영입) 상담 코치입니다. 실제 현장에서 영입 성사율이 높은 지점장들이 쓰는 검증된 상담 스크립트를 작성합니다.
 
 리크루팅 후보 정보:
@@ -98,6 +113,7 @@ function buildRecruitScriptPrompt(v: ScriptVars): string {
 - 예상 반론: ${v.expected_objections}
 - 상담 스타일: ${v.agent_style}
 - 추가 메모: ${v.extra_notes}
+${mbti ? buildMbtiAddendum(mbti) : ''}
 
 아래 10개 섹션을 반드시 정확히 마커로 구분하여, 각 섹션은 실전에서 바로 쓸 수 있을 만큼 구체적이되 간결하게 작성하세요 (섹션당 3~6문장 또는 3~5개 항목 수준). 보험 상품을 파는 상담이 아니라 "보험설계사라는 직업/커리어"를 제안하는 상담입니다.
 
@@ -282,6 +298,7 @@ export async function POST(request: NextRequest) {
     extraNotes,
     categoryId,
     contactType,
+    mbtiType,
     forceRegenerate = false,
   } = body
 
@@ -335,11 +352,12 @@ export async function POST(request: NextRequest) {
   // 완결하지 못해(24,000토큰+3분 이상) 성향분석 미연동 시엔 간결한 버전을 사용해야 함.
   // 리크루팅 후보는 MBTI 성향분석 연동이 아직 없어 항상 lite(Haiku) 리크루팅 프롬프트를 사용한다.
   const hasAnalysis = !isRecruit && typeof extraNotes === 'string' && extraNotes.includes('[고객성향분석 결과]')
+  const mbti = typeof mbtiType === 'string' && mbtiType ? mbtiType : undefined
   const scriptModel = hasAnalysis ? 'claude-sonnet-5' : undefined // undefined = 기본 Haiku
   const scriptMaxTokens = hasAnalysis ? 16000 : 8000
   const version = isRecruit ? 'code-recruit-v1' : hasAnalysis ? 'code-analysis-v1' : 'code-lite-v1'
 
-  let prompt = isRecruit ? buildRecruitScriptPrompt(scriptVars) : (hasAnalysis ? buildAnalysisScriptPrompt(scriptVars) : buildLiteScriptPrompt(scriptVars))
+  let prompt = isRecruit ? buildRecruitScriptPrompt(scriptVars, mbti) : (hasAnalysis ? buildAnalysisScriptPrompt(scriptVars) : buildLiteScriptPrompt(scriptVars, mbti))
   const categoryAddendum = isRecruit ? '' : buildProductCategoryAddendum(category)
   if (categoryAddendum) prompt = `${prompt}\n\n${categoryAddendum}`
   const fullDisclaimer = isRecruit ? '' : (category?.riskNotice ? `${DISCLAIMER}\n${category.riskNotice}` : DISCLAIMER)
@@ -348,6 +366,7 @@ export async function POST(request: NextRequest) {
     customerName: customerName || '', gender, ageGroup, occupation, maritalStatus,
     hasChildren, incomeLevel, existingInsurance, productInterest, consultationPurpose,
     customerPersonality, expectedObjections, agentStyle, extraNotes, categoryId: category?.id ?? null,
+    mbti: mbti ?? null,
   }
 
   let result

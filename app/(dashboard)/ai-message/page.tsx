@@ -32,11 +32,12 @@ export default async function AiMessagePage({
     productField?: string
     extraNotes?: string
     contactType?: "customer" | "recruit"
+    mbtiType?: string
   } | undefined
   if (customerId) {
     const { data: customer } = await (supabase as any)
       .from("customers")
-      .select("id, name, age_group, job, relationship_type, interest_products, contact_type")
+      .select("id, name, age_group, job, relationship_type, interest_products, contact_type, mbti_type")
       .eq("id", customerId)
       .eq("user_id", user!.id)
       .maybeSingle()
@@ -52,6 +53,7 @@ export default async function AiMessagePage({
           ? undefined
           : (Array.isArray(customer.interest_products) ? customer.interest_products[0] : undefined),
         contactType: customer.contact_type === "recruit" ? "recruit" : "customer",
+        mbtiType: customer.mbti_type ?? undefined,
       }
     }
   }

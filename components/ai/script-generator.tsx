@@ -74,6 +74,7 @@ interface InitialData {
   incomeLevel?: string
   productInterest?: string
   extraNotes?: string
+  mbtiType?: string
   expectedObjections?: string
   contactType?: "customer" | "recruit"
 }
@@ -306,6 +307,7 @@ export function ScriptGenerator({ initialUsage, limit, planName, planId, initial
       incomeLevel, existingInsurance, productInterest, consultationPurpose,
       customerPersonality, expectedObjections, agentStyle,
       contactType: isRecruit ? "recruit" : "customer",
+      mbtiType: initialData?.mbtiType ?? "",
       extraNotes: [
         selectedAnalysisText ? `[고객성향분석 결과]\n${selectedAnalysisText}` : '',
         extraNotes,
@@ -472,7 +474,10 @@ export function ScriptGenerator({ initialUsage, limit, planName, planId, initial
         {initialData?.customerId && (
           <div className="flex items-center gap-1.5 text-xs text-purple-700 bg-purple-50 border border-purple-100 rounded-lg px-3 py-2">
             <CheckCircle className="h-3.5 w-3.5" />
-            <span>고객 정보 &ldquo;{initialData.customerName}&rdquo;가 자동으로 입력되었습니다</span>
+            <span>
+              고객 정보 &ldquo;{initialData.customerName}&rdquo;가 자동으로 입력되었습니다
+              {initialData.mbtiType && ` · MBTI(${initialData.mbtiType})에 맞춰 문체가 자동 조정됩니다`}
+            </span>
           </div>
         )}
 

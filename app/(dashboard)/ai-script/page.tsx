@@ -74,11 +74,12 @@ export default async function AiScriptPage({
     extraNotes?: string
     expectedObjections?: string
     contactType?: "customer" | "recruit"
+    mbtiType?: string
   } | undefined
   if (customerId) {
     const { data: customer } = await (supabase as any)
       .from("customers")
-      .select("id, name, gender, age_group, job, family_status, children_status, income_level, interest_products, memo, contact_type")
+      .select("id, name, gender, age_group, job, family_status, children_status, income_level, interest_products, memo, contact_type, mbti_type")
       .eq("id", customerId)
       .eq("user_id", user!.id)
       .maybeSingle()
@@ -98,6 +99,7 @@ export default async function AiScriptPage({
           : (Array.isArray(customer.interest_products) ? customer.interest_products[0] : undefined),
         extraNotes: customer.memo ?? undefined,
         contactType: customer.contact_type === "recruit" ? "recruit" : "customer",
+        mbtiType: customer.mbti_type ?? undefined,
       }
     }
   }

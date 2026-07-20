@@ -64,6 +64,20 @@ function parseOutputSections(raw: string, markers: readonly string[]): Record<st
   return result
 }
 
+// customers.mbti_type만 저장돼 있고 별도의 저장된 성향분석(hasAnalysis)이 없는 경우 —
+// 심층 분석 없이 MBTI 코드만으로 과하게 단정짓지 않도록, 톤 조정 수준의 가벼운 지침만 추가한다.
+// hasAnalysis가 있으면 buildPersonalityAddendum이 훨씬 상세히 다루므로 이쪽은 쓰지 않는다.
+function buildMbtiAddendum(mbti: string): string {
+  return `
+※ 참고 — 이 상대방의 MBTI는 ${mbti}입니다. 별도로 저장된 성향분석 결과는 없으므로, 아래처럼
+MBTI 앞 2글자(에너지 방향)와 뒤 2글자(정보처리·결정 방식)만 참고해서 문체와 어투를 자연스럽게
+조정하세요 — 심층 분석이 아니라 톤 조정 수준으로만 가볍게 활용하고 과하게 단정짓지 마세요:
+- E(외향) 시작: 조금 더 활기차고 적극적인 어투 / I(내향) 시작: 차분하고 부담 없는 어투
+- T(사고) 포함: 근거·수치·논리 중심 설명 / F(감정) 포함: 공감·관계·스토리 중심 설명
+- J(판단)로 끝: 명확한 다음 단계·결론 제시 / P(인식)로 끝: 선택지를 열어두고 부담 없이 제안
+- 이 성향 정보는 어투 참고용일 뿐이며, 메시지의 주제·상품 내용에는 영향을 주지 않습니다.`
+}
+
 function buildPersonalityAddendum(productField: string): string {
   return `
 ※ 중요 — "특별 보장 내용" 안에 [고객성향분석 결과]가 포함되어 있다면, 그 안의 MBTI/성향 정보를
@@ -78,7 +92,7 @@ function buildPersonalityAddendum(productField: string): string {
   상품/보장 내용 설명은 반드시 "${productField}" 기준으로만 작성하세요.`
 }
 
-function buildHaikuPrompt(vars: Record<string, string>, categoryAddendum: string, hasAnalysis: boolean): string {
+function buildHaikuPrompt(vars: Record<string, string>, categoryAddendum: string, hasAnalysis: boolean, mbti?: string): string {
   return `당신은 보험설계사를 돕는 전문 메시지 작성 AI입니다.
 
 고객 정보:
@@ -90,7 +104,7 @@ function buildHaikuPrompt(vars: Record<string, string>, categoryAddendum: string
 - 상품 분야: ${vars.product_field}
 - 선호 말투: ${vars.tone}
 - 특별 보장 내용(후킹 포인트): ${vars.extra_notes}
-${hasAnalysis ? buildPersonalityAddendum(vars.product_field) : ''}
+${hasAnalysis ? buildPersonalityAddendum(vars.product_field) : (mbti ? buildMbtiAddendum(mbti) : '')}
 
 아래 4가지 버전의 메시지를 반드시 마커로 구분하여 작성하세요.
 모든 버전은 "관심 유도 → 공감 사례 스토리 → 상품 핵심 설명 → 차별화 포인트 → 자연스러운 마무리"
@@ -119,7 +133,7 @@ ${hasAnalysis ? buildPersonalityAddendum(vars.product_field) : ''}
 - 고지문은 시스템이 자동 추가하므로 포함하지 말 것${categoryAddendum ? `\n\n${categoryAddendum}` : ''}`
 }
 
-function buildSonnetPrompt(vars: Record<string, string>, categoryAddendum: string, hasAnalysis: boolean): string {
+function buildSonnetPrompt(vars: Record<string, string>, categoryAddendum: string, hasAnalysis: boolean, mbti?: string): string {
   return `당신은 보험설계사를 돕는 전문 메시지 작성 AI입니다.
 
 고객 정보:
@@ -131,7 +145,7 @@ function buildSonnetPrompt(vars: Record<string, string>, categoryAddendum: strin
 - 상품 분야: ${vars.product_field}
 - 선호 말투: ${vars.tone}
 - 특별 보장 내용(후킹 포인트): ${vars.extra_notes}
-${hasAnalysis ? buildPersonalityAddendum(vars.product_field) : ''}
+${hasAnalysis ? buildPersonalityAddendum(vars.product_field) : (mbti ? buildMbtiAddendum(mbti) : '')}
 
 아래 1가지 버전의 메시지를 반드시 마커로 구분하여 작성하세요. 마커 아래 괄호 안 문구는 어떤
 내용을 써야 하는지 알려주는 지시사항일 뿐이니, 그 문구 자체를 메시지 본문에 옮겨 쓰지 마세요:
@@ -157,7 +171,7 @@ ${hasAnalysis ? buildPersonalityAddendum(vars.product_field) : ''}
 // ── 리크루팅 후보용 프롬프트 (기존 고객 대상 상품 제안 프롬프트와 구조는 동일하게 유지 —
 // 파싱/탭 UI를 그대로 재사용하기 위해 마커 구성만 똑같이 맞추고 내용만 리크루팅 제안으로 전환) ──
 
-function buildRecruitHaikuPrompt(vars: Record<string, string>): string {
+function buildRecruitHaikuPrompt(vars: Record<string, string>, mbti?: string): string {
   return `당신은 보험대리점 지점장/팀장을 돕는 리크루팅(신규 설계사 영입) 메시지 작성 AI입니다.
 
 리크루팅 후보 정보:
@@ -169,6 +183,7 @@ function buildRecruitHaikuPrompt(vars: Record<string, string>): string {
 - 어필 포인트: ${vars.product_field}
 - 선호 말투: ${vars.tone}
 - 참고 메모: ${vars.extra_notes}
+${mbti ? buildMbtiAddendum(mbti) : ''}
 
 아래 4가지 버전의 메시지를 반드시 마커로 구분하여 작성하세요. 보험 상품을 파는 메시지가 아니라
 "보험설계사라는 직업/커리어"를 제안하는 메시지입니다. 강요하거나 과장하지 말고, 상대방의 현재
@@ -194,7 +209,7 @@ function buildRecruitHaikuPrompt(vars: Record<string, string>): string {
 - 마크다운 기호(#, ##, **, --- 구분선 등) 절대 사용 금지, 마커([SMS] 등) 외 다른 기호로 섹션 구분하지 말 것`
 }
 
-function buildRecruitSonnetPrompt(vars: Record<string, string>): string {
+function buildRecruitSonnetPrompt(vars: Record<string, string>, mbti?: string): string {
   return `당신은 보험대리점 지점장/팀장을 돕는 리크루팅(신규 설계사 영입) 메시지 작성 AI입니다.
 
 리크루팅 후보 정보:
@@ -206,6 +221,7 @@ function buildRecruitSonnetPrompt(vars: Record<string, string>): string {
 - 어필 포인트: ${vars.product_field}
 - 선호 말투: ${vars.tone}
 - 참고 메모: ${vars.extra_notes}
+${mbti ? buildMbtiAddendum(mbti) : ''}
 
 아래 1가지 버전의 메시지를 반드시 마커로 구분하여 작성하세요:
 
@@ -243,6 +259,7 @@ export async function POST(request: NextRequest) {
     length,
     extraNotes,
     contactType,
+    mbtiType,
     forceRegenerate = false,
   } = body
 
@@ -288,13 +305,15 @@ export async function POST(request: NextRequest) {
   }
 
   const hasAnalysis = typeof extraNotes === 'string' && extraNotes.includes('[고객성향분석 결과]')
-  const haikuPrompt = isRecruit ? buildRecruitHaikuPrompt(vars) : buildHaikuPrompt(vars, categoryAddendum, hasAnalysis)
-  const sonnetPrompt = isRecruit ? buildRecruitSonnetPrompt(vars) : buildSonnetPrompt(vars, categoryAddendum, hasAnalysis)
+  const mbti = typeof mbtiType === 'string' && mbtiType ? mbtiType : undefined
+  const haikuPrompt = isRecruit ? buildRecruitHaikuPrompt(vars, mbti) : buildHaikuPrompt(vars, categoryAddendum, hasAnalysis, mbti)
+  const sonnetPrompt = isRecruit ? buildRecruitSonnetPrompt(vars, mbti) : buildSonnetPrompt(vars, categoryAddendum, hasAnalysis, mbti)
 
   const baseCacheInput = {
     customerName: customerName || '',
     ageGroup, occupation, relationship, purpose, productField,
     categoryId: category?.id ?? null, tone, extraNotes,
+    mbti: mbti ?? null,
     promptSplit: 'v1',
   }
 

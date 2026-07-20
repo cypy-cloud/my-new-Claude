@@ -307,6 +307,30 @@
       customer-form.tsx/customer-analysis.tsx가 같은 목록을 공유(기존엔 각자 따로 정의돼
       있었음). **[x] 마이그레이션 실행 완료 (2026-07-20)** — Supabase SQL Editor에서 직접
       실행, "Success. No rows returned" 확인. MBTI 저장 기능 실제로 사용 가능한 상태.
+      **보강 3: 고객 MBTI → 문자/스크립트 생성 자동 연동 (2026-07-20)** — 사용자가 실사용
+      테스트 중 "고객관리에서 MBTI를 저장해뒀는데 문자/스크립트 생성에 실제로 반영된 게
+      맞냐"고 질문해서 코드를 재확인한 결과, 보강 2에서 저장한 `customers.mbti_type`이
+      AI 문자/스크립트 생성 화면의 고객 자동입력(`ai-message`/`ai-script` page.tsx의
+      select 쿼리)에는 애초에 포함되어 있지 않았고, 문자/스크립트의 MBTI 반영은 오직
+      "고객성향분석 결과 불러오기"로 **별도로 저장해둔 심층 분석**을 수동으로 불러왔을
+      때만(`[고객성향분석 결과]` 마커) 동작하는 완전히 분리된 두 기능이었음을 확인 — 즉
+      고객등록에서 MBTI만 선택해둔 상태로는 자동 반영이 안 되고 있었음. 사용자 요청으로
+      "고객등록에서 MBTI를 선택해두면, 그 고객을 불러와 문자/스크립트를 생성할 때 무조건
+      자동으로 반영"되도록 연동 추가. 다만 심층 분석 승격(Sonnet, ~16,000토큰, 120초+)까지
+      자동으로 트리거하면 문자 하나 만드는데 비용·시간이 과하게 커지므로, **MBTI 코드만
+      있을 때는 가벼운 톤 조정 지침만 추가하는 방식으로 절충**(사용자에게 A/B 두 안 제시
+      후 A안으로 진행 확정) — 모델은 기존과 동일(Haiku), 속도·비용 변화 없음. 심층 분석이
+      함께 로드된 경우엔 기존처럼 더 상세한 `buildPersonalityAddendum`/
+      `buildAnalysisScriptPrompt`가 우선 적용되고 이 가벼운 지침은 쓰이지 않음(중복 방지).
+      리크루팅 후보(`contact_type='recruit'`)도 동일하게 적용 — MBTI는 상담 목적과 무관한
+      개인 성향이라 일반 고객/리크루팅 구분 없이 적용하는 게 맞다고 판단.
+      구현: `app/(dashboard)/ai-message,ai-script/page.tsx`의 select에 `mbti_type` 추가해
+      `initialData.mbtiType`으로 전달 → `message-generator.tsx`/`script-generator.tsx`의
+      `buildParams()`가 `mbtiType`을 API 페이로드에 포함 + 고객 자동입력 배너에
+      "MBTI(◯◯◯◯)에 맞춰 문체가 자동 조정됩니다" 안내 표시 → `app/api/ai/message,script/
+      route.ts`에 `buildMbtiAddendum(mbti)` 추가, `hasAnalysis`가 false일 때만(중복 방지)
+      각 프롬프트 빌더에 주입, 캐시 키(`cacheInput`)에도 `mbti` 포함해 MBTI 유무에 따라
+      다른 캐시로 분리.
 
 ### 결제/구독
 - [x] 요금제 페이지 (기본/프로/프리미엄)
