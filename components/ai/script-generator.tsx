@@ -746,6 +746,7 @@ export function ScriptGenerator({ initialUsage, limit, planName, planId, initial
             disabled={isLoading}
             className="min-h-[60px] resize-none text-xs"
           />
+          <p className="text-[11px] text-gray-400">구체적으로 적을수록 반론 대응 섹션이 더 맞춤형으로 나와요</p>
         </div>
 
         <div className="space-y-1.5">
@@ -773,6 +774,7 @@ export function ScriptGenerator({ initialUsage, limit, planName, planId, initial
             disabled={isLoading}
             className="min-h-[60px] resize-none text-xs"
           />
+          <p className="text-[11px] text-gray-400">자세히 적을수록 스크립트 전반에 더 풍성하게 반영돼요</p>
         </div>
 
         <Button

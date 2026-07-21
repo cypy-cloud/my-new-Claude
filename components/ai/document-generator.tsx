@@ -75,7 +75,10 @@ export function DocumentGenerator({ initialAnalysisCount, analysisLimit, planNam
   const [formatStyle, setFormatStyle] = useState("친근하고 쉽게")
   const [extraRequests, setExtraRequests] = useState("")
   const [categoryId, setCategoryId] = useState("")
-  const [showAdvanced, setShowAdvanced] = useState(false)
+  // 고객 상황/추가 요청사항을 구체적으로 적을수록 결과물이 풍성해진다는 게 실사용
+  // 테스트로 확인되어(2026-07-22), 기본값을 펼침으로 바꿔 더 눈에 띄게 함 — 접는 기능
+  // 자체는 그대로 유지해 원치 않는 사용자는 계속 접어둘 수 있음.
+  const [showAdvanced, setShowAdvanced] = useState(true)
 
   // Voice input state
   const [voiceTarget, setVoiceTarget] = useState<"situation" | "requests" | null>(null)
@@ -462,6 +465,7 @@ export function DocumentGenerator({ initialAnalysisCount, analysisLimit, planNam
                 disabled={isLoading}
                 className="min-h-[60px] resize-none text-xs"
               />
+              <p className="text-[11px] text-gray-400">구체적으로 적을수록 오해하기 쉬운 부분·Q&A에 더 잘 반영돼요</p>
             </div>
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
@@ -488,6 +492,7 @@ export function DocumentGenerator({ initialAnalysisCount, analysisLimit, planNam
                 disabled={isLoading}
                 className="min-h-[60px] resize-none text-xs"
               />
+              <p className="text-[11px] text-gray-400">자세히 적을수록 상담사 멘트가 더 풍성하고 맞춤형으로 나와요</p>
             </div>
           </div>
         )}
