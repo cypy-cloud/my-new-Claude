@@ -98,7 +98,9 @@ export function MessageGenerator({ initialUsage, limit, planName, initialData }:
   const [tone, setTone] = useState("친근체")
   const [length, setLength] = useState("보통 (100자 이내)")
   const [extraNotes, setExtraNotes] = useState(initialData?.extraNotes ?? "")
-  const [showAdvanced, setShowAdvanced] = useState(!!(initialData?.occupation || initialData?.relationship))
+  // PDF 설명자료/상담 스크립트와 화면 일관성을 맞추기 위해 기본값을 펼침으로 통일
+  // (2026-07-22) — 접는 기능 자체는 그대로 유지.
+  const [showAdvanced, setShowAdvanced] = useState(true)
 
   // 고객관리에 등록된 고객 목록 불러오기 — URL로 customerId 없이 이 화면에 직접 들어온 경우에도
   // 등록된 고객을 바로 선택해서 정보를 채울 수 있도록 함 (customer-analysis.tsx와 동일 패턴)
