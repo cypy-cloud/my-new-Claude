@@ -27,7 +27,10 @@ export async function GET(request: NextRequest) {
   query = query.order('sort_order').order('created_at', { ascending: false })
 
   const { data, error } = await query
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[admin/templates]', error)
+    return NextResponse.json({ error: '템플릿 처리 중 문제가 발생했습니다' }, { status: 500 })
+  }
 
   return NextResponse.json({ templates: data ?? [] })
 }
@@ -67,6 +70,9 @@ export async function POST(request: NextRequest) {
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[admin/templates]', error)
+    return NextResponse.json({ error: '템플릿 처리 중 문제가 발생했습니다' }, { status: 500 })
+  }
   return NextResponse.json({ template: data }, { status: 201 })
 }

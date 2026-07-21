@@ -5,6 +5,7 @@ import { PortOneProvider } from '@/lib/billing/portone-provider'
 import { activateSubscription, recordPayment } from '@/lib/billing/subscription-service'
 import { validateDiscountCode, redeemDiscountCode } from '@/lib/billing/discount'
 import { PLANS, PLAN_LABELS, type PlanId } from '@/lib/subscription/plans'
+import { handleApiError } from '@/lib/errors/api-error-handler'
 
 const PLAN_RANK: Record<PlanId, number> = { free: 0, basic: 1, pro: 2, premium: 3 }
 const PAYABLE_PLANS: PlanId[] = ['basic', 'pro', 'premium']
@@ -21,10 +22,13 @@ export async function POST(request: NextRequest) {
 
   try {
     return await handleSubscribe(request, user.id, supabase)
-  } catch (e: any) {
+  } catch (e) {
     // 실결제 라우트라 예상 못한 예외가 그대로 터지면 클라이언트가 빈 응답을 JSON으로
-    // 파싱하려다 알아보기 힘든 에러만 보게 됨 — 반드시 에러 메시지가 담긴 JSON으로 반환
-    return NextResponse.json({ error: e?.message ?? '결제 처리 중 오류가 발생했습니다' }, { status: 500 })
+    // 파싱하려다 알아보기 힘든 에러만 보게 됨 — 반드시 에러가 담긴 JSON으로 반환하되,
+    // 내부 에러 메시지(DB 제약 위반 문구 등)가 그대로 사용자에게 노출되지 않도록
+    // handleApiError로 감싸 친절한 메시지로 대체하고 서버 로그에는 원본을 남긴다
+    // (2026-07-21 에러처리 재검토로 발견 — 디버깅 중 임시로 e.message를 그대로 노출했었음).
+    return handleApiError(e, { userId: user.id, area: 'payment', metadata: { feature: 'billing_subscribe' } })
   }
 }
 

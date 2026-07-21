@@ -41,7 +41,10 @@ export async function GET(request: NextRequest) {
   query = query.order('sort_order', { ascending: true }).order('created_at', { ascending: false })
 
   const { data, error } = await query
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[templates]', error)
+    return NextResponse.json({ error: '템플릿을 불러오는 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.' }, { status: 500 })
+  }
 
   return NextResponse.json({ templates: data ?? [], isPremium })
 }

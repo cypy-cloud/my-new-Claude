@@ -41,7 +41,10 @@ export async function PATCH(
     .select(TASK_SELECT)
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[tasks/[id]]', error)
+    return NextResponse.json({ error: '일정 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.' }, { status: 500 })
+  }
   return NextResponse.json({ task: data })
 }
 
@@ -60,6 +63,9 @@ export async function DELETE(
     .eq('id', id)
     .eq('user_id', user.id)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[tasks/[id]]', error)
+    return NextResponse.json({ error: '일정 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.' }, { status: 500 })
+  }
   return NextResponse.json({ ok: true })
 }

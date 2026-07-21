@@ -43,7 +43,10 @@ export async function GET(req: Request) {
     .not("notify_before_minutes", "is", null)
     .is("notified_at", null)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[cron/push-notify]', error)
+    return NextResponse.json({ error: '일정 조회 중 오류가 발생했습니다' }, { status: 500 })
+  }
 
   const TYPE_LABELS: Record<string, string> = {
     followup: "후속 연락", meeting: "상담 예정", birthday: "고객 생일",

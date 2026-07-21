@@ -22,7 +22,10 @@ export async function POST(req: Request) {
       auth: keys.auth,
     }, { onConflict: "user_id,endpoint" })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[push/subscribe]', error)
+    return NextResponse.json({ error: '알림 구독 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.' }, { status: 500 })
+  }
   return NextResponse.json({ ok: true })
 }
 

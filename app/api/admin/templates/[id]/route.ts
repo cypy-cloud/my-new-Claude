@@ -29,7 +29,10 @@ export async function PUT(
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[admin/templates/[id]]', error)
+    return NextResponse.json({ error: '템플릿 처리 중 문제가 발생했습니다' }, { status: 500 })
+  }
   return NextResponse.json({ template: data })
 }
 
@@ -47,6 +50,9 @@ export async function DELETE(
     .delete()
     .eq('id', id)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[admin/templates/[id]]', error)
+    return NextResponse.json({ error: '템플릿 처리 중 문제가 발생했습니다' }, { status: 500 })
+  }
   return NextResponse.json({ ok: true })
 }
