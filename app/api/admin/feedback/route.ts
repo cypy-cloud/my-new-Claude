@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   const supabase = createAdminClient()
   let query = (supabase as any)
     .from('feedback')
-    .select('id, user_id, category, title, content, status, priority, admin_memo, created_at, updated_at')
+    .select('id, user_id, category, title, content, status, priority, admin_memo, trial_granted, created_at, updated_at')
     .order('created_at', { ascending: false })
     .limit(limit)
 
@@ -35,13 +35,13 @@ export async function GET(request: NextRequest) {
 
   const { data: profiles } = await (supabase as any)
     .from('profiles')
-    .select('id, full_name, email')
+    .select('id, full_name, email, plan_type, review_trial_granted')
     .in('id', userIds.length > 0 ? userIds : ['00000000-0000-0000-0000-000000000000'])
 
   const profileMap = new Map(
-    (profiles ?? []).map((p: { id: string; full_name: string | null; email: string }) => [
+    (profiles ?? []).map((p: { id: string; full_name: string | null; email: string; plan_type: string; review_trial_granted: boolean }) => [
       p.id,
-      { name: p.full_name, email: p.email },
+      { name: p.full_name, email: p.email, planType: p.plan_type, reviewTrialGranted: p.review_trial_granted },
     ])
   )
   const result = rows.map((r: { user_id: string }) => ({

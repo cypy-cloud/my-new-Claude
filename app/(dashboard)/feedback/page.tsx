@@ -109,6 +109,14 @@ export default function FeedbackPage() {
         </div>
       </div>
 
+      <div className="flex items-start gap-2.5 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 text-sm text-orange-800">
+        <span className="text-base leading-none">🎁</span>
+        <span>
+          <strong>이용후기 이벤트</strong> — 200자 이상 자세한 이용후기를 남겨주시면 검토 후
+          기본 플랜 7일 무료체험을 드려요. (무료 플랜 사용자 대상, 계정당 1회)
+        </span>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <Label className="text-sm font-medium">카테고리 <span className="text-red-500">*</span></Label>

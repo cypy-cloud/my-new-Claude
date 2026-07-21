@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/subscription-check",
       "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/cron/review-trial-expire",
+      "schedule": "0 2 * * *"
     }
   ]
 }

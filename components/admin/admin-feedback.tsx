@@ -4,12 +4,13 @@ import { useEffect, useState, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { MessageSquareWarning, Loader2, Save, ChevronDown, ChevronUp } from "lucide-react"
+import { MessageSquareWarning, Loader2, Save, ChevronDown, ChevronUp, Gift, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 import {
   FEEDBACK_CATEGORY_LABELS, FEEDBACK_STATUS_LABELS, FEEDBACK_PRIORITY_LABELS,
   type FeedbackCategory, type FeedbackStatus, type FeedbackPriority,
 } from "@/types"
+import { REVIEW_TRIAL_MIN_LENGTH, REVIEW_TRIAL_DAYS } from "@/lib/subscription/review-trial"
 
 interface AdminFeedbackRow {
   id: string
@@ -20,9 +21,10 @@ interface AdminFeedbackRow {
   status: FeedbackStatus
   priority: FeedbackPriority
   admin_memo: string | null
+  trial_granted: boolean
   created_at: string
   updated_at: string
-  profile: { full_name: string | null; email: string } | null
+  profile: { name: string | null; email: string; planType: string; reviewTrialGranted: boolean } | null
 }
 
 const STATUSES: FeedbackStatus[] = ['open', 'reviewing', 'planned', 'resolved', 'closed']
@@ -51,6 +53,7 @@ export function AdminFeedback() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [memoDrafts, setMemoDrafts] = useState<Record<string, string>>({})
   const [savingId, setSavingId] = useState<string | null>(null)
+  const [grantingId, setGrantingId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -86,6 +89,27 @@ export function AdminFeedback() {
     } : f))
     toast.success('저장되었습니다')
     setSavingId(null)
+  }
+
+  async function grantTrial(id: string) {
+    setGrantingId(id)
+    const res = await fetch('/api/admin/feedback/grant-trial', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ feedbackId: id }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      toast.error(data.error ?? '지급 실패')
+      setGrantingId(null)
+      return
+    }
+    setList(prev => prev.map(f => f.id === id
+      ? { ...f, trial_granted: true, profile: f.profile ? { ...f.profile, reviewTrialGranted: true, planType: 'basic' } : f.profile }
+      : f
+    ))
+    toast.success(`${REVIEW_TRIAL_DAYS}일 무료체험이 지급되었습니다`)
+    setGrantingId(null)
   }
 
   const counts = {
@@ -163,7 +187,7 @@ export function AdminFeedback() {
                           {f.title || f.content.slice(0, 40)}
                         </p>
                         <p className="text-xs text-gray-400 mt-0.5">
-                          {f.profile?.full_name ?? f.profile?.email ?? '알 수 없음'} · {new Date(f.created_at).toLocaleString('ko-KR')}
+                          {f.profile?.name ?? f.profile?.email ?? '알 수 없음'} · {new Date(f.created_at).toLocaleString('ko-KR')}
                         </p>
                       </div>
                       <button onClick={() => setExpandedId(isOpen ? null : f.id)} className="p-1.5 text-gray-400 hover:text-gray-600 shrink-0">
@@ -174,6 +198,34 @@ export function AdminFeedback() {
                     {isOpen && (
                       <div className="mt-4 pl-1 space-y-4">
                         <p className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3 whitespace-pre-wrap">{f.content}</p>
+
+                        <div className="flex items-center justify-between gap-3 bg-orange-50 border border-orange-100 rounded-lg px-3 py-2.5">
+                          <div className="flex items-center gap-1.5 text-xs text-orange-700">
+                            <Gift className="h-3.5 w-3.5 shrink-0" />
+                            {f.trial_granted ? (
+                              <span className="flex items-center gap-1 font-medium"><CheckCircle2 className="h-3.5 w-3.5" />이용후기 체험 지급 완료</span>
+                            ) : f.profile?.reviewTrialGranted ? (
+                              <span>이 사용자는 이미 체험을 받은 적이 있어 지급 불가</span>
+                            ) : f.profile?.planType !== 'free' ? (
+                              <span>무료 플랜 사용자가 아니라 지급 불가 (현재: {f.profile?.planType ?? '알 수 없음'})</span>
+                            ) : f.content.length < REVIEW_TRIAL_MIN_LENGTH ? (
+                              <span>{REVIEW_TRIAL_MIN_LENGTH}자 이상 작성해야 지급 가능 (현재 {f.content.length}자)</span>
+                            ) : (
+                              <span>이용후기 조건 충족 ({f.content.length}자) — 기본 플랜 {REVIEW_TRIAL_DAYS}일 무료체험 지급 가능</span>
+                            )}
+                          </div>
+                          {!f.trial_granted && !f.profile?.reviewTrialGranted && f.profile?.planType === 'free' && f.content.length >= REVIEW_TRIAL_MIN_LENGTH && (
+                            <Button
+                              size="sm"
+                              className="bg-orange-500 hover:bg-orange-600 text-white shrink-0"
+                              disabled={grantingId === f.id}
+                              onClick={() => grantTrial(f.id)}
+                            >
+                              {grantingId === f.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Gift className="h-3.5 w-3.5 mr-1.5" />}
+                              {REVIEW_TRIAL_DAYS}일 체험 지급
+                            </Button>
+                          )}
+                        </div>
 
                         <div className="grid grid-cols-2 gap-3">
                           <div>
