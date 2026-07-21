@@ -52,7 +52,11 @@ export function AdminSidebar({ role, onNavigate, mobile }: AdminSidebarProps) {
   return (
     <aside className={cn(
       "bg-[#1e3a5f] text-white flex flex-col overflow-hidden",
-      mobile ? "w-64 h-full" : "hidden md:flex md:w-64 md:fixed md:inset-y-0"
+      // AdminShell이 이 컴포넌트를 md:pl-64(왼쪽 여백)가 걸린 컨테이너 안에서 렌더링하는데,
+      // fixed 요소는 left를 명시하지 않으면 부모의 padding까지 반영된 정적 위치를 그대로
+      // 물려받아 화면 왼쪽 끝이 아니라 오른쪽으로 밀려 렌더링된다 — md:left-0으로 고정해서
+      // 뷰포트 왼쪽 끝에 항상 붙도록 강제한다(2026-07-22 실사용 중 발견).
+      mobile ? "w-64 h-full" : "hidden md:flex md:w-64 md:fixed md:inset-y-0 md:left-0"
     )}>
       <div className="flex items-center gap-3 px-6 py-5 border-b border-white/10 flex-shrink-0">
         <div className="h-9 w-9 rounded-xl bg-orange-500 flex items-center justify-center flex-shrink-0">
