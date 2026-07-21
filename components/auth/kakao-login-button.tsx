@@ -13,7 +13,13 @@ export function KakaoLoginButton({ label }: { label: string }) {
       const supabase = createClient()
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "kakao",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          // Supabase의 기본 요청 스코프가 카카오 콘솔에 설정한 동의항목(이메일만 필수)과
+          // 어긋나면 KOE205(설정하지 않은 동의항목 요청) 에러가 난다 — 정확히 이메일만
+          // 요청하도록 명시해서 콘솔 설정과 항상 일치시킨다.
+          scopes: "account_email",
+        },
       })
       if (error) {
         toast.error(error.message)
