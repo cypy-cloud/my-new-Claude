@@ -608,8 +608,28 @@
    charge-billing-key/route.ts`)와 매달 자동갱신 크론(`app/api/cron/subscription-check/
    route.ts`)에서도 공유해서 쓰는 함수라, 오늘 라이브 MID 연동 전까지는 실제로 청구가
    실행된 적이 없어 이 버그가 지금까지 발견되지 못하고 있었던 것으로 보임 — 세 호출부
-   모두 이번 수정으로 함께 해결됨. 타입체크·빌드 통과 확인. **[사용자 확인 필요]** 방금
-   등록된 카드(KB국민카드)로 재결제 시도 시 정상 청구되는지 재테스트 필요.
+   모두 이번 수정으로 함께 해결됨. 타입체크·빌드 통과 확인.
+   **버그 수정 2(2026-07-21) — 위 수정 직후 재테스트에서 또 다른 원인으로 실패.** 카드
+   등록은 성공했지만 브라우저에 "Failed to execute 'json' on 'Response': Unexpected end of
+   JSON input" 에러 발생. 원인은 `subscriptions` 테이블 — `activateSubscription()`이
+   `upsert(..., { onConflict: 'user_id' })`로 쓰는데 `032_billing_subscriptions.sql`에는
+   `user_id`에 일반 인덱스만 있고 **UNIQUE 제약이 애초에 누락**되어 있었음. PostgREST
+   upsert의 onConflict가 동작하려면 해당 컬럼에 유니크 제약이 반드시 있어야 하므로 DB
+   에러가 났는데, `app/api/billing/subscribe/route.ts`엔 이 예외를 잡는 try/catch가 없어
+   Next.js가 빈 응답(500)을 반환했고 클라이언트가 그걸 JSON으로 파싱하려다 저 에러가 난
+   것 — 진짜 원인(구독 활성화 실패)이 화면엔 전혀 드러나지 않는 상태였음.
+   `activateSubscription()`은 기존 `/api/billing/verify` 경로에서도 똑같이 호출되던
+   함수인데, 지금까지 실제 라이브 결제로 신규 구독이 활성화된 적이 이번이 처음이라(그 전
+   테스트는 전부 어드민 플랜 강제 변경으로 우회) 이 버그도 여태 발견되지 못했던 것으로
+   보임. 조치:
+   - `supabase/migrations/059_subscriptions_user_id_unique.sql`(신규) — 혹시 모를 중복
+     user_id 행을 먼저 정리한 뒤 `subscriptions.user_id`에 UNIQUE 제약 추가. **[사용자
+     액션 필요] Supabase SQL Editor에서 실행 전까지는 구독 활성화가 계속 실패함.**
+   - `app/api/billing/subscribe/route.ts` — 실제 처리 로직을 `handleSubscribe()`로 분리하고
+     POST 핸들러에서 try/catch로 감싸 예상 못한 예외도 항상 에러 메시지가 담긴 JSON으로
+     반환하도록 수정(실결제 라우트에서 빈 응답이 나가는 걸 방지, 원인 파악 가능하게).
+   타입체크·빌드 통과 확인, main 배포 완료. **[사용자 확인 필요]** 위 마이그레이션 실행
+   후 재테스트 필요.
    **[사용자 액션 필요] 정산준비 가맹점 → 정산 가맹점 전환**: KPN 메일에 "가입하신 보증보험
    서류를 회신 메일로 보내면 확인 후 정산 가맹점으로 전환"이라는 안내가 있어 별도로 서류 제출
    필요. 카카오페이·토스페이 추가 연동 시 신용카드(인증)으로 추가 카드사 심사가 별도로 필요하다는

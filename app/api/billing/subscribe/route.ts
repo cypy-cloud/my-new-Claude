@@ -18,6 +18,16 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
 
+  try {
+    return await handleSubscribe(request, user.id, supabase)
+  } catch (e: any) {
+    // 실결제 라우트라 예상 못한 예외가 그대로 터지면 클라이언트가 빈 응답을 JSON으로
+    // 파싱하려다 알아보기 힘든 에러만 보게 됨 — 반드시 에러 메시지가 담긴 JSON으로 반환
+    return NextResponse.json({ error: e?.message ?? '결제 처리 중 오류가 발생했습니다' }, { status: 500 })
+  }
+}
+
+async function handleSubscribe(request: NextRequest, userId: string, supabase: Awaited<ReturnType<typeof createClient>>) {
   const body = await request.json()
   const { planId, discountCode, billingKey: newBillingKey } = body as {
     planId: PlanId
@@ -32,7 +42,7 @@ export async function POST(request: NextRequest) {
   const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('plan_type, portone_billing_key, portone_customer_id')
-    .eq('id', user.id)
+    .eq('id', userId)
     .single()
 
   const currentPlan = (profile?.plan_type as PlanId) ?? 'free'
@@ -47,7 +57,7 @@ export async function POST(request: NextRequest) {
   // 위변조로 임의 할인가 결제를 막기 위함 (/api/billing/verify와 동일한 원칙)
   let discountResult: Awaited<ReturnType<typeof validateDiscountCode>> | null = null
   if (discountCode) {
-    discountResult = await validateDiscountCode(discountCode, planId, user.id)
+    discountResult = await validateDiscountCode(discountCode, planId, userId)
   }
   const amount = discountResult?.valid ? discountResult.discountedAmount! : PLANS[planId].price
 
@@ -67,7 +77,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: verified.error ?? '카드 등록에 실패했습니다' }, { status: 400 })
     }
     // customerId는 이 유저 소유의 것인지 확인 (다른 유저의 카드가 잘못 연결되는 것 방지)
-    const expectedCustomerId = `fp_${user.id.replace(/-/g, '').slice(0, 20)}`
+    const expectedCustomerId = `fp_${userId.replace(/-/g, '').slice(0, 20)}`
     if (verified.customerId !== expectedCustomerId) {
       return NextResponse.json({ error: '유효하지 않은 요청입니다' }, { status: 400 })
     }
@@ -81,13 +91,13 @@ export async function POST(request: NextRequest) {
         billing_card_brand: verified.cardBrand ?? null,
         billing_key_registered_at: new Date().toISOString(),
       })
-      .eq('id', user.id)
+      .eq('id', userId)
 
     billingKey = verified.billingKey
     customerId = verified.customerId
   }
 
-  const paymentId = `sub${user.id.replace(/-/g, '').slice(0, 10)}${Date.now()}`
+  const paymentId = `sub${userId.replace(/-/g, '').slice(0, 10)}${Date.now()}`
   const chargeResult = await provider.chargeBillingKey({
     billingKey: billingKey!,
     customerId: customerId!,
@@ -98,7 +108,7 @@ export async function POST(request: NextRequest) {
 
   if (!chargeResult.success) {
     await recordPayment({
-      userId: user.id,
+      userId,
       amount,
       provider: 'portone',
       providerTxId: paymentId,
@@ -113,7 +123,7 @@ export async function POST(request: NextRequest) {
   const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate())
 
   const subscription = await activateSubscription({
-    userId: user.id,
+    userId,
     planType: planId,
     provider: 'portone',
     providerCustomerId: customerId,
@@ -123,11 +133,11 @@ export async function POST(request: NextRequest) {
   })
 
   if (discountResult?.valid && discountResult.codeId && discountResult.discountPercent) {
-    await redeemDiscountCode(discountResult.codeId, user.id, planId, discountResult.discountPercent).catch(() => null)
+    await redeemDiscountCode(discountResult.codeId, userId, planId, discountResult.discountPercent).catch(() => null)
   }
 
   await recordPayment({
-    userId: user.id,
+    userId,
     subscriptionId: subscription.id,
     amount,
     provider: 'portone',
