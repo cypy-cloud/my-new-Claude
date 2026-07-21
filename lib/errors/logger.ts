@@ -24,6 +24,22 @@ const USER_FRIENDLY_MESSAGES: Record<ErrorArea, string> = {
 
 const DEFAULT_USER_MESSAGE = '요청 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'
 
+// Supabase/Postgrest 에러는 JS Error 인스턴스가 아니라 message/code/details를 가진
+// 일반 객체라서, err instanceof Error로만 분기하면 String(err)가 "[object Object]"로만
+// 찍혀 실제 원인을 알 수 없게 된다(2026-07-22 에러 로그 점검으로 발견). message 필드를
+// 먼저 찾고, 없으면 객체 전체를 JSON으로 남긴다.
+function stringifyError(err: unknown): string {
+  if (err instanceof Error) return err.message
+  if (err && typeof err === 'object' && 'message' in err && typeof (err as { message: unknown }).message === 'string') {
+    return (err as { message: string }).message
+  }
+  try {
+    return JSON.stringify(err)
+  } catch {
+    return String(err)
+  }
+}
+
 export function getUserFriendlyMessage(area: ErrorArea = 'unknown'): string {
   return USER_FRIENDLY_MESSAGES[area] ?? DEFAULT_USER_MESSAGE
 }
@@ -52,7 +68,7 @@ export async function logError(
     stack,
   } = options
 
-  const errorMessage = err instanceof Error ? err.message : String(err)
+  const errorMessage = stringifyError(err)
   const stackTrace = stack ?? (err instanceof Error ? err.stack : undefined) ?? null
   const finalSeverity = severity ?? inferSeverity(err)
 
