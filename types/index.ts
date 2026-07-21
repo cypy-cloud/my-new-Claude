@@ -30,11 +30,12 @@ export const PROMPT_FEATURE_LABELS: Record<PromptFeatureType, string> = {
   pdf_explanation: 'AI PDF 설명자료 생성',
 }
 
-export type FeedbackCategory = 'bug' | 'feature_request' | 'improvement' | 'billing' | 'other'
+export type FeedbackCategory = 'review' | 'bug' | 'feature_request' | 'improvement' | 'billing' | 'other'
 export type FeedbackStatus = 'open' | 'reviewing' | 'planned' | 'resolved' | 'closed'
 export type FeedbackPriority = 'low' | 'medium' | 'high'
 
 export const FEEDBACK_CATEGORY_LABELS: Record<FeedbackCategory, string> = {
+  review: '⭐ 이용후기',
   bug: '🐛 버그 신고',
   feature_request: '🚀 기능 제안',
   improvement: '🎨 개선 제안',

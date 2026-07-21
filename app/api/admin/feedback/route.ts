@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { adminGuard, isGuardError } from '@/lib/auth/middleware-guard'
 import type { FeedbackCategory, FeedbackPriority, FeedbackStatus } from '@/types'
 
-const CATEGORIES: FeedbackCategory[] = ['bug', 'feature_request', 'improvement', 'billing', 'other']
+const CATEGORIES: FeedbackCategory[] = ['review', 'bug', 'feature_request', 'improvement', 'billing', 'other']
 const STATUSES: FeedbackStatus[] = ['open', 'reviewing', 'planned', 'resolved', 'closed']
 const PRIORITIES: FeedbackPriority[] = ['low', 'medium', 'high']
 

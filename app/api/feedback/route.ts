@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { handleApiError } from '@/lib/errors/api-error-handler'
 import type { FeedbackCategory } from '@/types'
 
-const CATEGORIES: FeedbackCategory[] = ['bug', 'feature_request', 'improvement', 'billing', 'other']
+const CATEGORIES: FeedbackCategory[] = ['review', 'bug', 'feature_request', 'improvement', 'billing', 'other']
 
 // GET: 내가 보낸 피드백 목록
 export async function GET(request: NextRequest) {
