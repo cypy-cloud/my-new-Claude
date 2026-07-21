@@ -1,7 +1,9 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PUBLIC_PATHS = ['/', '/login', '/signup', '/forgot-password', '/reset-password', '/auth/callback', '/terms', '/privacy', '/manifest.webmanifest', '/manifest.json', '/sw.js', '/offline']
+// '/auth/*' 전체(callback, complete-profile 등)는 아래에서 startsWith('/auth/')로
+// 별도 공개 처리되므로 여기 목록에 개별로 추가할 필요 없다.
+const PUBLIC_PATHS = ['/', '/login', '/signup', '/forgot-password', '/reset-password', '/terms', '/privacy', '/manifest.webmanifest', '/manifest.json', '/sw.js', '/offline']
 const ADMIN_PATHS = ['/admin']
 
 export async function proxy(request: NextRequest) {
@@ -46,7 +48,7 @@ export async function proxy(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
 
-  if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith('/auth/'))) {
+  if (PUBLIC_PATHS.includes(pathname) || pathname.startsWith('/auth/')) {
     return supabaseResponse
   }
 

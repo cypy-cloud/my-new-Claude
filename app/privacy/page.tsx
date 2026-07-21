@@ -33,8 +33,8 @@ export default function PrivacyPage() {
           <h2 className="text-lg font-semibold text-[#1e3a5f]">1. 수집하는 개인정보 항목</h2>
           <p className="font-medium">가. 회원(이용자) 정보</p>
           <ul className="list-disc pl-5 space-y-1">
-            <li>필수: 이름, 이메일, 비밀번호(암호화 저장)</li>
-            <li>선택: 연락처, 소속(법인/GA명), 주력 보험사</li>
+            <li>필수: 이름, 이메일, 연락처, 비밀번호(암호화 저장 · 소셜 로그인 이용 시 제외)</li>
+            <li>선택: 소속(법인/GA명), 주력 보험사</li>
             <li>결제 시: 결제수단 정보（PG사를 통해 처리되며 회사는 카드 전체 번호를 저장하지 않습니다）</li>
             <li>자동 수집: 서비스 이용 기록, 접속 로그, 기기 정보, 쿠키</li>
           </ul>

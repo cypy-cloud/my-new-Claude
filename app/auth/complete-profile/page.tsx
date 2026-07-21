@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { CompleteProfileForm } from "@/components/auth/complete-profile-form"
+import { isSafeRedirectPath } from "@/lib/auth/safe-redirect"
 
 export default async function CompleteProfilePage({
   searchParams,
@@ -15,7 +16,7 @@ export default async function CompleteProfilePage({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1e3a5f] to-[#2d5a8e] flex items-center justify-center px-4 py-12">
-      <CompleteProfileForm nextPath={next && next.startsWith("/") ? next : "/dashboard"} />
+      <CompleteProfileForm nextPath={isSafeRedirectPath(next) ? next : "/dashboard"} />
     </div>
   )
 }
