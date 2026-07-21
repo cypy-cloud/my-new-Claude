@@ -9,13 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2, CheckCircle, Mail, Lock, User, Phone, Building2, Shield, ChevronDown } from "lucide-react"
-
-// app/terms, app/privacy 페이지의 "버전 vX.X" 표기와 반드시 일치시켜야 함 —
-// 여기가 실제 약관 개정(2026-07-16 v1.3, 2026-07-08 v1.1) 이후에도 v1.0으로
-// 고정되어 있어서, 신규 가입자 전원이 실제로 동의한 버전과 다른 값이
-// terms_agreed_at/terms_version에 기록되고 있었음 (2026-07-21 가입 플로우 재검토로 발견).
-const TERMS_VERSION = "v1.3"
-const PRIVACY_VERSION = "v1.1"
+import { KakaoLoginButton } from "@/components/auth/kakao-login-button"
+import { TERMS_VERSION, PRIVACY_VERSION } from "@/lib/legal/versions"
 
 export function SignupForm() {
   const [isLoading, setIsLoading] = useState(false)
@@ -101,6 +96,12 @@ export function SignupForm() {
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-[#1e3a5f]">무료로 시작하기</h1>
           <p className="text-gray-500 mt-2 text-sm">신용카드 없이 지금 바로 시작하세요</p>
+        </div>
+        <KakaoLoginButton label="카카오로 시작하기" />
+        <div className="flex items-center gap-3 my-5">
+          <div className="h-px flex-1 bg-gray-100" />
+          <span className="text-xs text-gray-400">또는 이메일로 가입</span>
+          <div className="h-px flex-1 bg-gray-100" />
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">

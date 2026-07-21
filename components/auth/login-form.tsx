@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2, Lock, Mail } from "lucide-react"
+import { KakaoLoginButton } from "@/components/auth/kakao-login-button"
 
 export function LoginForm() {
   const router = useRouter()
@@ -71,6 +72,12 @@ export function LoginForm() {
             로그인
           </Button>
         </form>
+        <div className="flex items-center gap-3 my-5">
+          <div className="h-px flex-1 bg-gray-100" />
+          <span className="text-xs text-gray-400">또는</span>
+          <div className="h-px flex-1 bg-gray-100" />
+        </div>
+        <KakaoLoginButton label="카카오로 로그인" />
         <p className="text-sm text-center text-gray-500 mt-6">
           계정이 없으신가요?{" "}
           <Link href="/signup" className="text-orange-500 hover:text-orange-600 font-semibold">무료로 시작하기</Link>
