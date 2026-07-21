@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Zap, X, CheckCircle, Clock, Loader2, ShieldCheck, Lock } from "lucide-react"
+import { Zap, X, CheckCircle, Clock, Loader2, ShieldCheck, Lock, CreditCard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { CREDIT_PACKS, type CreditPack } from "@/lib/billing/credit-packs"
@@ -37,44 +37,42 @@ export function CreditsPurchaseModal({ open, onClose, featureLabel = "AI 기능"
   }, [open, isFreeUser])
 
   async function handlePurchase() {
+    // 자동결제 카드가 없으면 결제 자체를 시도하지 않고 카드 등록부터 안내한다.
+    // (예전엔 등록된 카드가 없을 때 단건결제 체크아웃으로 보냈는데, KPN MID가
+    // 정기결제(빌링키) 전용이라 그 경로는 항상 실패함 — 2026-07-21 확인)
+    if (!hasBillingKey) {
+      toast.error("먼저 자동결제 카드 등록이 필요합니다")
+      onClose()
+      window.location.href = '/billing'
+      return
+    }
+
     setStep('paying')
     try {
-      if (hasBillingKey) {
-        const res = await fetch('/api/billing/credits/charge-billing-key', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ packSize: selectedPack.packSize, featureType: 'all' }),
-        })
-        const data = await res.json()
-        if (!res.ok) {
-          if (data.noBillingKey) {
-            goToCheckoutRedirect()
-            return
-          }
-          toast.error(data.error ?? "결제에 실패했습니다")
-          setStep('confirm')
+      const res = await fetch('/api/billing/credits/charge-billing-key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packSize: selectedPack.packSize, featureType: 'all' }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        if (data.noBillingKey) {
+          toast.error("먼저 자동결제 카드 등록이 필요합니다")
+          onClose()
+          window.location.href = '/billing'
           return
         }
-        toast.success(data.message ?? "크레딧이 충전되었습니다")
-        onSuccess?.(data.totalCredits)
-        onClose()
+        toast.error(data.error ?? "결제에 실패했습니다")
+        setStep('confirm')
         return
       }
-      goToCheckoutRedirect()
+      toast.success(data.message ?? "크레딧이 충전되었습니다")
+      onSuccess?.(data.totalCredits)
+      onClose()
     } catch {
       toast.error("결제 초기화에 실패했습니다")
       setStep('confirm')
     }
-  }
-
-  function goToCheckoutRedirect() {
-    const paymentId = `credits${Date.now()}${Math.random().toString(36).slice(2, 8)}`
-    const params = new URLSearchParams({
-      paymentId,
-      amount: String(selectedPack.price),
-      packSize: String(selectedPack.packSize),
-    })
-    window.location.href = `/billing/checkout/credits?${params.toString()}`
   }
 
   if (!open) return null
@@ -193,16 +191,23 @@ export function CreditsPurchaseModal({ open, onClose, featureLabel = "AI 기능"
               </div>
             )}
 
-            {hasBillingKey && (
+            {hasBillingKey ? (
               <div className="flex items-center gap-1.5 text-xs text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 rounded-lg px-3 py-2 mb-4">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 등록된 카드{cardLast4 ? ` (끝자리 ${cardLast4})` : ""}로 바로 결제됩니다
               </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-lg px-3 py-2 mb-4">
+                <CreditCard className="h-3.5 w-3.5" />
+                자동결제 카드 등록 후 구매할 수 있습니다
+              </div>
             )}
 
             <Button onClick={handlePurchase} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold">
-              <Zap className="h-4 w-4 mr-1.5" />
-              {selectedPack.label} ₩{selectedPack.price.toLocaleString()} {hasBillingKey ? "바로 결제하기" : "결제하기"}
+              {hasBillingKey
+                ? <><Zap className="h-4 w-4 mr-1.5" />{selectedPack.label} ₩{selectedPack.price.toLocaleString()} 바로 결제하기</>
+                : <><CreditCard className="h-4 w-4 mr-1.5" />카드 등록하러 가기</>
+              }
             </Button>
             <div className="flex items-center justify-center gap-1 mt-2.5 text-xs text-gray-400">
               <ShieldCheck className="h-3 w-3" />
@@ -214,9 +219,7 @@ export function CreditsPurchaseModal({ open, onClose, featureLabel = "AI 기능"
         {!isFreeUser && step === 'paying' && (
           <div className="flex flex-col items-center gap-3 py-6">
             <Loader2 className="h-8 w-8 text-purple-500 animate-spin" />
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {hasBillingKey ? "결제 처리 중..." : "결제 페이지로 이동 중..."}
-            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">결제 처리 중...</p>
           </div>
         )}
       </div>
