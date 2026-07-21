@@ -56,14 +56,16 @@ export async function POST(request: NextRequest) {
 
   if (error) return NextResponse.json({ error: '작성 실패' }, { status: 500 })
 
-  // 활성 공지사항이면 전체 사용자에게 앱 내 알림 발송
+  // 활성 공지사항이면 대상(target_plan/target_role)에 맞는 사용자에게만 앱 내 알림 발송
+  // — 공지 자체는 대상 필터링이 있는데 알림은 항상 전체 발송이라, 대상이 아닌
+  // 사용자가 알림을 받고 클릭해도 /notices에 아무것도 안 보이는 문제가 있었음 (2026-07-22 발견)
   if (isActive !== false) {
     createNotificationForAllUsers({
       type: 'announcement',
       title: `[공지] ${title.trim()}`,
       message: content.trim().slice(0, 100) + (content.trim().length > 100 ? '...' : ''),
       actionUrl: '/notices',
-    }).catch(() => {})
+    }, { plan: targetPlan ?? 'all', role: targetRole ?? 'all' }).catch(() => {})
   }
 
   return NextResponse.json({ id: data.id })

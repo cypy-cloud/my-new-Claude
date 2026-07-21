@@ -25,13 +25,21 @@ export async function createNotification(params: CreateNotificationParams) {
   }
 }
 
-export async function createNotificationForAllUsers(params: Omit<CreateNotificationParams, 'userId'>) {
+export async function createNotificationForAllUsers(
+  params: Omit<CreateNotificationParams, 'userId'>,
+  target?: { plan?: string; role?: string },
+) {
   try {
     const supabase = createAdminClient()
-    const { data: users } = await (supabase as any)
+    let query = (supabase as any)
       .from('profiles')
       .select('id')
       .eq('status', 'active')
+
+    if (target?.plan && target.plan !== 'all') query = query.eq('plan_type', target.plan)
+    if (target?.role && target.role !== 'all') query = query.eq('role', target.role)
+
+    const { data: users } = await query
 
     if (!users?.length) return
 
