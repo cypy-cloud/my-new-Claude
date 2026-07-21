@@ -33,3 +33,6 @@ yarn-error.log*
 # typescript
 next-env.d.ts
 tsconfig.tsbuildinfo
+
+# Claude Code agent worktrees (internal tooling scratch dirs, not project code)
+.claude/worktrees/
