@@ -13,6 +13,11 @@ const DISCLAIMER = '\n\n[보험 관련 유의사항] 이 메시지는 보험 상
 const HAIKU_MODEL = 'claude-haiku-4-5-20251001'
 const SONNET_MODEL = 'claude-sonnet-5'
 
+// "설득력 있는 버전"이 Sonnet을 호출하는데 maxDuration이 없으면 Vercel 기본 타임아웃
+// (Pro 기준 무설정 시 15초)에 걸릴 수 있음 (2026-07-21 AI 기능 재검토로 발견, script/
+// customer-analysis 라우트와 동일한 버그 패턴 방어).
+export const maxDuration = 240
+
 // SMS, KAKAO, SOFT, FOLLOWUP → Haiku (저렴한 모델)
 const HAIKU_SECTIONS = ['SMS', 'KAKAO', 'SOFT', 'FOLLOWUP'] as const
 // PERSUASIVE → Sonnet (고품질 모델)

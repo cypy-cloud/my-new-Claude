@@ -5,6 +5,9 @@ import { blockIfLimitExceeded, checkUsageLimit, incrementUsage, UsageLimitError 
 import { trackFeatureComplete } from '@/lib/analytics/track'
 import { handleApiError } from '@/lib/errors/api-error-handler'
 
+// Vercel 기본 타임아웃(Pro 기준 무설정 시 15초) 방어 (2026-07-21 AI 기능 재검토로 발견)
+export const maxDuration = 240
+
 const CONTENT_DISCLAIMER = `
 
 ⚠️ 보험 광고 심의 안내: 보험 관련 콘텐츠는 금융위원회 및 생명·손해보험협회의 광고 심의를 받아야 할 수 있습니다. 실제 게시 전 반드시 소속 회사의 컴플라이언스 팀에 확인하세요.

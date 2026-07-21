@@ -4,6 +4,9 @@ import { generateWithAI } from '@/lib/ai/provider'
 import { handleApiError } from '@/lib/errors/api-error-handler'
 import { getCurrentSeasonContext } from '@/lib/content/newsletter-season'
 
+// Vercel 기본 타임아웃(Pro 기준 무설정 시 15초) 방어 (2026-07-21 AI 기능 재검토로 발견)
+export const maxDuration = 240
+
 function buildSuggestPrompt(params: {
   categoryLabel: string
   subcategoryLabel: string

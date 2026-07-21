@@ -4,6 +4,12 @@ import { generateWithAI } from '@/lib/ai/provider'
 import { reserveUsage, checkUsageLimit, incrementUsage, UsageLimitError } from '@/lib/subscription/usage'
 import { handleApiError } from '@/lib/errors/api-error-handler'
 
+// 이 라우트는 Sonnet으로 성향분석 상세 프롬프트를 호출하는데(script/route.ts와 동일한
+// 종류의 호출, 실측 약 120초 소요) maxDuration이 설정된 적이 없어 Vercel 기본 타임아웃
+// (Pro 기준 무설정 시 15초)에 걸려 이 기능이 사실상 처음부터 동작한 적이 없었을 가능성이
+// 높음 (2026-07-21 AI 기능 재검토로 발견). script/document 라우트와 동일하게 240으로 설정.
+export const maxDuration = 240
+
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

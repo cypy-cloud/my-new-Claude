@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { checkSafety } from '@/lib/safety/safety-checker'
 
+// Vercel 기본 타임아웃(Pro 기준 무설정 시 15초) 방어 (2026-07-21 AI 기능 재검토로 발견)
+export const maxDuration = 240
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient()

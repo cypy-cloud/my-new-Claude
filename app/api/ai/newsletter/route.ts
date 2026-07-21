@@ -6,6 +6,9 @@ import { trackFeatureComplete } from '@/lib/analytics/track'
 import { handleApiError } from '@/lib/errors/api-error-handler'
 import { getCurrentSeasonContext } from '@/lib/content/newsletter-season'
 
+// Vercel 기본 타임아웃(Pro 기준 무설정 시 15초) 방어 (2026-07-21 AI 기능 재검토로 발견)
+export const maxDuration = 240
+
 const NEWSLETTER_DISCLAIMER = `
 
 ⚠️ 법적 유의사항: 이 뉴스레터 초안은 AI가 생성한 참고용 자료입니다. 법령·세금·이율 등 수치가 포함된 경우 반드시 최신 공식 출처를 통해 직접 확인하세요. AI는 최신 뉴스나 법령 개정 내용을 정확히 알 수 없으므로, 구체적인 수치나 최신 규정은 금융감독원·생명보험협회·손해보험협회 공식 자료를 참고하세요.

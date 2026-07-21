@@ -8,6 +8,9 @@ import { resolveProductCategory, buildProductCategoryAddendum } from '@/lib/ai-c
 import { handleApiError } from '@/lib/errors/api-error-handler'
 import type { TeamRole } from '@/lib/team/types'
 
+// Vercel 기본 타임아웃(Pro 기준 무설정 시 15초) 방어 (2026-07-21 AI 기능 재검토로 발견)
+export const maxDuration = 240
+
 const DISCLAIMER = '\n\n【필수 고지문】\n본 자료는 업로드된 자료를 바탕으로 AI가 작성한 참고용 설명자료입니다. 실제 보장 여부, 보험금 지급 여부, 가입 가능 여부는 해당 보험회사의 약관, 인수기준, 심사결과에 따라 달라질 수 있습니다.'
 const SECTION_MARKERS = ['SUMMARY', 'COVERAGE', 'MISCONCEPTIONS', 'CHECKLIST', 'EXCLUSIONS', 'QNA', 'AGENT_SCRIPT', 'CAUTION']
 const PDF_CONTENT_LIMIT = 12_000
