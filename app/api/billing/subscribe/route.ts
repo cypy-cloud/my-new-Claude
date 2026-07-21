@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { PortOneProvider } from '@/lib/billing/portone-provider'
 import { activateSubscription, recordPayment } from '@/lib/billing/subscription-service'
 import { validateDiscountCode, redeemDiscountCode } from '@/lib/billing/discount'
@@ -119,6 +120,21 @@ async function handleSubscribe(request: NextRequest, userId: string, supabase: A
     return NextResponse.json({ error: chargeResult.error ?? '결제에 실패했습니다' }, { status: 400 })
   }
 
+  // 카드가 실제로 청구된 직후 곧바로 결제 기록부터 남긴다. activateSubscription() 등
+  // 이후 단계가 실패해도 "돈은 빠졌는데 우리 시스템엔 기록이 전혀 없는" 상태가 되는 걸
+  // 막기 위함 — 2026-07-21 실결제 테스트 중, activateSubscription()이 DB 제약 문제로
+  // 실패하면서 실제로는 청구된 결제가 payments 테이블에 전혀 기록되지 않는 사고를 발견함
+  // (사용자 카드에서 두 번 청구됐는데 우리 쪽엔 한 건만 기록되는 결과로 이어짐).
+  const payment = await recordPayment({
+    userId,
+    amount,
+    provider: 'portone',
+    providerTxId: chargeResult.paymentId ?? paymentId,
+    status: 'succeeded',
+    paidAt: new Date(),
+    metadata: discountResult?.valid ? { discountCode: discountCode?.trim().toUpperCase(), discountPercent: discountResult.discountPercent } : undefined,
+  })
+
   const now = new Date()
   const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate())
 
@@ -132,20 +148,12 @@ async function handleSubscribe(request: NextRequest, userId: string, supabase: A
     periodEnd,
   })
 
+  // 결제 기록에 뒤늦게 확정된 subscriptionId를 연결
+  await (createAdminClient() as any).from('payments').update({ subscription_id: subscription.id }).eq('id', payment.id)
+
   if (discountResult?.valid && discountResult.codeId && discountResult.discountPercent) {
     await redeemDiscountCode(discountResult.codeId, userId, planId, discountResult.discountPercent).catch(() => null)
   }
-
-  await recordPayment({
-    userId,
-    subscriptionId: subscription.id,
-    amount,
-    provider: 'portone',
-    providerTxId: chargeResult.paymentId ?? paymentId,
-    status: 'succeeded',
-    paidAt: new Date(),
-    metadata: discountResult?.valid ? { discountCode: discountCode?.trim().toUpperCase(), discountPercent: discountResult.discountPercent } : undefined,
-  }).catch(() => null)
 
   return NextResponse.json({
     ok: true,
