@@ -23,7 +23,9 @@ export async function POST(request: NextRequest) {
     signature = request.headers.get('stripe-signature') ?? ''
   }
 
-  if (signature && !adapter.verifyWebhookSignature(rawBody, signature)) {
+  // 서명이 아예 없는 요청도 반드시 거부한다(fail-closed) — signature가 빈 문자열이면
+  // 검증 자체를 건너뛰던 예전 로직은 서명 헤더 없이 위조된 요청도 통과시키는 구멍이었음.
+  if (!adapter.verifyWebhookSignature(rawBody, signature)) {
     return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 400 })
   }
 

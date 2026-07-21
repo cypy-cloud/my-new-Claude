@@ -7,7 +7,11 @@ import { trackFeatureComplete } from '@/lib/analytics/track'
 import { handleApiError } from '@/lib/errors/api-error-handler'
 import { resolveProductCategory, buildProductCategoryAddendum } from '@/lib/ai-core/product-category'
 
-export const maxDuration = 60
+// Vercel Pro는 기본 300초까지 가능한데 60초로 하드코딩되어 있으면 그 한도와 무관하게
+// 이 라우트만 강제 종료됨 — AI 상담 스크립트 라우트에서 이미 겪은 것과 같은 버그 패턴
+// (2026-07-21 코드 재검토로 발견). PDF 설명자료 생성은 3개 그룹을 병렬 Haiku 호출로
+// 나눠 처리하도록 설계돼 있지만, 트래픽이나 API 지연이 겹치면 60초를 넘길 수 있어 240으로 상향.
+export const maxDuration = 240
 
 const DISCLAIMER = '\n\n【필수 고지문】\n본 자료는 업로드된 자료를 바탕으로 AI가 작성한 참고용 설명자료입니다. 실제 보장 여부, 보험금 지급 여부, 가입 가능 여부는 해당 보험회사의 약관, 인수기준, 심사결과에 따라 달라질 수 있습니다.'
 

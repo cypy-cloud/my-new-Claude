@@ -13,6 +13,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next({ request })
   }
 
+  // 포트원(PortOne) 웹훅도 서버-to-서버 호출이라 브라우저 세션 쿠키가 없다 — 위 크론과
+  // 동일한 이유로 세션 체크를 건너뛰고 라우트 자체의 서명 검증에 맡긴다. 이 예외가 없으면
+  // 웹훅 요청이 매번 /login으로 리다이렉트되어 핸들러가 실행되지 않는다
+  // (2026-07-21 코드 재검토로 발견 — push-notify 크론과 동일한 버그 패턴).
+  if (request.nextUrl.pathname.startsWith('/api/billing/webhook')) {
+    return NextResponse.next({ request })
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(

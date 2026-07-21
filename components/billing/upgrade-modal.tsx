@@ -39,7 +39,10 @@ export function UpgradeModal({ open, onClose, featureLabel, currentPlanId, recom
         return
       }
       onClose()
-      router.push(data.checkoutUrl)
+      // KPN MID가 정기결제(빌링키) 전용이라 일반(단건)결제가 지원되지 않아
+      // (2026-07-21 확인), data.checkoutUrl(일반결제 체크아웃) 대신 자동결제 카드
+      // 등록 방식의 체크아웃으로 보낸다 (upgrade-button.tsx와 동일한 수정).
+      router.push(`/billing/checkout/billing-key?planId=${recommendedPlanId}`)
     } catch {
       toast.error('네트워크 오류가 발생했습니다')
     } finally {

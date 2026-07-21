@@ -148,7 +148,9 @@ function DowngradeConfirm({ plan }: { plan: PlanId }) {
   async function confirm() {
     setLoading(true)
     try {
-      const res = await fetch("/api/billing/checkout", {
+      // 다운그레이드는 결제가 필요 없는 예약 변경이라 결제 세션을 만드는
+      // /api/billing/checkout이 아니라 전용 엔드포인트를 바로 호출한다.
+      const res = await fetch("/api/billing/downgrade", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ planId: plan }),
@@ -158,7 +160,8 @@ function DowngradeConfirm({ plan }: { plan: PlanId }) {
         toast.error(data.error ?? "변경에 실패했습니다")
         return
       }
-      router.push(data.checkoutUrl)
+      toast.success(data.message ?? "플랜이 변경되었습니다")
+      router.push("/billing")
     } finally {
       setLoading(false)
     }

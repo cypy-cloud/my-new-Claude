@@ -36,56 +36,65 @@ async function handleCheck(request: NextRequest) {
   let expiredCount = 0
   let renewedCount = 0
   for (const row of expired ?? []) {
-    const planId = row.plan_type as PlanId
-    const billingKey = row.profiles?.portone_billing_key
-    const customerId = row.profiles?.portone_customer_id
+    // 사용자 한 명 처리 중 예외가 나도 나머지 사용자 처리가 통째로 중단되지 않도록 격리
+    try {
+      const planId = row.plan_type as PlanId
+      const billingKey = row.profiles?.portone_billing_key
+      const customerId = row.profiles?.portone_customer_id
 
-    if (billingKey && customerId) {
-      // 할인코드로 가입한 계정이 아직 할인 회차(최초 3개월)가 남아있고, 가입 당시와
-      // 같은 플랜을 유지 중이면 갱신 결제에도 동일 할인율을 적용한다.
-      const activeRedemption = await getActiveRedemption(row.user_id)
-      const applyDiscount = activeRedemption && activeRedemption.planId === planId
-      const amount = applyDiscount
-        ? Math.round(PLANS[planId].price * (1 - activeRedemption!.discountPercent / 100))
-        : PLANS[planId].price
-      const paymentId = `renew${row.user_id.replace(/-/g, '').slice(0, 10)}${Date.now()}`
-      const result = await provider.chargeBillingKey({
-        billingKey,
-        customerId,
-        amount,
-        paymentId,
-        orderName: `FP AI Assistant ${PLANS[planId].name} 플랜 정기결제 (월간)`,
-      })
-
-      if (result.success) {
-        const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate())
-
-        await activateSubscription({
-          userId: row.user_id,
-          planType: planId,
-          provider: 'portone',
-          providerCustomerId: customerId,
-          billingInterval: 'month',
-          periodEnd,
-        })
-        await recordPayment({
-          userId: row.user_id,
+      if (billingKey && customerId) {
+        // 할인코드로 가입한 계정이 아직 할인 회차(최초 3개월)가 남아있고, 가입 당시와
+        // 같은 플랜을 유지 중이면 갱신 결제에도 동일 할인율을 적용한다.
+        const activeRedemption = await getActiveRedemption(row.user_id)
+        const applyDiscount = activeRedemption && activeRedemption.planId === planId
+        const amount = applyDiscount
+          ? Math.round(PLANS[planId].price * (1 - activeRedemption!.discountPercent / 100))
+          : PLANS[planId].price
+        const paymentId = `renew${row.user_id.replace(/-/g, '').slice(0, 10)}${Date.now()}`
+        const result = await provider.chargeBillingKey({
+          billingKey,
+          customerId,
           amount,
-          provider: 'portone',
-          providerTxId: result.paymentId ?? paymentId,
-          status: 'succeeded',
+          paymentId,
+          orderName: `FP AI Assistant ${PLANS[planId].name} 플랜 정기결제 (월간)`,
         })
-        if (applyDiscount) {
-          await incrementRedemptionUsage(row.user_id).catch(() => null)
-        }
-        renewedCount++
-        continue
-      }
-    }
 
-    await expireSubscription(row.user_id)
-    await notifyPlanExpired(row.user_id, PLAN_LABELS[planId] ?? planId)
-    expiredCount++
+        if (result.success) {
+          // 청구 성공 직후 곧바로 결제 기록부터 남긴다 — activateSubscription()이
+          // 이후 실패해도 "돈은 빠졌는데 기록이 없는" 상태가 되지 않도록 함
+          // (신규 구독 결제와 동일한 원칙, 2026-07-21 실결제 테스트 중 발견된
+          // 이중 청구 사고 재발 방지 — 이 크론은 그 수정이 누락되어 있었음)
+          await recordPayment({
+            userId: row.user_id,
+            amount,
+            provider: 'portone',
+            providerTxId: result.paymentId ?? paymentId,
+            status: 'succeeded',
+          })
+
+          const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate())
+          await activateSubscription({
+            userId: row.user_id,
+            planType: planId,
+            provider: 'portone',
+            providerCustomerId: customerId,
+            billingInterval: 'month',
+            periodEnd,
+          })
+          if (applyDiscount) {
+            await incrementRedemptionUsage(row.user_id).catch(() => null)
+          }
+          renewedCount++
+          continue
+        }
+      }
+
+      await expireSubscription(row.user_id)
+      await notifyPlanExpired(row.user_id, PLAN_LABELS[planId] ?? planId)
+      expiredCount++
+    } catch (e) {
+      console.error(`[subscription-check] user ${row.user_id} 처리 실패:`, e)
+    }
   }
 
   // 2. 3일 이내 만료 예정인 유료 구독 → 재결제 리마인더 (하루 1회만 발송, notifyRenewalReminder 내부에서 중복 방지)
