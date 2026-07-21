@@ -417,6 +417,41 @@
       **[x] 마이그레이션 실행 완료 (2026-07-17)** — Supabase SQL Editor에서 직접 실행,
       "Success. No rows returned" 확인. 캡이 실제로 적용되는 상태.
 - [x] 백업 로그 시스템
+- [x] **스키마-타입 정합성 감사 (2026-07-21)** — 59개 마이그레이션 누적 상태를 `types/database.ts`와
+      대조 + `(supabase as any)` 캐스팅 쿼리 95개 파일 전수조사, 서브에이전트 2개 병렬 실행.
+      **[가장 심각, 즉시 수정] 보안 구멍**: `profiles`의 "본인 프로필 수정" RLS 정책이 행
+      단위로만 걸려있고 컬럼 단위 제한이 없어서, 로그인한 사용자가 Supabase REST API를
+      직접 호출해 자기 `plan_type`을 premium으로, `role`을 admin으로 바꾸는 게 가능한
+      상태였음. `subscriptions`/`payments`/`user_restrictions`/`admin_permissions`/
+      `subscription_events`/`notifications`/`error_logs`/`backup_logs`/`safety_checks`의
+      "service_*" 이름 정책들도 실제로는 `using(true)`로 전체 공개돼 있어 동일한 문제
+      (서비스롤은 RLS를 애초에 우회하므로 이 정책들은 서비스롤엔 무의미하고 일반 사용자에게만
+      구멍이었음). `supabase/migrations/060_security_hardening.sql`(신규)로 (1) profiles
+      민감 컬럼(plan_type/role/status/구독·카드 관련) 변경을 서비스롤 외에는 트리거로
+      강제 차단, (2) 위 9개 테이블의 service_* 정책을 `discount_codes`와 동일하게
+      `using(false)`로 수정. **[사용자 액션 필요] Supabase SQL Editor에서 실행 필요,
+      실행 전까지는 이 취약점이 그대로 열려있음.**
+      **실제 버그 4개**: ①`app/api/admin/storage/route.ts`가 존재한 적 없는 `documents`
+      테이블을 조회해 저장공간 관리 화면이 항상 0건으로 표시되던 문제 → 실제 테이블
+      `uploaded_files`로 수정(MB→bytes 변환 포함) ②`app/api/admin/report/route.ts`도
+      존재하지 않는 `pdf_files` 테이블 조회로 저장공간 추이 차트가 항상 비어있던 문제 →
+      동일하게 수정 ③`app/api/admin/users/route.ts`가 존재하지 않는 `branch_name`
+      컬럼(실제는 `branch`)을 조회해 관리자 회원 목록 API가 500 에러를 내던 문제 → 수정
+      ④`lib/ai-core/company-profile.ts`가 존재한 적 없는 `profiles.insurance_company`
+      컬럼을 조회해 보험사별 프롬프트 커스터마이징 기능이 한 번도 동작한 적이 없었던 문제
+      → 설정 페이지에서 실제로 저장되는 `profiles.company`로 교체해 정상 작동하도록 수정
+      ⑤`app/api/admin/stats/route.ts`의 "이탈 위험 사용자" 위젯도 존재하지 않는
+      `user_id`/`name` 컬럼(실제는 `id`/`full_name`) 조회로 항상 빈 목록이었음 → 수정.
+      `types/database.ts`의 profiles 타입에 남아있던 존재한 적 없는 3개 필드
+      (`branch_name`, `is_active`, `insurance_company`)도 제거.
+      **확인했지만 손대지 않은 것**: 회원가입 폼의 "주력 보험사" 선택값이 `handle_new_user()`
+      트리거에서 애초에 저장되지 않고 버려지는 문제(설정 페이지의 `company` 필드로 대체
+      입력 가능해 당장 기능은 살아있음, 시연회 이후 정리), `subscriptions` 테이블에 001의
+      구식 컬럼(`plan_id` 등)이 032 이후에도 안 지워지고 남아있는 문제(기본값 덕에 현재는
+      실제 버그로 이어지지 않음), `profiles!inner(...)` PostgREST 임베드가 실제로 FK 없이도
+      동작하는지 여부(오늘 실결제 테스트에서 관련 어드민 화면이 정상 작동한 것으로 미루어
+      문제없어 보이나 마이그레이션 파일만으로는 완전히 확인 불가). 타입체크·빌드 통과 확인,
+      main 배포 완료.
 
 ---
 

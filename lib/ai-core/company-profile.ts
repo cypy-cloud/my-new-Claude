@@ -19,9 +19,12 @@ export const EMPTY_CONTEXT: CompanyPromptContext = {
   disclaimerTemplate: null,
 }
 
-// Looks up the user's insurance company (free-text profiles.insurance_company),
-// then the matching active company_prompt_profiles row for this feature.
+// Looks up the user's insurance company (free-text profiles.company — 설정 페이지의
+// "회사" 필드), then the matching active company_prompt_profiles row for this feature.
 // Falls back to EMPTY_CONTEXT (base prompt only) when no match is found.
+// (2026-07-21 수정: profiles.insurance_company은 실제로 존재한 적 없는 컬럼이라
+// 이 조회가 항상 조용히 실패해서 보험사별 프롬프트 커스터마이징 기능이 한 번도
+// 동작한 적이 없었음 — 실제 저장/수정되는 컬럼인 profiles.company로 교체)
 export async function resolveCompanyContext(
   userId: string | undefined,
   feature: AiCoreFeature
@@ -34,11 +37,11 @@ export async function resolveCompanyContext(
 
     const { data: profile } = await db
       .from('profiles')
-      .select('insurance_company')
+      .select('company')
       .eq('id', userId)
       .maybeSingle()
 
-    const companyName = (profile?.insurance_company as string | undefined)?.trim()
+    const companyName = (profile?.company as string | undefined)?.trim()
     if (!companyName) return EMPTY_CONTEXT
 
     const { data: company } = await db

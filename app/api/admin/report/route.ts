@@ -65,17 +65,18 @@ export async function GET(request: NextRequest) {
     requestMonthly[month] = (requestMonthly[month] ?? 0) + 1
   }
 
-  // 3. 저장공간 추이 (pdf_files)
+  // 3. 저장공간 추이 (uploaded_files) — pdf_files 테이블은 존재한 적이 없어
+  // 이 집계가 항상 빈 값만 나오고 있었음(2026-07-21 스키마 재검토로 발견).
   const { data: pdfFiles } = await (supabase as any)
-    .from('pdf_files')
-    .select('file_size, created_at')
+    .from('uploaded_files')
+    .select('file_size_mb, created_at')
     .gte('created_at', periodStart)
 
   const storageMonthly: Record<string, number> = {}
   for (const f of pdfFiles ?? []) {
     const month = f.created_at?.slice(0, 7)
     if (month) {
-      storageMonthly[month] = (storageMonthly[month] ?? 0) + (f.file_size ?? 0)
+      storageMonthly[month] = (storageMonthly[month] ?? 0) + Math.round((f.file_size_mb ?? 0) * 1024 * 1024)
     }
   }
 

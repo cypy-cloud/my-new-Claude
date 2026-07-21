@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
   let query = (admin as any)
     .from('profiles')
-    .select('id, full_name, email, plan_type, role, status, created_at, company_name, branch_name', { count: 'exact' })
+    .select('id, full_name, email, plan_type, role, status, created_at, company_name, branch', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1)
 

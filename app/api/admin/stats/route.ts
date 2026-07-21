@@ -148,13 +148,13 @@ export async function GET() {
 
   const { data: paidProfiles } = await (supabase as any)
     .from('profiles')
-    .select('user_id, name, email, plan_type, created_at')
+    .select('id, full_name, email, plan_type, created_at')
     .neq('plan_type', 'free')
     .eq('status', 'active')
     .limit(200)
 
   const churnRiskUsers = (paidProfiles ?? [])
-    .filter((p: { user_id: string }) => !recentActiveSet.has(p.user_id))
+    .filter((p: { id: string }) => !recentActiveSet.has(p.id))
     .slice(0, 10)
 
   // ── 11. 최근 이벤트 활동 ────────────────────────────────────────────────────
@@ -207,10 +207,10 @@ export async function GET() {
     },
     planDistribution: planCounts,
     churnRiskUsers: churnRiskUsers.map((p: {
-      user_id: string; name: string | null; email: string; plan_type: string; created_at: string
+      id: string; full_name: string | null; email: string; plan_type: string; created_at: string
     }) => ({
-      userId: p.user_id,
-      name: p.name,
+      userId: p.id,
+      name: p.full_name,
       email: p.email,
       planType: p.plan_type,
       joinedAt: p.created_at,

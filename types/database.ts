@@ -11,9 +11,7 @@ export type Database = {
           avatar_url: string | null
           phone: string | null
           company_name: string | null
-          branch_name: string | null
           role: 'user' | 'manager' | 'admin' | 'super_admin'
-          is_active: boolean
           created_at: string
           updated_at: string
           team_id: string | null
@@ -41,9 +39,7 @@ export type Database = {
           avatar_url?: string | null
           phone?: string | null
           company_name?: string | null
-          branch_name?: string | null
           role?: 'user' | 'manager' | 'admin' | 'super_admin'
-          is_active?: boolean
           created_at?: string
           updated_at?: string
           team_id?: string | null

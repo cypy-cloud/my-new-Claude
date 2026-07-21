@@ -22,7 +22,7 @@ interface UserRow {
   status: string
   created_at: string
   company_name: string | null
-  branch_name: string | null
+  branch: string | null
 }
 
 interface UsageRow {
