@@ -291,13 +291,24 @@ const FALLBACK_PROMPTS: Record<AiCoreFeature, PromptTemplate> = {
   },
 }
 
+// prompt_versions.feature_type은 마이그레이션 015 이후로 'sms'/'script'/'pdf_explanation'
+// 레거시 이름만 허용하는 DB 제약(check constraint)이 걸려있어, AiCoreFeature의
+// 'sms_message'/'sales_script' 값을 그대로 조회하면 절대 매칭되지 않는다 — 그 결과
+// 관리자 "AI 프롬프트 버전 관리" 화면에서 문자/스크립트 버전을 아무리 활성화해도 실제
+// 생성에는 전혀 반영되지 않고 항상 아래 fallback만 쓰이고 있었다(2026-07-22 발견).
+// DB 제약/기존 데이터는 그대로 두고 조회 시점에만 이름을 매핑해서 연결한다.
+const DB_FEATURE_TYPE: Partial<Record<AiCoreFeature, string>> = {
+  sms_message: 'sms',
+  sales_script: 'script',
+}
+
 export async function loadPrompt(feature: AiCoreFeature): Promise<PromptTemplate> {
   try {
     const supabase = await createClient()
     const { data } = await (supabase as any)
       .from('prompt_versions')
       .select('system_prompt, user_prompt_template, version')
-      .eq('feature_type', feature)
+      .eq('feature_type', DB_FEATURE_TYPE[feature] ?? feature)
       .eq('is_active', true)
       .maybeSingle()
 
