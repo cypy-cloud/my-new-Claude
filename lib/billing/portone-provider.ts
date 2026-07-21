@@ -160,13 +160,11 @@ export class PortOneProvider implements BillingProviderAdapter {
       method: 'POST',
       headers: { Authorization: this.authHeader(), 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        payment: {
-          billingKey: params.billingKey,
-          orderName: params.orderName,
-          customer: { id: params.customerId },
-          amount: { total: params.amount },
-          currency: 'KRW',
-        },
+        billingKey: params.billingKey,
+        orderName: params.orderName,
+        customer: { id: params.customerId },
+        amount: { total: params.amount },
+        currency: 'KRW',
       }),
     })
     const data = await res.json()

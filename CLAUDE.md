@@ -594,6 +594,22 @@
      구매도 대부분 이 경로를 타게 됨.
    - 타입체크·빌드 통과 확인, main 배포 완료. **[사용자 확인 필요]** 실제 화면에서 새
      플랜 가입 플로우(카드 등록 → 즉시 결제) 테스트 필요.
+   **버그 수정(2026-07-21) — 위 신규 구독 실결제 테스트 중 발견: `chargeBillingKey()` 요청
+   포맷 오류로 카드 등록은 성공하나 즉시 청구가 항상 실패.** 실사용자가 기본 플랜(할인코드
+   YM2026 적용, ₩4,720)으로 실제 테스트한 결과 카드 등록(KB국민카드)까지는 성공했으나
+   직후 청구 단계에서 `Invalid value for: body Reason: missing required field "billingKey"`
+   에러 발생. 원인은 `lib/billing/portone-provider.ts`의 `chargeBillingKey()`가 포트원 V2
+   빌링키 결제 API(`POST /payments/{paymentId}/billing-key`)에 보내는 요청 본문을
+   `{ payment: { billingKey, orderName, customer, amount, currency } }`처럼 `payment` 객체로
+   한 번 더 감싸서 보내고 있었음 — 이 API는 `billingKey`/`orderName`/`customer`/`amount`/
+   `currency`를 **최상위 필드**로 요구하므로, 최상위엔 `billingKey`가 없다는 에러가 난 것.
+   `payment` 래핑을 제거해 필드를 최상위로 평탄화하는 것으로 수정. 이 함수는 신규 구독
+   결제(`app/api/billing/subscribe/route.ts`)뿐 아니라 크레딧 구매(`app/api/billing/credits/
+   charge-billing-key/route.ts`)와 매달 자동갱신 크론(`app/api/cron/subscription-check/
+   route.ts`)에서도 공유해서 쓰는 함수라, 오늘 라이브 MID 연동 전까지는 실제로 청구가
+   실행된 적이 없어 이 버그가 지금까지 발견되지 못하고 있었던 것으로 보임 — 세 호출부
+   모두 이번 수정으로 함께 해결됨. 타입체크·빌드 통과 확인. **[사용자 확인 필요]** 방금
+   등록된 카드(KB국민카드)로 재결제 시도 시 정상 청구되는지 재테스트 필요.
    **[사용자 액션 필요] 정산준비 가맹점 → 정산 가맹점 전환**: KPN 메일에 "가입하신 보증보험
    서류를 회신 메일로 보내면 확인 후 정산 가맹점으로 전환"이라는 안내가 있어 별도로 서류 제출
    필요. 카카오페이·토스페이 추가 연동 시 신용카드(인증)으로 추가 카드사 심사가 별도로 필요하다는
