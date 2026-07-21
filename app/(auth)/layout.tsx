@@ -16,7 +16,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         {children}
       </main>
       <footer className="py-4 text-center text-sm text-blue-300">
-        <p>© 2025 FP AI Assistant · 보험설계사 전용 AI 서비스</p>
+        <p>© 2026 FP AI Assistant · 보험설계사 전용 AI 서비스</p>
       </footer>
     </div>
   )
