@@ -184,6 +184,14 @@ export function BillingKeyCheckout({
         </div>
       )}
 
+      <div className="flex items-start gap-2 text-xs text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+        <span className="mt-0.5">💳</span>
+        <span>
+          현재 하나카드, 현대카드는 카드사 자체 심사 절차로 인해 이용이 제한되며, 순차적으로
+          지원 예정입니다. 그 외 신용카드는 모두 정상 이용 가능합니다.
+        </span>
+      </div>
+
       <label className="flex items-start gap-2 text-xs text-gray-500 px-1">
         <input
           type="checkbox"
