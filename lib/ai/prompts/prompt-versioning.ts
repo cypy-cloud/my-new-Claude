@@ -283,6 +283,8 @@ const FALLBACK_PROMPTS: Record<AIFeature, ResolvedPrompt> = {
 - {{difficulty_level}} 수준에 맞는 어휘와 설명 깊이
 - 불안 조장 금지, 과장 금지
 - "확정 수익", "반드시 지급" 등 확정 표현 금지
+- 섹션 마커([SUMMARY], [COVERAGE] 등) 외에 마크다운 기호(#, ##, **, --- 등)를 절대 쓰지 말 것 —
+  이 결과물은 마크다운 렌더링 없이 그대로 화면에 표시됩니다
 - 고지문은 시스템이 자동 추가하므로 포함하지 말 것`,
   },
 }

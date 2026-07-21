@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Sparkles, Loader2, Plus, CheckCircle2, Lock, ChevronDown, ChevronUp } from "lucide-react"
+import { Sparkles, Loader2, Plus, CheckCircle2, Lock, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 import { PROMPT_FEATURE_LABELS, type PromptFeatureType } from "@/types"
 
@@ -117,6 +117,17 @@ export function AdminPrompts({ isSuperAdmin }: { isSuperAdmin: boolean }) {
           </button>
         ))}
       </div>
+
+      {featureFilter === 'script' && (
+        <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
+          <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <span>
+            AI 상담 스크립트 생성은 품질 보호를 위해 프롬프트가 <code className="bg-amber-100 px-1 rounded">app/api/ai/script/route.ts</code>
+            코드에 직접 고정되어 있습니다. 아래에서 새 버전을 만들거나 "활성화"해도 실제 생성 결과에는 반영되지 않습니다 —
+            버전 기록·비교용으로만 사용해주세요. 실제로 반영하려면 개발자에게 코드 수정을 요청해야 합니다.
+          </span>
+        </div>
+      )}
 
       {isSuperAdmin && (
         <Card className="border-0 shadow-sm">
