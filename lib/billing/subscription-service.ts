@@ -83,10 +83,13 @@ export async function activateSubscription(params: {
 
   if (error) throw new Error(`구독 활성화 실패: ${error.message}`)
 
-  // profiles.plan_type 동기화
+  // profiles.plan_type 동기화 — 실제 결제로 구독이 활성화된 경우이므로, 이용후기
+  // 이벤트로 받은 무료체험(trial_expires_at)이 남아있어도 지워준다. 안 지우면
+  // review-trial-expire 크론이 며칠 뒤 이 사용자를 결제 여부와 무관하게 무료로
+  // 강제 전환시켜버림 (2026-07-22 코드 리뷰로 발견).
   await (admin as any)
     .from('profiles')
-    .update({ plan_type: params.planType })
+    .update({ plan_type: params.planType, trial_expires_at: null })
     .eq('id', params.userId)
 
   return rowToSubscription(data)
@@ -122,13 +125,15 @@ export async function changePlan(params: {
   })
 
   if (isUpgrade) {
-    // 업그레이드: 즉시 적용, 예약 초기화
+    // 업그레이드: 즉시 적용, 예약 초기화. trial_expires_at도 함께 정리
+    // (activateSubscription과 동일한 이유 — 실제 결제가 이용후기 체험을 덮어씀)
     await (admin as any)
       .from('profiles')
       .update({
         plan_type: toPlan,
         scheduled_plan_type: null,
         scheduled_plan_date: null,
+        trial_expires_at: null,
       })
       .eq('id', userId)
 

@@ -17,9 +17,14 @@ function initVapid() {
 }
 
 export async function GET(req: Request) {
-  // Vercel cron 인증
+  // Vercel cron 인증 — CRON_SECRET 자체가 설정 안 됐으면(undefined) "Bearer undefined"
+  // 문자열로 우회될 수 있으니 먼저 존재 여부부터 확인한다 (다른 크론 라우트와 동일 패턴).
+  const secret = process.env.CRON_SECRET
+  if (!secret) {
+    return NextResponse.json({ error: "CRON_SECRET이 설정되지 않았습니다" }, { status: 503 })
+  }
   const authHeader = req.headers.get("authorization")
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (authHeader !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 

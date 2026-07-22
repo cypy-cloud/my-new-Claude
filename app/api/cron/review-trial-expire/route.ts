@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyPlanExpired } from '@/lib/notifications/create-notification'
 import { PLAN_LABELS } from '@/lib/subscription/plans'
+import { REVIEW_TRIAL_PLAN } from '@/lib/subscription/review-trial'
 
 // Vercel Cron이 매일 호출한다. Authorization: Bearer <CRON_SECRET> 헤더로 인증.
 // 이용후기 이벤트로 지급된 무료체험(profiles.trial_expires_at)이 만료된 사용자를
@@ -30,6 +31,18 @@ async function handleExpire(request: NextRequest) {
   let expiredCount = 0
   for (const row of expired ?? []) {
     try {
+      // activateSubscription/changePlan(업그레이드)이 실제 결제 시 trial_expires_at을
+      // 지우도록 되어 있지만, 혹시 놓친 경로가 있을 경우를 대비해 plan_type이 여전히
+      // 체험 플랜(REVIEW_TRIAL_PLAN)일 때만 free로 되돌린다 — 실제 결제로 다른 플랜을
+      // 쓰고 있는 사용자를 잘못 강등시키지 않기 위한 안전장치.
+      if (row.plan_type !== REVIEW_TRIAL_PLAN) {
+        await (admin as any)
+          .from('profiles')
+          .update({ trial_expires_at: null })
+          .eq('id', row.id)
+        continue
+      }
+
       await (admin as any)
         .from('profiles')
         .update({ plan_type: 'free', trial_expires_at: null })

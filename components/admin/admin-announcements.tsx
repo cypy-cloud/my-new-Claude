@@ -46,6 +46,15 @@ async function sendPushNotification(_announcementId: string, _method: 'email' | 
   console.log('[Push placeholder] Push notification queued for', _method)
 }
 
+// DB에는 UTC ISO로 저장돼있는데 .slice(0,16)으로 그대로 datetime-local에 넣으면
+// 로컬(KST) 시각으로 오인돼 9시간이 밀려 보이고, 그 상태로 다시 저장하면 실제
+// 시각이 편집할 때마다 계속 어긋난다 — 로컬 타임존 기준으로 변환해서 넣어야 한다.
+function toLocalDatetimeInputValue(iso: string): string {
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
 export function AdminAnnouncements() {
   const [list, setList] = useState<Announcement[]>([])
   const [loading, setLoading] = useState(true)
@@ -76,8 +85,8 @@ export function AdminAnnouncements() {
       title: a.title, content: a.content, type: a.type,
       targetPlan: a.target_plan, targetRole: a.target_role,
       isPinned: a.is_pinned, isActive: a.is_active,
-      startsAt: a.starts_at ? a.starts_at.slice(0, 16) : '',
-      endsAt: a.ends_at ? a.ends_at.slice(0, 16) : '',
+      startsAt: a.starts_at ? toLocalDatetimeInputValue(a.starts_at) : '',
+      endsAt: a.ends_at ? toLocalDatetimeInputValue(a.ends_at) : '',
     })
     setEditId(a.id)
     setShowForm(true)
@@ -247,7 +256,10 @@ export function AdminAnnouncements() {
             {/* 푸시 알림 placeholder */}
             <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-500">
               <Bell className="h-3.5 w-3.5 shrink-0" />
-              이메일/문자 푸시 알림 기능은 준비 중입니다. 공지 저장 시 앱 내 알림이 자동 발송됩니다.
+              이메일/문자 푸시 알림 기능은 준비 중입니다.{' '}
+              {editId
+                ? '앱 내 알림은 신규 등록 시에만 발송되며, 수정 시에는 다시 발송되지 않습니다.'
+                : '공지 등록 시 대상(요금제/역할)에 맞는 사용자에게 앱 내 알림이 자동 발송됩니다.'}
             </div>
 
             <div className="flex justify-end gap-2">

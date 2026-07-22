@@ -3,8 +3,6 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Loader2 } from "lucide-react"
-import { toast } from "sonner"
 import { clientTrackUpgradeClick } from "@/lib/analytics/client-track"
 import { PLANS, type PlanId } from "@/lib/subscription/plans"
 
@@ -53,7 +51,6 @@ function buildUsageSummary(
 }
 
 export function UpgradeButton({ planId, isCurrent, isDowngrade, currentPlanId, currentUsage }: Props) {
-  const [loading, setLoading] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const router = useRouter()
 
@@ -88,28 +85,12 @@ export function UpgradeButton({ planId, isCurrent, isDowngrade, currentPlanId, c
     proceed()
   }
 
-  async function proceed() {
+  function proceed() {
     setShowConfirm(false)
-    setLoading(true)
-    try {
-      const res = await fetch('/api/billing/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId, interval: 'month' }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        toast.error(data.error ?? '결제 준비에 실패했습니다')
-        return
-      }
-      // KPN MID가 정기결제(빌링키) 전용이라 일반(단건)결제가 지원되지 않아(2026-07-21 확인),
-      // data.checkoutUrl(일반결제 체크아웃) 대신 자동결제 카드 등록 방식의 체크아웃으로 보낸다.
-      router.push(`/billing/checkout/billing-key?planId=${planId}`)
-    } catch {
-      toast.error('네트워크 오류가 발생했습니다')
-    } finally {
-      setLoading(false)
-    }
+    // KPN MID가 정기결제(빌링키) 전용이라 일반(단건)결제가 지원되지 않아(2026-07-21 확인),
+    // /api/billing/checkout(일반결제 세션 생성용, 여기선 실제로 쓰이지 않던 호출이었음 —
+    // 2026-07-22 정리)을 거치지 않고 바로 자동결제 카드 등록 체크아웃으로 이동한다.
+    router.push(`/billing/checkout/billing-key?planId=${planId}`)
   }
 
   return (
@@ -117,10 +98,9 @@ export function UpgradeButton({ planId, isCurrent, isDowngrade, currentPlanId, c
       <Button
         className="w-full mt-4"
         variant={isCurrent || isDowngrade ? "outline" : "default"}
-        disabled={isCurrent || loading}
+        disabled={isCurrent}
         onClick={handleClick}
       >
-        {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
         {label}
       </Button>
 
@@ -152,9 +132,7 @@ export function UpgradeButton({ planId, isCurrent, isDowngrade, currentPlanId, c
               <Button
                 className="flex-1 bg-[#1e3a5f] text-white hover:bg-[#162d4a]"
                 onClick={proceed}
-                disabled={loading}
               >
-                {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 지금 업그레이드
               </Button>
             </div>

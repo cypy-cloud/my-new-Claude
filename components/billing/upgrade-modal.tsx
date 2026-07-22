@@ -1,12 +1,10 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Zap, ArrowRight, X, Loader2 } from "lucide-react"
+import { Zap, ArrowRight, X } from "lucide-react"
 import { PLANS, PLAN_LABELS, type PlanId } from "@/lib/subscription/plans"
 import { clientTrackUpgradeClick } from "@/lib/analytics/client-track"
-import { toast } from "sonner"
 
 interface Props {
   open: boolean
@@ -18,36 +16,19 @@ interface Props {
 
 export function UpgradeModal({ open, onClose, featureLabel, currentPlanId, recommendedPlanId }: Props) {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
 
   if (!open) return null
 
   const recommended = PLANS[recommendedPlanId]
 
-  async function handleUpgrade() {
+  function handleUpgrade() {
     clientTrackUpgradeClick({ targetPlan: recommendedPlanId, source: 'limit_modal' })
-    setLoading(true)
-    try {
-      const res = await fetch('/api/billing/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId: recommendedPlanId }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        toast.error(data.error ?? '결제 준비에 실패했습니다')
-        return
-      }
-      onClose()
-      // KPN MID가 정기결제(빌링키) 전용이라 일반(단건)결제가 지원되지 않아
-      // (2026-07-21 확인), data.checkoutUrl(일반결제 체크아웃) 대신 자동결제 카드
-      // 등록 방식의 체크아웃으로 보낸다 (upgrade-button.tsx와 동일한 수정).
-      router.push(`/billing/checkout/billing-key?planId=${recommendedPlanId}`)
-    } catch {
-      toast.error('네트워크 오류가 발생했습니다')
-    } finally {
-      setLoading(false)
-    }
+    onClose()
+    // KPN MID가 정기결제(빌링키) 전용이라 일반(단건)결제가 지원되지 않아
+    // (2026-07-21 확인), /api/billing/checkout(일반결제 세션 생성용, 여기선 실제로
+    // 쓰이지 않던 호출이었음 — 2026-07-22 정리) 대신 자동결제 카드 등록 방식의
+    // 체크아웃으로 바로 보낸다 (upgrade-button.tsx와 동일한 수정).
+    router.push(`/billing/checkout/billing-key?planId=${recommendedPlanId}`)
   }
 
   function handleViewPlans() {
@@ -101,13 +82,9 @@ export function UpgradeModal({ open, onClose, featureLabel, currentPlanId, recom
         <div className="flex flex-col gap-2">
           <Button
             onClick={handleUpgrade}
-            disabled={loading}
             className="w-full bg-[#1e3a5f] hover:bg-[#162d4a] text-white gap-2"
           >
-            {loading
-              ? <><Loader2 className="h-4 w-4 animate-spin" /> 처리 중...</>
-              : <>{PLAN_LABELS[recommendedPlanId]} 플랜으로 업그레이드 <ArrowRight className="h-4 w-4" /></>
-            }
+            {PLAN_LABELS[recommendedPlanId]} 플랜으로 업그레이드 <ArrowRight className="h-4 w-4" />
           </Button>
           <button
             onClick={handleViewPlans}

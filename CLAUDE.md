@@ -452,6 +452,78 @@
       동작하는지 여부(오늘 실결제 테스트에서 관련 어드민 화면이 정상 작동한 것으로 미루어
       문제없어 보이나 마이그레이션 파일만으로는 완전히 확인 불가). 타입체크·빌드 통과 확인,
       main 배포 완료.
+- [x] **카카오(Kakao) 소셜 로그인 (2026-07-22 새벽)** — `components/auth/kakao-login-button.tsx`
+      (`supabase.auth.signInWithOAuth({ provider: "kakao" })`) + 이메일 가입과 동일한
+      약관 동의를 소셜 가입자도 거치도록 `app/auth/complete-profile` 플로우 추가
+      (`app/auth/callback/route.ts`가 최초 로그인 시 이곳으로 보냄,
+      `app/(dashboard)/layout.tsx`가 `terms_agreed_at` 없는 사용자를 대시보드 진입 시
+      다시 이곳으로 게이트). 카카오 콘솔 설정: Redirect URI는 카카오 로그인 메뉴가 아니라
+      "앱 → 플랫폼 키"에 있고, 닉네임·프로필사진을 "선택 동의"로 설정해야 KOE205 에러가
+      해결됨(둘 다 "사용 안함"이면 발생). 웹 도메인은 "제품 링크 관리"에 별도 등록 필요.
+      **버그 수정(2026-07-22)**: 이미 약관 동의를 마친 사용자가 `/auth/complete-profile`
+      URL로 직접(재)방문하면 마케팅 수신동의 등 폼이 항상 미체크로 초기화된 채 열려서,
+      재제출 시 기존 동의값이 조용히 덮어써질 수 있었음 — 페이지에서 `terms_agreed_at`
+      존재 여부를 먼저 확인해 이미 완료된 사용자는 통과시키도록 수정.
+- [x] **관리자 사이드바 모바일/데스크톱 분리 (2026-07-22 새벽)** — `app/(admin)/layout.tsx`가
+      반응형 처리 없이 사이드바를 그대로 렌더링해 모바일에서 항상 펼쳐진 채 겹치던 문제 →
+      `components/admin/admin-sidebar.tsx`(모바일 오버레이/데스크톱 고정 분리) +
+      `components/admin/admin-shell.tsx`로 추출. **버그 수정**: 데스크톱에서 `position:fixed`
+      사이드바에 `left-0`이 없어서 부모의 `md:pl-64` 패딩을 그대로 이어받아 화면 오른쪽으로
+      256px 밀려나 콘텐츠와 겹치던 문제 → `md:left-0` 추가로 해결.
+- [x] **이용후기 이벤트 (2026-07-22 새벽)** — 무료 사용자가 [피드백] 메뉴에서 200자 이상
+      이용후기(신규 `category='review'`, ⭐ 이용후기)를 작성하면, 관리자가 검토 후 버튼 한 번
+      으로 기본 플랜을 7일간 무료체험시켜줌(계정당 1회, `profiles.trial_expires_at`/
+      `review_trial_granted`, `feedback.trial_granted`). `lib/subscription/review-trial.ts`
+      (기간 7일·최소 200자·대상 플랜 basic 상수), `app/api/admin/feedback/grant-trial/route.ts`
+      (지급), `app/api/cron/review-trial-expire/route.ts`(매일 새벽 2시, 만료 시 free로
+      복귀 — 결제 없는 프로모션이라 `subscriptions`/`payments` 테이블은 건드리지 않고 실결제
+      구독 크론과 완전히 분리). 공지사항으로 안내 배너도 등록함(무료 플랜 전용 노출).
+      **[x] 마이그레이션 실행 완료** — `061_review_trial.sql`(profiles/feedback 컬럼 추가),
+      `062_feedback_review_category.sql`(feedback_category_check에 'review' 추가) 둘 다
+      2026-07-22 새벽 SQL Editor에서 직접 실행, "Success" 확인함.
+      **버그 수정(2026-07-22, 최종점검 중 발견)**: `review-trial-expire` 크론이
+      `trial_expires_at`이 지난 계정을 무조건 `plan_type='free'`로 덮어썼음 — 체험(basic)
+      기간 중 실제로 유료 결제(업그레이드/신규구독)한 사용자가 며칠 뒤 크론에 의해 결제
+      여부와 무관하게 강제로 무료 플랜으로 다운그레이드되는 심각한 버그였음(결제 기록은
+      정상인데 plan_type만 어긋남). `activateSubscription()`/`changePlan()`(업그레이드
+      분기)이 실제 결제 시 `trial_expires_at`을 함께 지우도록 수정 + 크론 쪽에도 방어적으로
+      "plan_type이 여전히 체험 플랜(basic)일 때만 되돌린다" 이중 체크 추가
+      (`lib/billing/subscription-service.ts`, `app/api/cron/review-trial-expire/route.ts`).
+- [x] **공지사항(announcements) 알림 대상 필터링 버그 수정 (2026-07-22 새벽)** —
+      공지 자체는 `target_plan`/`target_role`로 노출 대상을 거르는데, 앱 내 알림(벨)은
+      `createNotificationForAllUsers`가 대상 구분 없이 항상 전체 발송하고 있었음 —
+      대상이 아닌 사용자가 알림을 받고 클릭해도 `/notices`에 아무것도 안 보이는 혼란스러운
+      경험으로 이어짐(실사용 중 발견). `lib/notifications/create-notification.ts`에
+      `target: { plan?, role? }` 파라미터 추가해 `app/api/admin/announcements/route.ts`
+      POST가 공지의 target_plan/target_role을 그대로 넘기도록 수정(다른 용도로 쓰이는
+      관리자 수동 전체발송 `app/api/admin/notifications/route.ts`는 그대로 전체발송 유지).
+      **버그 수정 2(같은 날 최종점검 중 발견)**: `components/admin/admin-announcements.tsx`의
+      수정(`openEdit`) 화면이 DB에 저장된 UTC 시각을 `.slice(0,16)`으로 그대로
+      datetime-local에 넣어서 KST 로컬시각으로 오인시키는 버그가 있었음 — 공지를 열어
+      수정할 때마다 게시 시작/종료 시각이 실제보다 9시간씩 어긋난 채로 보였고, 그대로
+      저장하면 저장할 때마다 -9시간씩 계속 밀려나가는 문제였음. UTC→로컬 변환 헬퍼
+      (`toLocalDatetimeInputValue`)를 추가해 수정.
+- [x] **고객 피드백 카테고리에 "⭐ 이용후기" 추가 (2026-07-22 새벽)** — 이용후기 이벤트
+      배너 바로 아래, 카테고리 선택 맨 앞에 노출(`types/index.ts`의 `FeedbackCategory`).
+- [x] **AI 리크루팅 문자의 소득 조작 가드레일 누락 수정 (2026-07-22, 최종점검 중 발견)** —
+      상담 스크립트(`app/api/ai/script/route.ts`의 `buildRecruitScriptPrompt`)에는
+      "소득 등 구체적 숫자를 지어내지 말 것" 가드레일이 있었는데, 같은 리크루팅 제안을
+      다루는 AI 문자(`app/api/ai/message/route.ts`의 `buildRecruitHaikuPrompt`/
+      `buildRecruitSonnetPrompt`)에는 빠져있었음 — 특히 Sonnet 버전의 "성공 스토리"
+      섹션은 가상 인물의 소득을 구체적 숫자로 지어낼 위험이 있어 동일한 가드레일 추가.
+- [x] **결제 화면의 불필요한 레거시 API 호출 정리 (2026-07-22, 최종점검 중 발견)** —
+      `upgrade-button.tsx`/`upgrade-modal.tsx`가 자동결제 체크아웃(`/billing/checkout/
+      billing-key`)으로 넘어가기 전에 실제로는 결과를 쓰지도 않는 옛 단건결제 세션 생성
+      API(`/api/billing/checkout`)를 매번 호출하고 있었음 — `subscription_events`에 영원히
+      pending 상태로 남는 더미 행만 쌓이고, 이 호출이 실패하면(예: 이미 해당 플랜 사용 중
+      등) 실제로는 문제없이 동작할 자동결제 체크아웃 진입까지 함께 막혀버리는 불필요한
+      취약점이었음 — 호출 제거하고 바로 자동결제 체크아웃으로 이동하도록 단순화.
+- [x] **크론 인증 방어 보강 (2026-07-22, 최종점검 중 발견)** — `app/api/cron/push-notify/
+      route.ts`가 다른 크론 라우트(`cleanup-files`/`review-trial-expire`/
+      `subscription-check`)와 달리 `CRON_SECRET` 환경변수 자체가 비어있는 경우를 먼저
+      걸러내지 않아서, 만약 배포 환경에 이 값이 설정되지 않으면 `Authorization: Bearer
+      undefined` 문자열로 인증이 우회될 수 있는 이론적 위험이 있었음 — 다른 크론과 동일하게
+      `!secret` 사전 차단 추가.
 
 ---
 
