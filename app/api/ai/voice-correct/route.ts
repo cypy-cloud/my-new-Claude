@@ -33,8 +33,12 @@ export async function POST(req: NextRequest) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-haiku-5-5',
         max_tokens: 300,
+        // Haiku 5.5는 적응형 사고가 기본 on이고 사고 토큰이 max_tokens를 같이 소모한다 —
+        // 300처럼 작은 예산에서는 사고에 밀려 교정 텍스트가 통째로 잘릴 수 있어 꺼둔다
+        // (2026-10-11 Haiku 4.5→5.5 전환 중 확인).
+        thinking: { type: 'disabled' },
         messages: [{ role: 'user', content: prompt }],
       }),
     })
@@ -42,7 +46,10 @@ export async function POST(req: NextRequest) {
     if (!response.ok) throw new Error('AI 호출 실패')
 
     const data = await response.json()
-    const corrected = data.content?.[0]?.text?.trim() ?? rawText
+    // content[0]을 그대로 쓰면 thinking 블록이 섞여 있을 때 엉뚱한 블록을 읽을 수 있어
+    // type으로 명시적으로 찾는다 (Anthropic 마이그레이션 가이드 권고사항).
+    const textBlock = data.content?.find((b: { type: string }) => b.type === 'text')
+    const corrected = textBlock?.text?.trim() ?? rawText
 
     return NextResponse.json({ corrected })
   } catch {

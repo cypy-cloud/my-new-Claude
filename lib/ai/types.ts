@@ -38,7 +38,8 @@ export interface AIProvider {
 // Cost per 1M tokens in USD
 export const MODEL_COSTS: Record<string, { input: number; output: number }> = {
   // Anthropic
-  'claude-haiku-4-5-20251001':   { input: 0.80,  output: 4.0  },
+  'claude-haiku-5-5':             { input: 0.10,  output: 0.50 },  // 10만 토큰 이하 프롬프트 기준 (2026-10-11 Haiku 4.5→5.5 전환)
+  'claude-haiku-4-5-20251001':   { input: 0.80,  output: 4.0  },  // 과거 생성분 비용 조회용으로 유지, 신규 호출에는 더 이상 쓰이지 않음
   'claude-sonnet-5':              { input: 2.0,   output: 10.0 },  // 할인가 (~2026-08-31), CLAUDE.md 기준
   'claude-opus-4-8':              { input: 15.0,  output: 75.0 },
   // OpenAI

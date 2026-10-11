@@ -4,7 +4,7 @@ import { FEATURE_CONFIG } from './types'
 export type CoreProviderName = 'anthropic' | 'openai' | 'mock'
 
 const DEFAULT_MODEL_BY_PROVIDER: Record<CoreProviderName, string> = {
-  anthropic: 'claude-haiku-4-5-20251001',
+  anthropic: 'claude-haiku-5-5',
   openai: 'gpt-4o-mini',
   mock: 'mock-model',
 }

@@ -10,8 +10,9 @@
 - **서비스명**: FP AI Assistant (보험설계사 전용 AI 도구)
 - **스택**: Next.js 14 App Router (TypeScript), Supabase Auth + DB, Vercel 배포
 - **AI 모델**: Anthropic Claude
-  - 기본(대부분 기능): `claude-haiku-4-5-20251001`
-  - 고품질(스크립트+성향분석 포함, SMS 5번째 초안): `claude-sonnet-5`
+  - 기본(대부분 기능): `claude-haiku-5-5` (2026-10-11, Haiku 4.5에서 전환 — 아래 "주요 구현
+    완료 기능 목록"의 전환 기록 참고)
+  - 고품질(스크립트+성향분석 포함, SMS 5번째 초안): `claude-sonnet-5` (변경 없음)
 - **결제**: 포트원(PortOne) + 한국결제네트웍스(KPN) — 일반결제/정기결제(빌링키) 코드 구현 완료.
   **[2026-07-20] 9개 카드사 중 7개 심사 완료(하나·현대카드 제외), MID/Passkey 수령 완료**
   (7/13 제출, 예상보다 빠름) — 자세한 남은 절차는 "앞으로 할 것" 4번 참고. 승인 불발 대비
@@ -86,7 +87,9 @@
 - **결제 수수료**: 3.6% (Toss페이먼츠 신용·체크카드 실제 수수료율, 부가세 별도)
 - **AI 모델 비용** (Sonnet 5 할인 중 ~2026-08-31):
   - Sonnet 5: Input $2/1M → ₩3,100/1M / Output $10/1M → ₩15,500/1M
-  - Haiku 4.5: Input $0.80/1M → ₩1,240/1M / Output $4/1M → ₩6,200/1M
+  - Haiku 5.5: Input $0.10/1M → ₩155/1M / Output $0.50/1M → ₩775/1M (10만 토큰 이하
+    프롬프트 기준 — 우리 서비스는 프롬프트가 10만 토큰을 넘지 않으므로 이 요율 적용,
+    2026-10-11 Haiku 4.5에서 전환)
 - **사용 시나리오**: 100% / 70% / 50% 3가지 모두 항상 표시
 
 ---
@@ -193,6 +196,31 @@
 ## 주요 구현 완료 기능 목록
 
 ### AI 기능
+- [x] **Haiku 4.5 → Haiku 5.5 모델 전환 (2026-10-11)** — 가격이 Input $0.80→$0.10,
+      Output $4.0→$0.50(1M 토큰당, 10만 토큰 이하 프롬프트 기준)로 대폭 저렴해져서 전환.
+      Sonnet 5는 그대로 유지(요청 범위 아님). 모델 ID를 쓰는 5곳 전부 수정:
+      `lib/ai/anthropic-provider.ts`(DEFAULT_MODEL, 대부분의 기능이 거치는 공용 경로),
+      `lib/ai/types.ts`(MODEL_COSTS 비용표 — 과거 생성분 조회용으로 구 Haiku 4.5 가격도
+      남겨둠), `lib/ai-core/model-policy.ts`(죽은 코드지만 일관성 위해 같이 수정),
+      `app/api/ai/voice-correct/route.ts`, `app/api/ai/message/route.ts`(HAIKU_MODEL 상수).
+      **마이그레이션 중 발견한 치명적 호환성 문제 2건(공식 문서로 확인, 둘 다 수정 안 했으면
+      전체 AI 기능이 즉시 깨졌을 것)**:
+      ①`temperature` 파라미터를 보내면 400 에러 반환 — 기존 `supportsTemperature()`가
+      "Haiku로 시작하면 전부 지원"이라고 가정하고 있었는데 Haiku 5.5에서 깨짐. 화이트리스트
+      방식(과거 레거시 모델만 명시 허용)으로 뒤집어 수정.
+      ②적응형 사고(adaptive thinking)가 기본 on이고 사고 토큰이 `max_tokens` 예산을 같이
+      소모함 — 기존 maxTokens 값들(2500~5000대)은 전부 "사고 없는 순수 텍스트" 기준으로
+      튜닝돼 있어서, 그대로 두면 사고 토큰에 밀려 응답이 잘리거나 빈 텍스트가 반환될
+      위험이 있었음. 이 앱의 생성 작업은 복잡한 추론이 필요 없는 정형화된 텍스트 생성이라
+      `thinking: {type: 'disabled'}`를 Haiku 5.5 호출에 추가해 Haiku 4.5와 동일하게
+      동작하도록 방어(공식 문서: medium 이하 effort에서 thinking:disabled 전송 가능).
+      **추가로 발견한 기존 버그(이번 전환과 무관하게 이미 있던 문제, 같이 수정)**:
+      `app/api/ai/voice-correct/route.ts`가 응답을 `content[0].text`처럼 **위치**로 읽고
+      있었음 — 사고 블록이 섞이면 엉뚱한 블록을 읽어 조용히 원문 그대로를 반환할 수 있는
+      구조였음(Anthropic 마이그레이션 가이드가 명시적으로 경고하는 패턴). `type==='text'`로
+      찾도록 수정. 타입체크·빌드 통과 확인. **[사용자 확인 필요]** 실제 화면에서 AI 문자/
+      스크립트/PDF 설명자료 등 생성 후 품질·잘림 여부 확인 필요 — 특히 maxTokens가 가장
+      빠듯한 음성 교정(300)과 AI 문자(Haiku 2500/5000)부터.
 - [x] AI 문자/카톡 생성 (Haiku 4가지 + Sonnet 1가지("설득력 있는 버전"), 5가지 스타일).
       **버그 수정(2026-07-16)**: "부드러운 버전"에 "후속 연락용" 내용이 그대로 섞여 나오는
       문제 발생 — `parseOutputSections`가 Haiku 응답(SMS/KAKAO/SOFT/FOLLOWUP 4개 마커)과
