@@ -1984,3 +1984,47 @@ textarea { resize: vertical; min-height: 116px; }
   .lightbox__nav--prev { left: 8px; }
   .lightbox__nav--next { right: 8px; }
 }
+
+/* ===================================================
+   EMPTY STATES (사진·후기 준비 중)
+   =================================================== */
+.gallery__empty,
+.reviews__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 64px 28px;
+  text-align: center;
+  background: var(--canvas);
+  border: 1px dashed var(--hairline);
+  border-radius: var(--radius-2xl);
+  color: var(--ink-mute);
+}
+.gallery__empty i,
+.reviews__empty i {
+  font-size: 1.9rem;
+  color: var(--primary-subdued);
+  margin-bottom: 4px;
+}
+.gallery__empty p,
+.reviews__empty p {
+  font-size: 1.0625rem;
+  color: var(--ink-secondary);
+  font-weight: 300;
+}
+.gallery__empty span,
+.reviews__empty span {
+  font-size: .875rem;
+  color: var(--ink-mute);
+  font-weight: 300;
+}
+.reviews__empty { margin-top: 4px; }
+
+/* 사진 파일이 없을 때: 강사 소개를 글 중심 한 단으로 */
+.about__inner--single { grid-template-columns: 1fr; }
+.about__inner--single .about__content { max-width: 820px; }
+
+/* 강사 소개 사진 비율 */
+.about-photo-wrap img { aspect-ratio: 4 / 5; display: block; }

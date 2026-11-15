@@ -5,7 +5,7 @@
 /* ===================================================
    강의 후기 데이터 (testimonials)
    ---------------------------------------------------
-   후기를 직접 추가하려면 아래 배열에 객체를 추가하세요.
+   실제 교육 참여자에게 동의를 받은 후기만 아래 배열에 넣습니다.
    필드 설명:
      rating  : 별점 (1~5, 소수점 가능 예: 4.5)
      text    : 후기 본문
@@ -24,26 +24,16 @@
      2. 아래 loadTestimonialsFromCSV() 함수의 CSV_URL에
         복사한 링크 입력 후 주석 해제
    ────────────────────────────────────────────────── */
-const testimonials = [
-  {
-    rating : 5,
-    text   : '강의가 어렵지 않고 현장에서 바로 적용할 수 있어 좋았습니다. 이론 설명보다 실습 중심이라 교육 후 바로 업무에 써볼 수 있었습니다.',
-    org    : '제조기업 · 팀장',
-    topic  : '리더십 교육',
-  },
-  {
-    rating : 5,
-    text   : '팀원 성향을 이해하고 소통하는 방법을 구체적으로 배울 수 있었습니다. MBTI가 단순한 유형 구분이 아니라 실제 협업에 이렇게 활용될 수 있다는 게 인상적이었어요.',
-    org    : '공공기관 · 교육담당자',
-    topic  : 'MBTI 조직소통 교육',
-  },
-  {
-    rating : 5,
-    text   : 'AI를 막연하게만 생각했는데 실제 업무에 활용할 수 있다는 자신감이 생겼습니다. 비전공자도 쉽게 따라갈 수 있도록 설명해 주셔서 감사했습니다.',
-    org    : '금융기관 · 대리',
-    topic  : 'AI 활용 교육',
-  },
-];
+const testimonials = [];
+
+/*
+   후기는 실제 교육 참여자에게 동의를 받은 것만 위 배열에 넣습니다.
+   배열이 비어 있으면 페이지에는 "아직 등록된 후기가 없습니다." 안내만 표시되고
+   평균 만족도와 후기 카드는 나타나지 않습니다.
+
+   작성 예)
+     { rating: 5, text: '후기 내용', org: '제조기업 · 팀장', topic: '리더십 교육' },
+*/
 
 /*
 ─── 방법 A: Apps Script 웹앱에서 불러오기 ───────────────
@@ -85,6 +75,7 @@ async function loadTestimonialsFromCSV() {
   const header    = document.getElementById('header');
   const hamburger = document.getElementById('hamburger');
   const navMenu   = document.getElementById('navMenu');
+  const floatingCta = document.getElementById('floatingCta');
 
   window.addEventListener('scroll', () => {
     header.classList.toggle('scrolled', window.scrollY > 20);
@@ -170,10 +161,21 @@ async function loadTestimonialsFromCSV() {
     const countEl    = document.getElementById('reviewCount');
     const moreWrap   = document.getElementById('reviewsMore');
     const moreBtn    = document.getElementById('reviewsMoreBtn');
+    const summary    = document.querySelector('.reviews__summary');
+    const emptyEl    = document.getElementById('reviewsEmpty');
     if (!grid) return;
 
     const INITIAL_SHOW = 3;
     let showAll = false;
+
+    // 후기가 하나도 없으면 평균·카드 대신 안내 문구만 보여준다.
+    if (!data.length) {
+      if (summary) summary.style.display = 'none';
+      if (moreWrap) moreWrap.style.display = 'none';
+      if (emptyEl) emptyEl.style.display = 'flex';
+      return;
+    }
+    if (emptyEl) emptyEl.style.display = 'none';
 
     function starHTML(rating) {
       let html = '';
@@ -291,8 +293,7 @@ async function loadTestimonialsFromCSV() {
     if (e.key === 'ArrowRight')  shiftLightbox(1);
   });
 
-  /* ─── Floating CTA ─── */
-  const floatingCta = document.getElementById('floatingCta');
+  /* ─── Floating CTA (고정 하단 버튼) ─── */
 
   /* ─── Contact Form ─── */
   const form = document.getElementById('contactForm');

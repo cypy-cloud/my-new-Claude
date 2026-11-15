@@ -6,8 +6,8 @@
 
   <!-- Primary SEO -->
   <title>임현수 강사 | 리더십·MBTI·코칭·CS·AI 기업교육 전문 | 열린교육컨설팅</title>
-  <meta name="description" content="임현수 강사 — 열린교육컨설팅 이사. 리더십, MBTI 조직소통, 코칭 커뮤니케이션, CS·세일즈, AI 활용 교육 전문. 500회 이상 기업·기관·대학 출강 경력. 지금 바로 강의 문의하세요." />
-  <meta name="keywords" content="임현수강사, 기업교육강사, 리더십교육, MBTI강사, 코칭강사, AI교육강사, CS강사, 세일즈교육, 열린교육컨설팅, 기업강의섭외" />
+  <meta name="description" content="임현수 강사 — 메트라이프금융서비스(주) 우리지점 지점장·열린교육컨설팅 대표. 보험영업 현장 20여 년, 기업교육 15년 이상. 리더십, MBTI 조직소통, 코칭 커뮤니케이션, CS·세일즈, AI 활용 교육 전문. 지금 바로 강의 문의하세요." />
+  <meta name="keywords" content="임현수강사, 기업교육강사, 리더십교육, MBTI강사, 코칭강사, AI교육강사, CS강사, 세일즈교육, 열린교육컨설팅, 메트라이프금융서비스지점장, 보험영업교육, 기업강의섭외" />
   <meta name="author" content="임현수" />
   <link rel="canonical" href="https://imhyunsoo.com/" />
 
@@ -15,16 +15,14 @@
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://imhyunsoo.com/" />
   <meta property="og:title" content="임현수 강사 | 리더십·MBTI·코칭·CS·AI 기업교육 전문" />
-  <meta property="og:description" content="500회 이상의 기업·기관·대학 강의 경력. 리더십, MBTI 조직소통, 코칭, CS·세일즈, AI 활용 교육 전문강사. 열린교육컨설팅 이사 임현수." />
-  <meta property="og:image" content="assets/profile.jpg" />
+  <meta property="og:description" content="메트라이프금융서비스(주) 우리지점 지점장·열린교육컨설팅 대표. 보험영업 현장 20여 년, 기업교육 15년 이상. 리더십, MBTI 조직소통, 코칭, CS·세일즈, AI 활용 교육 전문강사 임현수." />
   <meta property="og:locale" content="ko_KR" />
   <meta property="og:site_name" content="임현수 강사 공식 사이트" />
 
   <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="임현수 강사 | 기업교육 전문강사" />
-  <meta name="twitter:description" content="리더십·MBTI·코칭·CS·AI 교육 전문. 열린교육컨설팅 이사. 강의 문의: 010-9405-0838" />
-  <meta name="twitter:image" content="assets/profile.jpg" />
+  <meta name="twitter:description" content="리더십·MBTI·코칭·CS·AI 교육 전문. 열린교육컨설팅 대표·메트라이프금융서비스(주) 우리지점 지점장. 강의 문의: 010-9405-0838" />
 
   <!-- Google Fonts — Inter (Sohne open-source substitute) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -69,7 +67,7 @@
         <!-- 왼쪽: 메인 카피 -->
         <div class="hero__text">
           <p class="hero__eyebrow">
-            <span class="eyebrow-dot"></span>열린교육컨설팅 이사
+            <span class="eyebrow-dot"></span>메트라이프금융서비스(주) 우리지점 지점장
           </p>
           <h1 class="hero__title">
             조직의 변화를 이끄는 강의,<br />
@@ -121,7 +119,7 @@
               <!-- 이름 / 직함 -->
               <div class="instructor-card__header">
                 <div>
-                  <p class="instructor-card__org">열린교육컨설팅 이사</p>
+                  <p class="instructor-card__org">메트라이프금융서비스(주) 우리지점 지점장</p>
                   <h2 class="instructor-card__name">임현수 <span>강사</span></h2>
                 </div>
                 <div class="instructor-card__badge">
@@ -143,6 +141,10 @@
 
               <!-- 주요 이력 -->
               <ul class="instructor-card__history">
+                <li class="history--current">
+                  <span class="history-dot history-dot--on"></span>
+                  <span>메트라이프금융서비스(주) 우리지점 지점장</span>
+                </li>
                 <li class="history--current">
                   <span class="history-dot history-dot--on"></span>
                   <span>열린교육컨설팅 대표</span>
@@ -324,18 +326,22 @@
       <div class="container about__inner">
         <div class="about__photo">
           <div class="about-photo-wrap">
-            <img class="about__photo-img" src="" alt="임현수 강사 소개 사진" style="display:none;width:100%;height:100%;object-fit:cover;object-position:center top;border-radius:inherit;" />
-            <div class="photo-placeholder photo-placeholder--lg" id="aboutPhotoPlaceholder">
-              <i class="fa-solid fa-user"></i>
-              <p>강사 소개 사진</p>
-            </div>
+            <!-- assets/profile.jpg 가 있으면 사진이 보이고, 없으면 사진 칸을 숨기고 글로만 구성 -->
+            <img
+              class="about__photo-img"
+              src="assets/profile.jpg"
+              alt="임현수 강사"
+              style="width:100%;height:100%;object-fit:cover;object-position:center top;border-radius:inherit;"
+              onerror="this.closest('.about__photo').style.display='none'; this.closest('.about__inner').classList.add('about__inner--single');"
+            />
           </div>
         </div>
         <div class="about__content">
           <div class="section-label">강사 소개</div>
           <h2 class="section-title">사람과 조직의<br /><span class="accent">가능성을 열어주는</span> 전문가</h2>
           <p class="about__lead">
-            열린교육컨설팅 이사로서 15년 이상 기업·기관 현장을 누비며 수백 회의 교육을 진행해 왔습니다.
+            보험영업 현장에서 20여 년을 일해 왔고, 현재 메트라이프금융서비스(주) 우리지점 지점장과
+            열린교육컨설팅 대표를 함께 맡고 있습니다. 기업교육 강사로 15년 이상 기업·기관 현장에서 수백 회의 교육을 진행해 왔습니다.
             단순한 지식 전달이 아닌, <strong>현장에서 즉시 적용 가능한 변화</strong>를 만드는 교육을 추구합니다.
           </p>
           <ul class="about__list">
@@ -616,9 +622,9 @@
     </section>
 
     <!-- ===== GALLERY =====
-      사진 추가: assets/gallery/gallery-N.jpg 복사 후
-      아래 img src 경로와 figcaption 캡션 수정.
-      새 항목은 .gallery-item 블록 전체를 복사해 추가.
+      사진이 준비되면 아래 .gallery__empty 를 지우고
+      <div class="gallery__grid"> 안에 <figure class="gallery-item"> 블록을 넣으세요.
+      (이미지는 assets/gallery/ 에 두고 커밋해야 방문자에게도 보입니다.)
     ===== -->
     <section class="gallery section section--gray" id="gallery">
       <div class="container">
@@ -627,104 +633,11 @@
           <h2 class="section-title">현장에서 직접 만드는<br /><span class="accent">교육의 순간들</span></h2>
         </div>
 
-        <div class="gallery__grid">
-
-          <figure class="gallery-item">
-            <div class="gallery-item__img-wrap">
-              <img
-                src="assets/gallery/gallery-1.jpg"
-                alt="기업 리더십 특강"
-                loading="lazy"
-                onerror="this.style.display='none'"
-              />
-              <div class="gallery-item__fallback" aria-hidden="true">
-                <i class="fa-solid fa-trophy"></i>
-              </div>
-            </div>
-            <figcaption class="gallery-item__caption">기업 리더십 특강</figcaption>
-          </figure>
-
-          <figure class="gallery-item">
-            <div class="gallery-item__img-wrap">
-              <img
-                src="assets/gallery/gallery-2.jpg"
-                alt="MBTI 조직소통 워크숍"
-                loading="lazy"
-                onerror="this.style.display='none'"
-              />
-              <div class="gallery-item__fallback" aria-hidden="true">
-                <i class="fa-solid fa-brain"></i>
-              </div>
-            </div>
-            <figcaption class="gallery-item__caption">MBTI 조직소통 워크숍</figcaption>
-          </figure>
-
-          <figure class="gallery-item">
-            <div class="gallery-item__img-wrap">
-              <img
-                src="assets/gallery/gallery-3.jpg"
-                alt="AI 활용 실습 교육"
-                loading="lazy"
-                onerror="this.style.display='none'"
-              />
-              <div class="gallery-item__fallback" aria-hidden="true">
-                <i class="fa-solid fa-robot"></i>
-              </div>
-            </div>
-            <figcaption class="gallery-item__caption">AI 활용 실습 교육</figcaption>
-          </figure>
-
-          <figure class="gallery-item">
-            <div class="gallery-item__img-wrap">
-              <img
-                src="assets/gallery/gallery-4.jpg"
-                alt="CS 커뮤니케이션 교육"
-                loading="lazy"
-                onerror="this.style.display='none'"
-              />
-              <div class="gallery-item__fallback" aria-hidden="true">
-                <i class="fa-solid fa-star"></i>
-              </div>
-            </div>
-            <figcaption class="gallery-item__caption">CS 커뮤니케이션 교육</figcaption>
-          </figure>
-
-          <figure class="gallery-item">
-            <div class="gallery-item__img-wrap">
-              <img
-                src="assets/gallery/gallery-5.jpg"
-                alt="코칭 커뮤니케이션 워크숍"
-                loading="lazy"
-                onerror="this.style.display='none'"
-              />
-              <div class="gallery-item__fallback" aria-hidden="true">
-                <i class="fa-solid fa-comments"></i>
-              </div>
-            </div>
-            <figcaption class="gallery-item__caption">코칭 커뮤니케이션 워크숍</figcaption>
-          </figure>
-
-          <figure class="gallery-item">
-            <div class="gallery-item__img-wrap">
-              <img
-                src="assets/gallery/gallery-6.jpg"
-                alt="세일즈 역량 강화 교육"
-                loading="lazy"
-                onerror="this.style.display='none'"
-              />
-              <div class="gallery-item__fallback" aria-hidden="true">
-                <i class="fa-solid fa-chart-line"></i>
-              </div>
-            </div>
-            <figcaption class="gallery-item__caption">세일즈 역량 강화 교육</figcaption>
-          </figure>
-
+        <div class="gallery__empty">
+          <i class="fa-regular fa-images" aria-hidden="true"></i>
+          <p>강의 현장 사진을 준비하고 있습니다.</p>
+          <span>현장 사진은 참여자분들의 동의를 받은 뒤 순차적으로 게시합니다.</span>
         </div>
-
-        <p class="gallery__note">
-          <i class="fa-solid fa-circle-info"></i>
-          실제 강의 현장 사진은 순차적으로 업데이트됩니다.
-        </p>
       </div>
     </section>
 
@@ -751,7 +664,7 @@
         <div class="section-header">
           <div class="section-label">강의 후기</div>
           <h2 class="section-title">교육에 참여한 분들이<br /><span class="accent">직접 전하는 이야기</span></h2>
-          <p class="section-desc">구글 설문을 통해 수집된 실제 교육 참여자 후기입니다.</p>
+          <p class="section-desc">교육에 참여하신 분들의 동의를 받아 후기를 순차적으로 게시합니다.</p>
         </div>
 
         <!-- 평균 별점 요약 -->
@@ -771,6 +684,13 @@
         <!-- 카드 그리드 — JS가 렌더링 -->
         <div class="reviews__grid" id="reviewsGrid"></div>
 
+        <!-- 후기가 없을 때 표시 (JS가 후기 유무에 따라 전환) -->
+        <div class="reviews__empty" id="reviewsEmpty">
+          <i class="fa-regular fa-comment-dots" aria-hidden="true"></i>
+          <p>아직 등록된 후기가 없습니다.</p>
+          <span>교육에 참여하신 분들의 동의를 받은 후기만 순차적으로 게시합니다.</span>
+        </div>
+
         <!-- 더보기 버튼 (후기 3개 초과 시 노출) -->
         <div class="reviews__more" id="reviewsMore" style="display:none;">
           <button class="btn btn--outline" id="reviewsMoreBtn">
@@ -778,17 +698,14 @@
           </button>
         </div>
 
-        <!-- 구글 설문 링크 -->
+        <!-- 후기 설문 링크가 준비되면 아래 블록을 되살려 href에 구글 설문 주소를 넣으세요.
         <div class="reviews__cta-survey">
           <p>교육에 참여하셨나요?</p>
-          <!--
-            구글 설문지 링크를 아래 href에 붙여넣으세요.
-            예) href="https://forms.gle/xxxxxxxx"
-          -->
-          <a href="#" class="btn-survey" target="_blank" rel="noopener">
+          <a href="https://forms.gle/XXXXXXXX" class="btn-survey" target="_blank" rel="noopener">
             <i class="fa-solid fa-pen-to-square"></i> 후기 작성하기
           </a>
         </div>
+        -->
       </div>
     </section>
 
@@ -850,7 +767,7 @@
               </div>
             </div>
             <div class="contact__card-body">
-              <p class="contact__card-org">열린교육컨설팅 이사</p>
+              <p class="contact__card-org">열린교육컨설팅 대표<br />메트라이프금융서비스(주) 우리지점 지점장</p>
               <h3 class="contact__card-name">임현수 강사</h3>
               <div class="contact__card-divider"></div>
               <ul class="contact__card-fields">
@@ -930,7 +847,7 @@
         <!-- 브랜드 -->
         <div class="footer__brand">
           <p class="footer__name">임현수 <span>강사</span></p>
-          <p class="footer__org">열린교육컨설팅 이사</p>
+          <p class="footer__org">열린교육컨설팅 대표 · 메트라이프금융서비스(주) 우리지점 지점장</p>
           <p class="footer__tagline">조직의 변화를 이끄는 강의,<br />사람의 성장을 설계합니다.</p>
           <div class="footer__contact-inline">
             <a href="tel:010-9405-0838">
@@ -1007,8 +924,9 @@
           const fallback = img.nextElementSibling;
           if (fallback) fallback.style.display = 'none';
         });
-        const aboutPlaceholder = document.getElementById('aboutPhotoPlaceholder');
-        if (aboutPlaceholder) aboutPlaceholder.style.display = 'none';
+        // 사진이 들어오면 숨겨 두었던 강사 소개 사진 칸을 다시 보여준다.
+        document.querySelectorAll('.about__photo').forEach(el => { el.style.display = ''; });
+        document.querySelectorAll('.about__inner').forEach(el => el.classList.remove('about__inner--single'));
       }
       // 갤러리 사진
       for (let i = 1; i <= 6; i++) {
